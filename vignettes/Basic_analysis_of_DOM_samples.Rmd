@@ -1,0 +1,429 @@
+---
+title: |
+    | ![](staRdom384.png){width=150}
+    | Correcting raw data, Calculating peaks and indices in EEMS and absorbance (slope) parameters
+subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
+author: "`r packageDescription('staRdom')$Maintainer`"
+date: "`r format(Sys.time(), '%B %e %Y')`"
+bibliography: "references.bib"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Correcting raw data, Calculating peaks and indices in EEMS and absorbance (slope) parameters}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(knitcitations)
+cleanbib()
+options("citation_format" = "pandoc")
+bibliography() #style="apalike"
+```
+
+# Introduction
+staRdom is a package for R `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
+
+* correcting excitation-emission-matrices (EEM, `r citet("10.1039/c3ay41160e")`, `r citet(citation(package="eemR"))`)
+* calculating fluorescence peaks and indices (`r citet(citation(package="eemR"))`)
+    * biological index (bix, `r citet("10.1016/j.orggeochem.2009.03.002")`)
+    * so-called Coble-peaks (b,	t, a,	m, c, `r citet("10.1016/0304-4203(95)00062-3")`)
+    * fluorescence index (fi, `r citet("10.4319/lo.2001.46.1.0038")`)
+    * humification index (hix, `r citet("10.1021/es0155276")`)
+* absorbance slope parameters (a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR, `r citet("10.4319/lo.2008.53.3.0955")`, `r citet("10.1016/j.marchem.2004.02.008")`)
+* PARAFAC/CANDECOMP analysis can separate the components of the EEMs (`r citet("10.1039/c3ay41160e")`, `r citet(citation(package="multiway"))`).
+
+staRdom was developed and is maintained at [WasserCluster Lunz](http://www.wcl.ac.at/index.php/en/) and the [University of Natural Resources and Life Sciences, Vienna](http://www.boku.ac.at/). I want to thank Daniel Graeber for his support and for sharing his experience and Renata Pinto and Stefan Preiner for testing the scripts.
+
+staRdom comes with an Rmd template where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through this template while reading this vignette to get an overview of what is possible.
+As an advanced user, you can just include the functions in whatever calculations you want to do. The vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` of pressing F1 while the cursor is in the function name in the code.
+
+If you are a beginner in R you may find some help at [](https://www.rstudio.com/online-learning/#r-programming), [The Beginner's Guide to R](https://www.computerworld.com/article/2497143/business-intelligence/business-intelligence-beginner-s-guide-to-r-introduction.html) by Computerworld Magazine or below.
+
+The package is available on CRAN and can be installed via `install.packages("staRdom")`.
+
+Later in the vignette there is also a chapter about troubleshooting. If you experience problems you may find a useful solution there.
+
+The description of the PARAFAC analysis can be found in the [vignette for PARAFAC analysis](PARAFAC_analysis_of_EEM.html).
+
+# Starting the analysis with the template
+
+The template is accessible with the commands `eem_easy()` or if that does not work `file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))`. You can save this file if you want to preserve it. The example data is saved within the package structure and you can find the containing folders with the commands `system.file(package = "staRdom")`. Raw data is in the sub-folder "extdata".
+
+## Output parameters
+
+On top of the template there are the header parameters necessary to create a report with knitr. You can change them as you wish (e.g. author, title). It is possible to create reports in other file formats. Please find details at https://rmarkdown.rstudio.com/lesson-9.html.
+
+The directory your generated files are saved in is set by output_dir at line 7. It is important that you keep the ; at the end of the line. Folders are delimited by "/". In RStudio, pressing the tab key while the cursor is in the path can reveal possible folders on your drive.
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+title: "DOM analysis"
+subtitle: "EEM peak picking, absorbance slope parameters"
+date: "`r format(Sys.time(), '%B %e %Y')`"
+author: "WCL"
+knit: (function(inputFile, encoding) {
+      output_dir = 'C:/some_folder/another_folder';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(output_dir,paste0('DOM_EEM_analysis_report_',format(Sys.time(), "%Y%m%d_%H%M%S"),'.htm')))
+                        })
+```
+
+In case you want to run the code chunk-wise, you need to specify the output folder on line 45.
+
+```{r, eval=FALSE}
+# Set the directory where all output files are put in.
+# The directory is automatically created if it does not exist.
+output_dir = "C:/some_folder/another_folder" # e.g. output_dir = "C:/some_folder/output/"
+```
+
+## Input parameters
+
+Please be sure to have similarly named samples in fluorometer data, photometer data and meta data, as it is very often the reason for a non working analysis.
+
+### Fluorometer data (EEM)
+
+The parameter sample_dir specifies the directory where your data files from the fluorometer are. They have to be a text format (Cary Eclipse .csv files, Aqualog .dat files, Shimadzu .TXT files, Fluoromax-4 .dat files) (details at [eem_read()](https://www.rdocumentation.org/packages/eemR/versions/0.1.5/topics/eem_read)). Samples can be stored in subfolders as well. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number.
+
+```{r, eval=FALSE}
+### Directory containing EEM data ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Set the directory with your sample files. Please see eem_read() help for details on file formats.
+# Sub folders are read in and are considered different sample sets.
+# Import is done with eem.read() (package eemR), please see details there.
+# The template refers to data coming with the package. Please use your data
+# by setting the path to your files!
+sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/input/fluor/"
+```
+
+### Photometer data (absorbance)
+
+Absorbance data needed for inner-filter-effect correction and the calculation of the slope parameters is taken from the folder specified with `absorbance_dir`. The filenames must be identical to the EEM files to link results from one distinct sample. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. For the calculations the cuvette length (in cm) used in the photometer has to be set. Furthermore, you can specify the cell separator and decimal point of you data files.
+
+```{r, eval=FALSE}
+### Absorbance data ###
+#~~~~~~~~~~~~~~~~~~~~~#
+# Absorbance data is read from *.TXT or *.CSV files.
+# Either a directory containing one or more files can be named or a single file containing all samples.
+# Absorbance data is used for inner-filter-effect correction and calculation of the slope parameters.
+# Those steps can be skipped but keep in mind it is important for a profound analysis!
+#
+# path of adsorbance data as directory or single file, sub folders are not read:
+absorbance_dir = "C:/some_folder/input/absorbance/" # e.g. absorbance_dir = "C:/some_folder/input/absorbance/"
+
+# Cuvette length in cm that was used in absorbance measurement.
+# If it is set to "meta" data from the metadata table is used (details see below).
+absorbance_cuv_len = 5 # e.g. absorbance_cuv_len = 5
+
+# separator and decimal point of absorbance data tables (tab is coded as "\t")
+abs_sep_dec = c(",",".") # e.g. abs_sep_dec = c("\t",".")
+```
+
+### Meta data
+
+In case your samples are diverse and you need differing parameters you can set distinct dilution factors, photometer cuvette lengths and raman areas in a table for each sample. You can skip that if your dilution factors and your cuvette lengths are similar and you used blank samples for calculating the raman area. Furthermore, you can specify the cell separator and decimal point of you data files. If your values are identic for all samples you can skip that and add the numbers as described below.
+
+```{r, eval=FALSE}
+### Meta data ###
+#~~~~~~~~~~~~~~~#
+# Adding a table with meta data is OPTIONAL!
+# The table can contain dilution factors, cuvette lengths of
+# the photometer and absorbance cuvette lengths and is intended
+# for cases where different values should be used for different
+# samples. Each column can be used optionally.
+
+# read table with metadata as *.TXT or *.CSV
+# either a path or FALSE if no metadata file is used.
+metadata = system.file("extdata/metatable.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv"
+
+# separator and decimal point of metadata table ("\t" is for tab).
+meta_sep_dec = c(" ",".") # e.g. meta_sep_dec = c("\t",".")
+
+### Meta data: names of columns ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# column with sample names
+col_samples = "sample"
+
+# if you want to use dilution factors (e.g. 10 if 1 part sample and 9 parts solvent) from the meta data table, state the name 
+# of the column containing the dilution data and set dilution = "meta" (below)
+col_dilution = "dilution"
+
+# if you want to use the cuvette length (in cm) for the absorbance from the meta data table,
+# state the name of the column containing the cuvette lengths and set absorbance_cuv_len = "meta" (below)
+col_cuv_len = "cuv_len"
+
+# if you want to use the raman area (under the curve) data from the meta data table, state the name 
+# of the column containing the raman areas and set raman_normalisation = "meta" (below)
+col_raman_area = "raman"
+```
+
+## Write out results and plots
+
+### Results table
+
+If you want to export your picked peaks and slope parameters as a table, set the parameter below `TRUE`. Exporting XLS files needs a properly configured Java environment. If any problems are encountered, a CSV is written to your output directory instead and can be opened with spreadsheet software like MS Excel as well. Furthermore, you can specify the cell separator and decimal point of you data files. 
+
+```{r, eval=FALSE}
+### Table output ###
+#~~~~~~~~~~~~~~~~~~#
+# Write a table with peaks and slope parameters.
+# Written as xls or, in case of missing java environment as csv.
+output_xls = TRUE # e.g. TRUE
+
+# In case of csv export you can define the separator and the decimal point here.
+out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
+```
+
+### Plots
+
+The script offers several options for exporting plots. The parameter `scale_col` defines if the colour range of all plots is synchronised. If you want to compare different samples, it is easier if the colour code has the same range. Weak peaks in samples with lower DOM than other samples can be found easier if the colours are not synchronised.
+
+`output_overview_png` states whether overview plots containing a number of samples (`overview_number`) are saved in the output directory and `output_single_png` is the parameter if you want to export single PNGs from each sample.
+
+With the parameters `overview` and `single_plots` these plots can be included in the report.
+
+```{r, eval=FALSE}
+### Plot settings PNG ###
+#~~~~~~~~~~~~~~~~~~~~~~~#
+# The scaling of the different sample plots can be chosen.
+# Either all samples are coloured according to the range of the
+# complete sample set (TRUE) or each plot is scaled separately (FALSE).
+scale_col = FALSE # e.g. TRUE
+
+# State whether you want pngs of the single EEM spectra written in your output directory
+output_single_png = FALSE # e.g. TRUE
+
+## State whether you want pngs of multiple EEM spectra written in your output directory
+output_overview_png = FALSE # e.g. TRUE
+
+## number of EEM spectra plottet in each overview image
+overview_number = 6 # e.g. 6
+
+### Plot settings report ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# This block defines which plots are included in the report.
+#
+# Add plots with several EEM samples per plot. 
+# The number per plot is defined by overview_number above.
+overview = TRUE # e.g. TRUE
+
+# State whether you want plots from single EEM spectra in the report.
+single_plots = FALSE # e.g. TRUE
+```
+
+## Correction of EEM data
+
+Raw data from fluorometers bears several shortcomings. `r citet("10.1039/c3ay41160e")` addressed several ways of data correction that are used in the template. Depending on your data available some corrections cannot be done. Corrections can be necessary and can help you focus on certain aspects. But depending on your aim they might not be necessary. `r citet("10.1002/cem.773")` offer additional information on correction of EEM data.
+
+### Dilution
+
+If samples were diluted before analysis the dilution factor can be set here and the sample will be accordingly corrected. As an example a dilution factor of 10 means a 1:10 dilution (1 part sample and 9 parts milliq). By setting `dilution = "meta"`, data from the meta table is taken and each sample can be diluted differently.
+
+```{r, eval=FALSE}
+### Correction of diluted samples ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Set a dilution factor if your sample was diluted.
+# All samples are multiplied with this factor.
+# Please use a meta table (above) if your dilutions are differing
+# 1 for no dilution, 10 for dilution 1:10 (1 part sample and 9
+# parts milliq), "meta" for data from meta table
+dilution = "meta" # e.g. 1
+```
+
+### EEM range reduction
+
+EEM data can be cut in both dimensions. Peaks are calculated before the reduction. Cut ranges are set with vectors containing the upper and lower limits: `c(lower,upper)`. If you want to avoid any cutting, set the vectors to `c(0,Inf)`. `Inf` means infinity, so the script keeps data from 0 to infinity. The script also allows to cut all samples to the size of the sample with the shortest range which is neccessary if you want to perform a PARAFAC analysis.
+
+```{r, eval=FALSE}
+### Cut data to certain range ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Set a vector with range of wavelengths to be plotted and saved.
+# Peak picking is done before range reduction.
+# Emission wavelength:
+em_range = c(0,Inf) # e.g. c(300,500), c(0,Inf) to use everything
+
+# Excitation wavelength:
+ex_range = c(0,Inf) # e.g. c(300,500), c(0,Inf) to use everything
+
+# Cut all samples to fit largest range available in all samples
+cut_range_to_smallest = FALSE # e.g. FALSE
+```
+
+### Blank correction
+
+Blank samples are data from measuring simple milli-Q. Systematic biases can be removed by substracting the blank sample from each sample and the raman normalisation factor is calculated from blanks. The blank sample has to contain nano, miliq, milliq, mq or blank (cases are ignored) in the file name in the same directory as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It has to be measured with each sample set (e.g. once a day) `r citep("10.1039/c3ay41160e")`.
+
+```{r, eval=FALSE}
+### Blank correction ###
+#~~~~~~~~~~~~~~~~~~~~~~#
+# A blank sample is substracted from each sample. Blank samples have to be
+# in the same (sub)folder as the EEM samples. So different blanks are used
+# for different subsets. The file names of the blanks have to contain nano, 
+# miliq, milliq, mq or blank (cases are ignored). Other samples must not 
+# contain these words in their names respectively!
+blank_correction = FALSE # e.g. FALSE
+```
+
+### Correct inner filter effects
+
+Per sample absorbance data has to be measured to use the inner-filter-effects correction described in `r citet("10.4319/lom.2013.11.616")`. You can define if you want this step to be done here. Absorbance data must be available to do this step.
+
+```{r, eval=FALSE}
+### Inner filter effect correction ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Inner filter effects are corrected. Absorbance data is needed. File or column names
+# of the absorbance data have to resamble file names of the EEM data.
+ife_correction = TRUE # e.g. FALSE
+```
+
+### Remove and interpolate scattering
+
+Diagonal scatter peaks hinder the analysis of EEM data as they usually are much greater than peaks from DOM. They are partly removed by removing the blank sample as described above. Diagonal peaks are called Rayleigh and Raman peaks of first and second order. `r citet("10.1016/s0003-2670(00)81226-x")` `r citet("10.1007/978-0-387-46312-4")` and `r citet("10.1038/348432a0")` offer additional information.
+
+The width of the removed scatter slot can be determined. Make sure not to loose too much data while still removing the whole peak. If you use the interpolation below, a remaining diagonal peak hints at insufficient width.
+
+`r citet("10.1002/cem.978")` and `r citet("10.1016/j.marchem.2004.02.006")` suggest an interpolation of the removed scattering and offer a description.
+
+```{r, eval=FALSE}
+### Remove scattering and interpolate missing data ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Scattering is removed from the EEM spectra.
+remove_scatter <- c() # Please leave that as it is ;-)
+
+# remove Raman scatter order 1
+remove_scatter["raman1"] = TRUE # e.g. TRUE
+
+# remove Raman scatter order 2 
+remove_scatter["raman2"] = TRUE # e.g. TRUE
+
+# remove Rayleigh scatter order 1 
+remove_scatter["rayleigh1"] = TRUE # e.g. TRUE
+
+# remove Rayleigh scatter order 2
+remove_scatter["rayleigh2"] = TRUE # e.g. TRUE
+
+# Set the width of removed scatter slot (usually 10 to 16).
+# If you can still see traces of scattering after interpolation,
+# this value should be increased. You can specify a vector containing
+# separate widths for each scatter c(15,16,16,14), ordered by raman1,raman2,rayleigh1,rayleigh2.
+remove_scatter_width = c(15,15,15,15) # e.g. 15 or c(15,15,15,15)
+
+# state whether removed scattering should be interpolated
+interpolation <- TRUE # e.g. TRUE
+```
+
+### Raman normalisation
+
+Raman normalisation can be done in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation `r citep("10.1366/000370209788964548")` or you give a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
+
+```{r, eval=FALSE}
+### Raman normailsation ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~#
+# State whether a Raman normalisation should be performed
+# Either "blank" if a blank is present in each (sub)folder of the EEM data.
+# Blank samples have to be in the same (sub)folder as the EEM samples. So 
+# different blanks are used for different subsets. The file names of the 
+# blanks have to contain nano, miliq, milliq, mq or blank (cases are ignored).
+# Other samples must not contain these words in their names respectively!
+# Normalisation is then calculated with this blank, the raman area as a number
+# or "meta" if the raman areas should be taken from the meta data table.
+raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
+```
+
+### Smoothing
+
+For calculating the peaks the EEMs can be smoothed (citation missing). Peaks and indices are calculated from smoothed EEMs but they are not saved.
+
+```{r, eval=FALSE}
+### Smooth data for peak picking ###
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Moving window size for smoothing data along excitation wavelengths.
+# Data must be interpolated if you want to use smoothing.
+# This is used for peak picking but not saved.
+smooth = 4 # e.g. FALSE, 4
+```
+
+## Running the analysis
+
+If you reach the box below in the template, all parameters are set and you can finally run the analysis.
+
+```{r, eval=FALSE}
+#############################################
+#                                           #
+#       THERE ARE NO SETTINGS BELOW.        #
+#  YOU CAN KLICK "KNIT" AT THE MENU BAR.    #
+#  In case of errors, chunk-wise execution  #
+#     of the code can reveal problems!      #
+#                                           #
+#     Please read the help of the used      #
+#        functions if you encounter         #
+#               any problems:               #
+#   Press F1 while cursor in function or    #
+#   type help(function) in command line!    #
+#                                           #
+#             Please read the               #
+#        error messages carefully!          #
+#    Naming of the imput files and table    #
+#     column and row names is crucial!      #
+#                                           #
+#############################################
+```
+
+You can run the script by clicking on the Knit button in the toolbar in RStudio. At first run of the script you may be asked if you want to install several packages, please confirm. This can take some time. Your generated files are placed in your specified output folder. In case you experience problems please consider to start over with a "fresh" template.
+
+# Installation
+
+The script is running in R environment `r citep(citation())`. Using a graphical user interface like [RStudio](https://www.rstudio.com/) can help beginners to get into it.
+
+You can install staRdom via RStudio by klicking Tools -> Install Packages... or by entering the command `install.packages("staRdom")` in the command line.
+
+If any of the programmes are already installed on your computer, you can skip the respective step. In case of problems while running the script please consider re-installing/updating the respective programmes.
+
+## R
+Download:
+
+https://cran.r-project.org/mirrors.html
+
+Installation manual:
+
+https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and-Administration
+
+## RStudio
+
+Download:
+
+https://www.rstudio.com/products/rstudio/download/#download
+
+Please choose the installer for your operating system, not the zip/tarballs.
+
+Install RStudio by running the setup.
+
+## Optional software
+
+Optionally(!) you need a [Java runtime environment](https://www.java.com/de/download/) to import data from XLS files and a TeX environment (e.g. [MikTeX](http://miktex.org) for Windows) to export PDF files. You can use the script to the full extend without those.
+
+# Troubleshooting
+
+## Peaks table shows NAs
+
+NA stands for 'Not available' and means the wavelength range of the certain peak is missing. Be sure, you measured the range of the certain peak in the lab.
+
+## Only some sample plots show peaks
+
+If samples differ considerably in amount of DOM, scaling might be a problem. You can scale each sample plot separately by setting scale_col to FALSE.
+
+## I cannot read csv files
+
+If you encounter problems with reading csv files please visit:
+
+https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizard-40c6d5e6-41b0-4575-a54e-967bbe63a048
+
+## I get error messages concerning my output directory
+
+Be sure the specified hardware existis on your system (e.g. C:/) and you have wirte access. Please also refer to "I have problems running the code chunks one after the other".
+
+# References
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+write.bibtex(file="references.bib")
+```
+
+  
+

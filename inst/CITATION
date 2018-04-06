@@ -1,0 +1,10 @@
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(bibtype = "Manual",
+         title = "{staRdom}: PARAFAC analysis on DOM EEMs, calculating absorbance slopes",
+         author = c(person("Pucher", "Matthias"),person("Graeber", "Daniel")),
+         institution = c("Wassercluster Lunz, BOKU Vienna", "UFZ Leipzig"),
+         address = "Lunz, Austria",
+         year = "2018",
+         url = "https://github.com/MatthiasPucher/staRdom")
