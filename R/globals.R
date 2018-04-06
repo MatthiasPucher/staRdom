@@ -1,4 +1,5 @@
-utils::suppressForeignCheck(c(
+#' @import utils
+globalVariables(c(
   "eem",
   ".",
   "samp",
@@ -40,4 +41,4 @@ utils::suppressForeignCheck(c(
   "set",
   "y",
   "comb"
-))
+), package = "staRdom")
