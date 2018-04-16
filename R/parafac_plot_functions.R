@@ -16,7 +16,7 @@
 #' @seealso \code{\link[staRdom]{eempf_fits}}, \code{\link[staRdom]{eempf_plot_comps}}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(pfres_comps1)
 #'
 #' eempf_compare(pfres_comps)
@@ -41,11 +41,9 @@ eempf_compare <- function(pfres){
 #' @import ggplot2
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
 #' eempf_fits(pfres_comps)
-#' }
 eempf_fits <- function(pfres){
   pl <- data.frame(comps=lapply(pfres,"[[","A") %>% lapply(ncol) %>% unlist(),
                    fit=lapply(pfres,"[[","Rsq") %>% unlist()) %>%
@@ -70,12 +68,10 @@ eempf_fits <- function(pfres){
 #' @importFrom grDevices rainbow
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
 #' eempf_plot_comps(pfres_comps)
 #' eempf_plot_comps(pfres_comps,type=2)
-#' }
 eempf_plot_comps <- function(pfres,type=1){
   #pf_fits <- cp_out
   c <- pfres %>% lapply(eempf_comp_mat)
@@ -141,12 +137,10 @@ eempf_plot_comps <- function(pfres,type=1){
 #' @seealso \code{\link[staRdom]{eempf_leverage_ident}}
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
 #' leverage <- eempf_leverage(pfres_comps[[3]])
 #' eempf_leverage_plot(leverage)
-#' }
 eempf_leverage_plot <- function(cpl,qlabel=0.1){
   breaks <- cpl$x[cpl$mode != "sample"] %>% as.numeric() %>% na.omit() %>% unique() %>% .[.%%50 == 0]
   pl <- eempf_leverage_data(cpl,qlabel=qlabel) %>%
@@ -179,12 +173,10 @@ eempf_leverage_plot <- function(cpl,qlabel=0.1){
 #' @importFrom stats setNames
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
 #' leverage <- eempf_leverage(pfres_comps[[2]])
 #' outliers <- eempf_leverage_ident(leverage)
-#' }
 eempf_leverage_ident <- function(cpl,qlabel=0.1){
   pl <- eempf_leverage_data(cpl,qlabel=qlabel) %>%
     mutate(label = ifelse(is.na(label),"",label))
@@ -208,17 +200,15 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
 #' @return ggplot
 #' @export
 #'
-#' @seealso \code{\link[staRdom]{ggeem}}, \code{\link[staRdom]{eempf_C_plot}}
+#' @seealso \code{\link[staRdom]{ggeem}}, \code{\link[staRdom]{eempf_load_plot}}
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
-#' eempf_comp_C_plot(pfres_comps[[2]][[3]])
-#'}
-eempf_comp_C_plot <- function(cp_out){
+#' eempf_comp_load_plot(pfres_comps[[2]])
+eempf_comp_load_plot <- function(cp_out){
   pl1 <- ggeem(cp_out)
-  pl2 <- eempf_C_plot(cp_out)
+  pl2 <- eempf_load_plot(cp_out)
   #pl1 %>% print()
   #pl2 %>% print()
   list(pl1,pl2)
@@ -236,14 +226,12 @@ eempf_comp_C_plot <- function(cp_out){
 #' @importFrom tibble rownames_to_column
 #'
 #' @examples
-#' \dontrun{
 #' data(pfres_comps1)
 #'
-#' eempf_C_plot(pfres_comps[[2]][[3]])
-#' }
-eempf_C_plot <- function(cp_out){
-  cp_out <- norm2C(cp_out)
-  (cp_out$C) %>%
+#' eempf_load_plot(pfres_comps[[2]])
+eempf_load_plot <- function(cp_out){
+  cp_out <- norm2A(cp_out)
+  (cp_out$A) %>%
     data.frame() %>%
     rownames_to_column("sample") %>%
     #mutate(sample = names[[3]]) %>%
@@ -323,15 +311,15 @@ eempf_comps3D <- function(cp_out,which=NULL){
 #' @importFrom GGally ggpairs
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(pfres_comps1)
-#' eempf_corplot(pfres_comps)
+#' eempf_corplot(pfres_comps[[1]])
 #' }
 #'
 eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alpha=0.2),...){
   cp_out %>%
-    norm2C() %>%
-    .$C %>%
+    norm2A() %>%
+    .$A %>%
     data.frame() %>%
     ggpairs(lower=lower,mapping=mapping,...)
 }
@@ -361,7 +349,7 @@ eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alp
 #' @importFrom grDevices rainbow
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(eem_list)
 #' data(pfres_comps1)
 #'
@@ -422,14 +410,9 @@ eempf_residuals_plot <- function(cp_out,eem_list,res_data = NULL, spp = 5, selec
 #' @seealso \code{\link[staRdom]{splithalf}}
 #'
 #' @examples
-#' \dontrun{
-#' data(eem_list)
-#' data(pfres_comps1)
-#'
-#' sh <- splithalf(eem_list,pfres_comps)
+#' data(sh)
 #'
 #' splithalf_plot(sh)
-#' }
 splithalf_plot <- function(fits){
   sel <- 0
   table <- lapply(fits,function(fit){

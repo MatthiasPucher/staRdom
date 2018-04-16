@@ -22,7 +22,7 @@ Three plots are returned:
 The plots are intended to help with a suitable number of components.
 }
 \examples{
-\dontrun{
+\donttest{
 data(pfres_comps1)
 
 eempf_compare(pfres_comps)

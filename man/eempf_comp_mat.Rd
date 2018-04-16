@@ -18,9 +18,7 @@ a list of class data frames
 The components of a PARAFAC analysis are extracted as a data frame
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 eempf_comp_mat(pfres_comps[[3]])
-}
 }

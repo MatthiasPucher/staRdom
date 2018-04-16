@@ -23,14 +23,10 @@ Sample names in eemlist can be altered.
 \code{\link[stringr]{str_replace_all}} from package stringr is used for the replacement. Please read the corresponding help for further options.
 }
 \examples{
-\dontrun{
-data(eem_list)
-
 eem_names(eem_list)
 
 eem_list <- eem_name_replace(eem_list,"sample","Sample")
 eem_names(eem_list)
-}
 }
 \seealso{
 \code{\link[stringr]{str_replace_all}}

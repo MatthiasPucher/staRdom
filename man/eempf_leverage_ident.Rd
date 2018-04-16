@@ -18,12 +18,10 @@ list of three vectors containing the names of selected samples
 Plot is interactive where you can select values with your mouse. A list of vectors is returned to remove this outliers in a further step from your samples. The labels to be shown can be selected by adding the quatile of samples with highest leverages to be labeled.
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 leverage <- eempf_leverage(pfres_comps[[2]])
 outliers <- eempf_leverage_ident(leverage)
-}
 }
 \seealso{
 \code{\link[staRdom]{eempf_leverage_plot}}

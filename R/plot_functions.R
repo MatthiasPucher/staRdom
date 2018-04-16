@@ -19,17 +19,10 @@
 #' @importFrom grDevices rainbow
 #'
 #' @examples
-#' \dontrun{
-#'
-#' ## plotting whole sample set
-#' data(eem_list)
-#' ggeem(eem_list)
-#'
 #' ## plotting one distinct sample
 #' data(eem_list)
-#' eem <- eem_extract(eem_list,c("sample54"),keep=TRUE)
+#' eem <- eem_extract(eem_list,c("sample6","sample7"),keep=TRUE)
 #' ggeem(eem)
-#' }
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
 
 #' @rdname ggeem
@@ -106,7 +99,7 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(eem_list)
 #' eem_overview_plot(eem_list,spp=3)
 #' }

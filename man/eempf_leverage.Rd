@@ -16,9 +16,7 @@ list of 3 named vectors (emission, excitation wavelengths and samples)
 Calculate the leverage of each emission and excitation wavelength and each sample
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 eempf_leverage(pfres_comps[[2]])
-}
 }

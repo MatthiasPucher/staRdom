@@ -27,10 +27,8 @@ numeric exponential slope coefficient
 Fit absorbance data to exponential curve. \code{\link[drc]{drm}} is used for the fitting process.
 }
 \examples{
-\dontrun{
 data(abs_data)
 abs_fit_slope(abs_data$wavelength,abs_data$sample1,lim=c(350,400),l_ref=350)
-}
 }
 \seealso{
 \code{\link[drc]{drm}}

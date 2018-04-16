@@ -18,10 +18,8 @@ data frame
 Combine leverages into one data frame and add optional labels.
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 leverage <- eempf_leverage(pfres_comps[[2]])
-eempf_leverage_data(leverage)
-}
+lev_data <- eempf_leverage_data(leverage)
 }

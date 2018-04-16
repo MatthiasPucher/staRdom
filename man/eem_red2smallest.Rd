@@ -19,8 +19,6 @@ Reduce wavelength range of EEM spectra to widest available in the whole sample s
 This step is neccessary to perform a PARAFAC analysis which can only be calculated with spectra of similar range.
 }
 \examples{
-\dontrun{
 data(eem_list)
 eem_red2smallest(eem_list)
-}
 }

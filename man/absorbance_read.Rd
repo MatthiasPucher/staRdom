@@ -25,10 +25,8 @@ Reading absorbance data from txt and csv files.
 If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is passed on. Tables can either contain data from one sample or from several samples in columns. The column header containig the wavelength must be either "wavelength" or "Wavelength". A multi-sample file must have sample names as column names. A single-sample file can have sample name as column name or sample name as file name and "Abs." as column name. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
 }
 \examples{
-\dontrun{
 absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
 absorbance_read(absorbance_path,sep = " ", dec = ".")
-}
 }
 \seealso{
 \code{\link[utils]{read.table}}

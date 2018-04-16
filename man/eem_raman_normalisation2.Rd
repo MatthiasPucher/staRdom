@@ -27,12 +27,10 @@ Possible values for blank:
     data frame: normalisation is done with different values for different samples. Values are taken from a data.frame with sample names as rownames and one column containing the raman area values.
 }
 \examples{
-\dontrun{
 data(eem_list)
 # correction by blank
-eems_bl <- eem_raman_normalisation2(eem_list,norm="blank")
+eems_bl <- eem_raman_normalisation2(eem_list,blank="blank")
 
 # correction by value
-eems_num <- eem_raman_normalisation2(eem_list,norm=168)
-}
+eems_num <- eem_raman_normalisation2(eem_list,blank=168)
 }

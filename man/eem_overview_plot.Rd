@@ -18,7 +18,7 @@ list of ggplots
 Plot fluorescence data from several samples split into several plots.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
 eem_overview_plot(eem_list,spp=3)
 }

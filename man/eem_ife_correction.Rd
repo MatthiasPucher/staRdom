@@ -20,10 +20,8 @@ fluorescence data of class eemlist
 Calls \code{\link[eemR]{eem_inner_filter_effect}} for each sample to use different cuvette lengths.
 }
 \examples{
-\dontrun{
 data(eem_list)
 data(abs_data)
 
 eem_ife_correction(eem_list,abs_data,5)
-}
 }

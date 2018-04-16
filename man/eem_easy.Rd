@@ -17,6 +17,10 @@ Function does not work well in Windows. You might try file.edit(system.file("EEM
 }
 \examples{
 \dontrun{
+#
 eem_easy()
+
+# this function fails very often, so you might use that:
+file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))
 }
 }

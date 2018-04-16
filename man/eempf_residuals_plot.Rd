@@ -33,7 +33,7 @@ A raster of plots is created. Each column shows one sample. The top n rows show 
 eem_list may contain samples not used for modelling. The amount of contained components are then calculated by \code{\link[stats]{optim}} (via \code{\link[staRdom]{eempf_fit_sample}}). This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
 data(pfres_comps1)
 

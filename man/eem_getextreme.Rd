@@ -16,11 +16,9 @@ list of numeric vector containing the biggest available range
 Determines the the biggest range of EEM spectrum where data is available from each sample.
 }
 \examples{
-\dontrun{
 data(eem_list)
 eem_getextreme(eem_list)
 
 eem_list <- eem_range(eem_list,ex = c(250,Inf),em = c(280,500))
 eem_getextreme(eem_list)
-}
 }

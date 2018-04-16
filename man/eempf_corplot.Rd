@@ -23,9 +23,9 @@ object of class ggplot
 A pair plot showing correlations between samples is created.
 }
 \examples{
-\dontrun{
+\donttest{
 data(pfres_comps1)
-eempf_corplot(pfres_comps)
+eempf_corplot(pfres_comps[[1]])
 }
 
 }

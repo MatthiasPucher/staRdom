@@ -25,9 +25,7 @@ A data frame containing the EEM data.
 Converting EEM data from class eem to data.frame.
 }
 \examples{
-\dontrun{
 data(eem_list)
 as.data.frame(eem_list[[1]])
 as.data.frame(eem_list[[1]],gather=FALSE)
-}
 }

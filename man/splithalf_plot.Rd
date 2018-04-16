@@ -16,14 +16,9 @@ ggplot
 Graphs of all components of all models are plotted to be compared.
 }
 \examples{
-\dontrun{
-data(eem_list)
-data(pfres_comps1)
-
-sh <- splithalf(eem_list,pfres_comps)
+data(sh)
 
 splithalf_plot(sh)
-}
 }
 \seealso{
 \code{\link[staRdom]{splithalf}}

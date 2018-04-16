@@ -52,7 +52,7 @@ Additionally other wavelength limits can be defined. The slope ratio might fail 
 For further details please refer to Helm et al. (2008).
 }
 \examples{
-\dontrun{
+\donttest{
 data(abs_data)
 abs_parms(abs_data[,1:5],5)
 abs_parms(abs_data[,1:5],5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well

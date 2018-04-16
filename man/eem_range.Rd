@@ -20,8 +20,6 @@ An eemlist of reduced spectra size.
 Cut EEM data matching a given wavelength range
 }
 \examples{
-\dontrun{
 data(eem_list)
 eem_range(eem_list,ex = c(250,Inf),em = c(280,500))
-}
 }

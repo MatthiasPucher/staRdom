@@ -16,11 +16,11 @@ list of parafac models
 When running a splithalf analysis similar components are not necessarily on the same position. This function looks for best fits with Tucker's Congruence Coefficients and returns a list of models with reordered components.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
-data(pfres_comps1)
 
-splithalf(eem_list,pfres_comps)
+# function currently only used from within splithalf
+splithalf(eem_list,6,nstart=2)
 }
 }
 \seealso{

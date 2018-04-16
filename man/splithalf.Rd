@@ -36,11 +36,10 @@ data frame containing components of the splithalf models
 The samples are split into four subsamples: A,B,C,D. Subsamples are then combined and compared: AB vs. CD, AC vs. BD, AD vs. BC. The results show graphs from the components of each of the 6 models.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
-data(pfres_comps1)
 
-splithalf(eem_list,pfres_comps)
+splithalf(eem_list,6,nstart=2)
 }
 }
 \seealso{

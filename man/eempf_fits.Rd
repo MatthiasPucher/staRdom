@@ -16,9 +16,7 @@ object of class ggplot
 Fits vs. components of PARAFAC models are plotted
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 eempf_fits(pfres_comps)
-}
 }

@@ -41,15 +41,8 @@ The data can be of different sources:
     data.frame: a data.frame containing EEM data. Can be created by e.g. \code{as.data.frame.eem}
 }
 \examples{
-\dontrun{
-
-## plotting whole sample set
-data(eem_list)
-ggeem(eem_list)
-
 ## plotting one distinct sample
 data(eem_list)
-eem <- eem_extract(eem_list,c("sample54"),keep=TRUE)
+eem <- eem_extract(eem_list,c("sample6","sample7"),keep=TRUE)
 ggeem(eem)
-}
 }

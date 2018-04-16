@@ -1,0 +1,23 @@
+#
+# Fluorescence Model
+#
+name
+creator
+email
+doi
+reference
+unit
+toolbox
+date
+fluorometer
+nSample
+constraints
+validation
+methods
+preprocess
+sources
+ecozones
+description
+#
+# Excitation/Emission (Ex, Em), wavelength (nm), component[n] (intensity)
+#

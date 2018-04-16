@@ -187,7 +187,7 @@ comps <- 6
 cp_out <- pfres_comps2[[which(comps==seq(dim_min,dim_max))]]
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-eempf_comp_C_plot(cp_out)
+eempf_comp_load_plot(cp_out)
 
 ## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
 #  eempf_comps3D(cp_out)

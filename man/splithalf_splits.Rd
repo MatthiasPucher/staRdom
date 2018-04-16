@@ -16,12 +16,6 @@ data frame containing TCC values
 Extracting a list of sample names in each subsample from a splithalf analysis
 }
 \examples{
-\dontrun{
-data(eem_list)
-data(pfres_comps1)
-
-sh <- splithalf(eem_list,pfres_comps)
-
+data(sh)
 splithalf_splits(sh)
-}
 }

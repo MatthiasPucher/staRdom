@@ -18,7 +18,7 @@ object of class eemlist with interpoleted spectra.
 Missing EEM data can be interpolated. Usually it is the result of removing scatter. It is done along each excitation wavelength. This step is recommended if you aim for a PARAFAC analysis. Interpolation is done with hermitean interpolation polynomials using \code{\link[pracma]{pchip}}.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
 
 remove_scatter <- c()

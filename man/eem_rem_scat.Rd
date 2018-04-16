@@ -25,7 +25,6 @@ eemlist
 Wrapper function to remove several scatterings in one step using \code{\link[eemR]{eem_remove_scattering}}.
 }
 \examples{
-\dontrun{
 data(eem_list)
 
 remove_scatter <- c()
@@ -36,5 +35,4 @@ remove_scatter["rayleigh2"] = TRUE
 remove_scatter_width = c(15,10,16,12)
 
 eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
-}
 }

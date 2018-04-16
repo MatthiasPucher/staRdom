@@ -16,9 +16,7 @@ data frame
 Data of wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
-maxlines(pfres_comps)
-}
+ml <- maxlines(pfres_comps[[1]])
 }

@@ -23,8 +23,6 @@ Calculate raman area of EEM samples
 Code based on \code{\link[eemR]{eem_raman_normalisation}}.
 }
 \examples{
-\dontrun{
-data(eem_list)
-eem_raman_area(eem_list)
-}
+data(blank)
+eem_raman_area(blank)
 }

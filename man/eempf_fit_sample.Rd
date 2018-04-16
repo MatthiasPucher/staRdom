@@ -30,10 +30,10 @@ Fitting amounts of components of any samples to a certain model
 For parameters concerning \code{\link[stats]{optim}} please see according help.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
 data(pfres_comps1)
 
-eempf_fit_sample(eem_list[[1]],pfres_comps[[3]])
+eem_fit <- eempf_fit_sample(pfres_comps2[[3]],eem_list[[1]])
 }
 }

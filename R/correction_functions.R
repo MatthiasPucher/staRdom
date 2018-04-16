@@ -19,7 +19,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(eem_list)
 #'
 #' remove_scatter <- c()
@@ -73,14 +73,12 @@ eem_interp <- function(data,cores = detectCores(logical = FALSE)/2){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' # correction by blank
-#' eems_bl <- eem_raman_normalisation2(eem_list,norm="blank")
+#' eems_bl <- eem_raman_normalisation2(eem_list,blank="blank")
 #'
 #' # correction by value
-#' eems_num <- eem_raman_normalisation2(eem_list,norm=168)
-#' }
+#' eems_num <- eem_raman_normalisation2(eem_list,blank=168)
 eem_raman_normalisation2 <- function(data,blank="blank"){
   #norm <- ram_data
   if(blank == "blank"){
@@ -133,12 +131,10 @@ eem_raman_normalisation2 <- function(data,blank="blank"){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' data(abs_data)
 #'
 #' eem_ife_correction(eem_list,abs_data,5)
-#' }
 eem_ife_correction <- function(data,abs_data,cuvl){
   eem_list <- data %>% lapply(function(eem1){
     if(is.data.frame(cuvl)) cl <- cuvl[eemnam,] else cl <- cuvl
@@ -169,11 +165,9 @@ eem_ife_correction <- function(data,abs_data,cuvl){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #'
 #' eem_list <- eem_dilution(eem_list,dilution=5)
-#' }
 eem_dilution <- function(data,dilution=1){
   if(((is.numeric(dilution) & length(dilution)==1) | is.data.frame(dilution)) & class(data) == "eemlist"){
     res_list <- lapply(1:length(data),function(i){
@@ -203,11 +197,9 @@ eem_dilution <- function(data,dilution=1){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #'
 #' eem_list <- eem_smooth(eem_list,n=4)
-#' }
 eem_smooth <- function(data,n = 4){
   n <- n/2
   data <- lapply(data,function(eem){
@@ -237,7 +229,6 @@ eem_smooth <- function(data,n = 4){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #'
 #' remove_scatter <- c()
@@ -248,7 +239,6 @@ eem_smooth <- function(data,n = 4){
 #' remove_scatter_width = c(15,10,16,12)
 #'
 #' eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
-#' }
 eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpolation = FALSE, cores = parallel::detectCores()/2)
 {
   if(data %>% class != "eemlist") stop("first argument has to be a list of eem samples!")
@@ -283,10 +273,8 @@ eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpol
 #' @importFrom stats setNames
 #'
 #' @examples
-#' \dontrun{
-#' data(eem_list)
-#' eem_raman_area(eem_list)
-#' }
+#' data(blank)
+#' eem_raman_area(blank)
 eem_raman_area <- function(eem_list, blanks_only = TRUE, average = FALSE){
   if(blanks_only){
     blank_names <- c("nano", "miliq", "milliq", "mq", "blank")

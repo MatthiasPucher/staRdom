@@ -18,9 +18,7 @@ fluorescence data with class eemlist
 If samples were diluted before measuring, a dilution factor has to be added to the measured data. This function can do that by either multilpying each sample with the same value or using a data frame with different values for each sample.
 }
 \examples{
-\dontrun{
 data(eem_list)
 
 eem_list <- eem_dilution(eem_list,dilution=5)
-}
 }

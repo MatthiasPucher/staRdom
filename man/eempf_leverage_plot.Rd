@@ -18,12 +18,10 @@ ggplot
 The labels to be shown can be selected by adding the quatile of samples with highest leverages to be labeled.
 }
 \examples{
-\dontrun{
 data(pfres_comps1)
 
 leverage <- eempf_leverage(pfres_comps[[3]])
 eempf_leverage_plot(leverage)
-}
 }
 \seealso{
 \code{\link[staRdom]{eempf_leverage_ident}}

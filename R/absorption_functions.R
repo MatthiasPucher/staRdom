@@ -19,10 +19,8 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
 #' absorbance_read(absorbance_path,sep = " ", dec = ".")
-#' }
 absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,...){
   if(dir.exists(absorbance_path)){
     #absorbance_path <- absorbance_dir
@@ -96,7 +94,7 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,...){
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(abs_data)
 #' abs_parms(abs_data[,1:5],5)
 #' abs_parms(abs_data[,1:5],5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
@@ -197,10 +195,8 @@ abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(abs_data)
 #' abs_fit_slope(abs_data$wavelength,abs_data$sample1,lim=c(350,400),l_ref=350)
-#' }
 abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, noMessage = TRUE),...){
   #library(minpack.lm)
   #library(nls2)

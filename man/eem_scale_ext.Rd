@@ -16,8 +16,6 @@ numeric vector
 Determine the range of fluorescence values in a set of samples
 }
 \examples{
-\dontrun{
 data(eem_list)
 eem_scale_ext(eem_list)
-}
 }

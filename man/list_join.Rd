@@ -18,7 +18,6 @@ The joint data frame.
 Full join of a list of data frames.
 }
 \examples{
-\dontrun{
 a <- data.frame(what=letters[1:5],a=c(1:5))
 b <- data.frame(what=letters[1:5],b=c(7:11))
 c <- data.frame(what=letters[1:5],c=c(20:24))
@@ -26,7 +25,6 @@ c <- data.frame(what=letters[1:5],c=c(20:24))
 df_list <- list(a,b,c)
 
 list_join(df_list,by="what")
-}
 }
 \seealso{
 \code{\link[dplyr]{full_join}}

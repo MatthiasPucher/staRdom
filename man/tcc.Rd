@@ -18,12 +18,9 @@ data.frame containing the TCCs
 Componets must be passed as peak lines \code{\link[staRdom]{maxlines}}
 }
 \examples{
-\dontrun{
-data(eem_list)
 data(pfres_comps1)
 
-ml <- maxlines(pfres_comps)
+ml <- maxlines(pfres_comps[[2]])
 
 tcc(ml)
-}
 }

@@ -16,10 +16,8 @@ array
 Normalise 3-dimensional array in first and second dimension
 }
 \examples{
-\dontrun{
 data(eem_list)
 
 a <- eem2array(eem_list)
 an <- norm_array(a)
-}
 }

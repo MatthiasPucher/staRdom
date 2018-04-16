@@ -21,7 +21,6 @@ Outliers in all modes should be avoided. With this functions excitation or emiss
 The argument exclude is a named list of three vectors. The names must be "ex", "em" and "sample". Each element contains a vector of wavelengths or sample names that are to be excluded from the data set.
 }
 \examples{
-\dontrun{
 data(eem_list)
 
 exclude <- list("ex" = c(280,285,290,295),
@@ -30,5 +29,4 @@ exclude <- list("ex" = c(280,285,290,295),
 )
 
 eem_list_ex <- eem_exclude(eem_list, exclude)
-}
 }

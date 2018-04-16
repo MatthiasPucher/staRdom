@@ -23,10 +23,10 @@ data frame with EEM residuals
 Calculate residuals of EEM data according to a certain model
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
-data(pfres_comps)
+data(pfres_comps2)
 
-eempf_residuals(pfres_comps[[3]],eem_list)
+eempf_residuals(pfres_comps2[[2]],eem_list)
 }
 }

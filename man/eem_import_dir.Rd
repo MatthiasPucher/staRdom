@@ -17,6 +17,7 @@ Reads Rdata files with one eemlist each. eemlists are combined into one and retu
 }
 \examples{
 \dontrun{
+# due to package size issues no example data is provided for this function
 eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
 }
 }

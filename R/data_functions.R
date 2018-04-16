@@ -12,7 +12,6 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' a <- data.frame(what=letters[1:5],a=c(1:5))
 #' b <- data.frame(what=letters[1:5],b=c(7:11))
 #' c <- data.frame(what=letters[1:5],c=c(20:24))
@@ -20,7 +19,6 @@
 #' df_list <- list(a,b,c)
 #'
 #' list_join(df_list,by="what")
-#' }
 list_join <- function(df_list,by){
   df <- df_list[[1]]
   for(n in 2:length(df_list)){
@@ -44,11 +42,9 @@ list_join <- function(df_list,by){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' as.data.frame(eem_list[[1]])
 #' as.data.frame(eem_list[[1]],gather=FALSE)
-#' }
 as.data.frame.eem <- function(x, row.names = NULL, optional = FALSE, ..., gather = TRUE){
   eem_d <- x$x %>% data.frame()
   colnames(eem_d) <- x$ex
@@ -83,14 +79,10 @@ as.data.frame.eem <- function(x, row.names = NULL, optional = FALSE, ..., gather
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(eem_list)
-#'
 #' eem_names(eem_list)
 #'
 #' eem_list <- eem_name_replace(eem_list,"sample","Sample")
 #' eem_names(eem_list)
-#' }
 eem_name_replace <- function(eem_list, pattern, replacement){
   eem_list <- lapply(eem_list,function(eem){
     eem$sample <- eem$sample %>%
@@ -115,10 +107,8 @@ eem_name_replace <- function(eem_list, pattern, replacement){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' eem_range(eem_list,ex = c(250,Inf),em = c(280,500))
-#' }
 eem_range <- function(data,ex = c(0,Inf),em = c(0,Inf)){
   data %>%
     eem_cut(ex = c(0,max(0,ex[1]-1)), em = c(0,max(0,em[1]-1)), exact=FALSE) %>%
@@ -135,13 +125,11 @@ eem_range <- function(data,ex = c(0,Inf),em = c(0,Inf)){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' eem_getextreme(eem_list)
 #'
 #' eem_list <- eem_range(eem_list,ex = c(250,Inf),em = c(280,500))
 #' eem_getextreme(eem_list)
-#' }
 eem_getextreme <- function(data){
   res <- lapply(c("em","ex"),function(e){
     range <- lapply(data,function(eem){
@@ -167,10 +155,8 @@ eem_getextreme <- function(data){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' eem_scale_ext(eem_list)
-#' }
 eem_scale_ext <- function(data){
   range <- lapply(data,function(eem){
     eem$x
@@ -194,10 +180,8 @@ eem_scale_ext <- function(data){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' data(eem_list)
 #' eem_red2smallest(eem_list)
-#' }
 eem_red2smallest <- function(data){
   extr <- data %>% eem_getextreme()
   cat(paste0("Samples are cut to ex from ",extr[['ex']][1]," to ",extr[['ex']][2]," and em from ",extr[['em']][1]," to ",extr[['em']][2]," \n"))
@@ -218,6 +202,7 @@ eem_red2smallest <- function(data){
 #'
 #' @examples
 #' \dontrun{
+#' # due to package size issues no example data is provided for this function
 #' eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
 #' }
 eem_import_dir <- function(dir){
@@ -250,7 +235,11 @@ eem_import_dir <- function(dir){
 #'
 #' @examples
 #' \dontrun{
+#' #
 #' eem_easy()
+#'
+#' # this function fails very often, so you might use that:
+#' file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))
 #' }
 eem_easy <- function(){
   file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))

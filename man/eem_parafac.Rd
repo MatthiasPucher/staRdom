@@ -33,16 +33,16 @@ eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE, const = c(2,
 object of class parafac
 }
 \description{
-One or more PARAFAC models can be calculated depending on the number of components. The idea is to compare the different models to get the most suitable. A-mode is emmission wavelengths, B-mode is excitation wavelengths and, C-mode is the loadings of the samples. The calculation is done with \code{\link[multiway]{parafac}}, please see details there.
+One or more PARAFAC models can be calculated depending on the number of components. The idea is to compare the different models to get the most suitable. B-mode is emmission wavelengths, C-mode is excitation wavelengths and, A-mode is the loadings of the samples. The calculation is done with \code{\link[multiway]{parafac}}, please see details there.
 }
 \examples{
-\dontrun{
+\donttest{
 data(eem_list)
 
 dim_min <- 3 # minimum number of components
 dim_max <- 7 # maximum number of components
 nstart <- 10 # random starts for PARAFAC analysis, models built simulanuously, best selected
-cores <- detectCores()/2 # use all cores but do not use all threads
+cores <- parallel::detectCores()/2 # use all cores but do not use all threads
 maxit = 500
 ctol <- 10^-4 # tolerance for parafac
 
