@@ -58,12 +58,12 @@ The data is saved in a folder accesible by `data(eem_list)`. Due to package size
 
 ## Raw absorbance data
 
-The data is saved in a folder accesible by `system.file("extdata/absorbance",package = "staRdom")`.
+The data is saved in a folder accesible by `system.file("extdata/absorbance_eemR",package = "staRdom")`.
 
 ## Additional raw data
 
 This is a table with an example of how to deal with diluted samples.
-The data is saved in a folder accesible by `system.file("extdata/metatable.csv",package = "staRdom")`.
+The data is saved in a folder accesible by `system.file("extdata/metatable_eemR.csv",package = "staRdom")`.
 
 ## Corrected EEM data
 

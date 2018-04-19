@@ -1,7 +1,7 @@
 Package: staRdom
 Type: Package
 Title: PARAFAC Analysis of EEMs from DOM
-Version: 1.0.3
+Version: 1.0.4
 Date: 2018-04-16
 Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@wcl.ac.at",
                   role = c("aut", "cre")),
@@ -47,3 +47,5 @@ Suggests:
     knitcitations
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
+URL: https://github.com/MatthiasPucher/staRdom
+BugReports: https://github.com/MatthiasPucher/staRdom/issues

@@ -50,7 +50,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
     #eem_array %>% dim()
     cl <- NULL
     if(cores > 1){
-    cl <- makeCluster(cores, type="FORK")
+    cl <- makeCluster(cores, type="PSOCK")
     clusterExport(cl, c("eem_array","comp","maxit","nstart","const","ctol","cores"), envir=environment())
     clusterEvalQ(cl, library(multiway))
     }
