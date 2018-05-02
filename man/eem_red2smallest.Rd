@@ -4,10 +4,12 @@
 \alias{eem_red2smallest}
 \title{Reduce wavelength range of EEM spectra to widest available in the whole sample set.}
 \usage{
-eem_red2smallest(data)
+eem_red2smallest(data, verbose = FALSE)
 }
 \arguments{
 \item{data}{data of EEM samples as eemlist}
+
+\item{verbose}{states whether additional information is given in the command line}
 }
 \value{
 eemlist with reduced spectral width

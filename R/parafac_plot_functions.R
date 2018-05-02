@@ -337,7 +337,7 @@ eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alp
 #' @param residuals_only plot only residuals
 #' @param cores number of cores to use for parallel processing
 #'
-#' @details eem_list may contain samples not used for modelling. The amount of contained components are then calculated by \code{\link[stats]{optim}} (via \code{\link[staRdom]{eempf_fit_sample}}). This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
+#' @details eem_list may contain samples not used for modelling. Calculation is done by \code{\link[staRdom]{A_missing}}. This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
 #'
 #' @return several ggplot objects
 #' @export

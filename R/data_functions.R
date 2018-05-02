@@ -171,6 +171,7 @@ eem_scale_ext <- function(data){
 #' Reduce wavelength range of EEM spectra to widest available in the whole sample set.
 #'
 #' @param data data of EEM samples as eemlist
+#' @param verbose states whether additional information is given in the command line
 #'
 #' @details This step is neccessary to perform a PARAFAC analysis which can only be calculated with spectra of similar range.
 #'
@@ -182,9 +183,9 @@ eem_scale_ext <- function(data){
 #' @examples
 #' data(eem_list)
 #' eem_red2smallest(eem_list)
-eem_red2smallest <- function(data){
+eem_red2smallest <- function(data,verbose=FALSE){
   extr <- data %>% eem_getextreme()
-  cat(paste0("Samples are cut to ex from ",extr[['ex']][1]," to ",extr[['ex']][2]," and em from ",extr[['em']][1]," to ",extr[['em']][2]," \n"))
+  if(verbose) cat(paste0("Samples are cut to ex from ",extr[['ex']][1]," to ",extr[['ex']][2]," and em from ",extr[['em']][1]," to ",extr[['em']][2]," \n"))
   data %>% eem_range(ex=extr[["ex"]], em=extr[["em"]])
 }
 

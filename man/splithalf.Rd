@@ -5,8 +5,8 @@
 \title{Running a Split-Half analysis on a PARAFAC model}
 \usage{
 splithalf(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE,
-  nstart = 10, cores = parallel::detectCores()/2, maxit = 10000,
-  ctol = 10^(-5), ...)
+  nstart = 10, cores = parallel::detectCores()/2, maxit = 500,
+  ctol = 10^(-5), ..., verbose = FALSE)
 }
 \arguments{
 \item{eem_list}{eemlist containing sample data}
@@ -28,6 +28,8 @@ splithalf(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE,
 \item{ctol}{Convergence tolerance (R^2 change)}
 
 \item{...}{additional parameters that are passed on to \code{\link[multiway]{parafac}}}
+
+\item{verbose}{states whether you want additional information during calculation}
 }
 \value{
 data frame containing components of the splithalf models

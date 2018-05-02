@@ -4,12 +4,14 @@
 \alias{eem_exclude}
 \title{Exclude complete wavelengths or samples form data set}
 \usage{
-eem_exclude(eem_list, exclude = list())
+eem_exclude(eem_list, exclude = list, verbose = FALSE)
 }
 \arguments{
 \item{eem_list}{object of class eemlist}
 
 \item{exclude}{list of three vectors, see details}
+
+\item{verbose}{states whether additional information is given in the command line}
 }
 \value{
 object of class eemlist

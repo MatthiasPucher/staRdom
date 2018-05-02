@@ -4,7 +4,8 @@
 \alias{A_missing}
 \title{Calculate the amount of each component for samples not involved in model building}
 \usage{
-A_missing(eem_list, cp_out, cores = parallel::detectCores(logical = FALSE)/2)
+A_missing(eem_list, cp_out, cores = parallel::detectCores(logical = FALSE)/2,
+  ...)
 }
 \arguments{
 \item{eem_list}{object of class eemlist with sample data}
@@ -12,12 +13,14 @@ A_missing(eem_list, cp_out, cores = parallel::detectCores(logical = FALSE)/2)
 \item{cp_out}{object of class parafac}
 
 \item{cores}{number of cores to use for parallel processing}
+
+\item{...}{additional arguments passed to eem_parafac}
 }
 \value{
 object of class parafac
 }
 \description{
-Samples from an eemlist that were not used in the modelling process are added as entries in the  C-modes. Values are calculated using \code{\link[stats]{optim}} (via \code{\link[staRdom]{eempf_fit_sample}}).
+Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm.
 }
 \examples{
 \donttest{

@@ -4,12 +4,10 @@
 \alias{eem2array}
 \title{Data from an eemlist is transformed into an array}
 \usage{
-eem2array(eem_list, normalise = FALSE)
+eem2array(eem_list)
 }
 \arguments{
 \item{eem_list}{object of class eemlist}
-
-\item{normalise}{logical value whether data should be normalised for each sample}
 }
 \value{
 object of class array

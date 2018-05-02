@@ -1,7 +1,5 @@
 ---
-title: |
-    | ![](staRdom384.png){width=150}
-    | PARAFAC analysis of EEM data to separate DOM components
+title: "PARAFAC analysis of EEM data to separate DOM components"
 subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
 author: "`r packageDescription('staRdom')$Maintainer`"
 date: "`r format(Sys.time(), '%B %e %Y')`"
@@ -22,6 +20,8 @@ library(knitr)
 library(kableExtra)
 cores <- 2
 ```
+
+![](staRdom384.png)
 
 # Introduction
 staRdom is a package for R `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). It is possible to do the following steps:

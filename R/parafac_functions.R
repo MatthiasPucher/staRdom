@@ -45,6 +45,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
     if(verbose) cat("EEM matrices were normalised!",fill=TRUE)
   }
   res <- lapply(comps,function(comp){
+    if(verbose) cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
     #comp <- 5
     #eem_array %>% dim()
@@ -77,7 +78,6 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
 #' @description Data matrices from EEM are combined to an array that is needed for a PARAFAC analysis.
 #'
 #' @param eem_list object of class eemlist
-#' @param normalise logical value whether data should be normalised for each sample
 #'
 #' @return object of class array
 #' @export
@@ -86,7 +86,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
 #' data(eem_list)
 #'
 #' eem2array(eem_list)
-eem2array <- function(eem_list,normalise=FALSE){
+eem2array <- function(eem_list){
   eem_matrices <- eem_list %>%
     sapply("[", "x")
 
@@ -97,11 +97,11 @@ eem2array <- function(eem_list,normalise=FALSE){
   eem_array <- array(eem_matrices %>% unlist, dim=dim_eem)
   ## set NA to 0
   eem_array[is.na(eem_array) | is.nan(eem_array)] <- 0
-  eem_array <- eem_array %>% aperm(perm = c(3,1,2))
+  eem_array <- eem_array %>% aperm(perm = c(3,1,2), resize = TRUE)
   attr(eem_array,"em") <- eem_list[[1]]$em
   attr(eem_array,"ex") <- eem_list[[1]]$ex
   attr(eem_array,"samples") <- eem_list %>% sapply("[","sample") %>% unlist()
-  attr(eem_array,"mdim") <- dim_eem
+  attr(eem_array,"mdim") <- dim(eem_array)
   #attr(eem_array,"norm_factors") <- NULL
   eem_array
 }
@@ -125,10 +125,11 @@ norm_array <- function(eem_array){
   norm_factors <- lapply(1:(dim(eem_array)[1]),function(s) {
     apply(eem_array[s,,], c(1,2), function(x) x^2) %>% sum(na.rm=TRUE)
   }) %>% unlist() / (10^7)
-  eem_array <- lapply(1:(dim(eem_array)[1]),function(s) {
-    eem_array[s,,]/norm_factors[s]
-  }) %>% unlist() %>%
-    array(dim=dim(eem_array))
+  eem_array <- eem_array / norm_factors
+  #eem_array <- lapply(1:(dim(eem_array)[1]),function(s) {
+  #  eem_array[s,,]/norm_factors[s]
+  #}) %>% unlist() %>%
+  #  array(dim=dim(eem_array))
   attr(eem_array,"norm_factors") <- norm_factors
   eem_array
 }
@@ -274,6 +275,7 @@ eempf_cortable <- function(cp_out,method="pearson",...){
 #'
 #' @param eem_list object of class eemlist
 #' @param exclude list of three vectors, see details
+#' @param verbose states whether additional information is given in the command line
 #'
 #' @details The argument exclude is a named list of three vectors. The names must be "ex", "em" and "sample". Each element contains a vector of wavelengths or sample names that are to be excluded from the data set.
 #'
@@ -289,13 +291,13 @@ eempf_cortable <- function(cp_out,method="pearson",...){
 #' )
 #'
 #' eem_list_ex <- eem_exclude(eem_list, exclude)
-eem_exclude <- function(eem_list, exclude = list()){
+eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
   ex_exclude <- exclude[["ex"]]
   em_exclude <- exclude[["em"]]
   sample_exclude <- exclude[["sample"]]
   if(!is.null(sample_exclude)){
     sample_exclude <- paste0("^",sample_exclude,"$")
-    eem_list <- eem_extract(eem_list,sample_exclude)
+    eem_list <- eem_extract(eem_list,sample_exclude,verbose=verbose)
   }
   eem_list <- lapply(eem_list,function(eem){
     #eem <- eem_list[[1]]
@@ -304,8 +306,8 @@ eem_exclude <- function(eem_list, exclude = list()){
     eem$em <- eem$em[!eem$em %in% em_exclude] #%>% length()
     eem
   })
-  if(!is.null(ex_exclude)) cat(paste0("Removed excitation wavelength(s): ",paste0(ex_exclude %>% sort(),collapse=", ")),fill=TRUE)
-  if(!is.null(em_exclude)) cat(paste0("Removed emission wavelength(s): ",paste0(em_exclude %>% sort(),collapse=", ")),fill=TRUE)
+  if(!is.null(ex_exclude) & verbose) cat(paste0("Removed excitation wavelength(s): ",paste0(ex_exclude %>% sort(),collapse=", ")),fill=TRUE)
+  if(!is.null(em_exclude) & verbose) cat(paste0("Removed emission wavelength(s): ",paste0(em_exclude %>% sort(),collapse=", ")),fill=TRUE)
   class(eem_list) = "eemlist"
   eem_list
 }
@@ -327,21 +329,19 @@ eem_exclude <- function(eem_list, exclude = list()){
 #'
 #' ml <- maxlines(pfres_comps[[1]])
 maxlines <- function(cp_out){
-  mat <- cp_out %>% eempf_comp_mat()
-  maxl <- lapply(mat %>% names(), function(na){
-    mat[[na]] %>% mutate(comp = na)
+  #cp_out <- pfres_comps[[2]]
+  maxl <- lapply(colnames(cp_out$C),function(comp){
+    #comp <- colnames(cp_out$C)[1]
+    em = (cp_out$B[,comp]*max(cp_out$C[,comp])) %>%
+      data.frame(e="em", wavelength = as.numeric(names(.)),value=.)
+    ex = (cp_out$C[,comp]*max(cp_out$B[,comp])) %>%
+      data.frame(e="ex", wavelength = as.numeric(names(.)),value=.)
+    res <- bind_rows(em,ex) %>%
+      setNames(c("e","wavelength",comp))
   }) %>%
-    bind_rows() %>%
-    mutate(ex = as.numeric(ex), em= as.numeric(em)) %>%
-    group_by(comp) %>%
-    filter(em == em[which.max(value)] | ex == ex[which.max(value)]) %>%
-    mutate(em2 = em, em = ifelse(ex != ex[which.max(value)],NA,em),ex = ifelse(em2 != em2[which.max(value)],NA,ex)) %>%
-    select(-em2) %>%
-    ungroup() %>%
-    gather(e,wavelength,em,ex) %>%
-    filter(!is.na(wavelength)) %>%
-    spread(comp,value)
+    list_join(by=c("e","wavelength"))
 }
+
 
 #' Calculate residuals of EEM data according to a certain model
 #'
@@ -411,11 +411,12 @@ eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detec
 
 #' Calculate the amount of each component for samples not involved in model building
 #'
-#' Samples from an eemlist that were not used in the modelling process are added as entries in the  C-modes. Values are calculated using \code{\link[stats]{optim}} (via \code{\link[staRdom]{eempf_fit_sample}}).
+#' Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm.
 #'
 #' @param eem_list object of class eemlist with sample data
 #' @param cp_out object of class parafac
 #' @param cores number of cores to use for parallel processing
+#' @param ... additional arguments passed to eem_parafac
 #'
 #' @return object of class parafac
 #' @export
@@ -431,63 +432,25 @@ eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detec
 #'
 #' A_missing(eem_list,pfres_comps2[[3]])
 #' }
-A_missing <- function(eem_list,cp_out,cores = parallel::detectCores(logical = FALSE)/2){
+A_missing <- function(eem_list,cp_out,cores = parallel::detectCores(logical = FALSE)/2,...){
+  #data("pfres_comps2")
+  #data("eem_list")
+  #cores=2
+  #cp_out <- pfres_comps2[[2]]
 
-  cl <- makeCluster(spec = cores, type = "PSOCK")
-  registerDoParallel(cl)
+  eem_list <- eem_red2smallest(eem_list)
 
-  cp_out$A <- foreach(eem = eem_list) %dopar% {
-    if(eem$sample %in% rownames(cp_out$A)){
-      cp_out$A[eem$sample,]
-    } else {
-      eempf_fit_sample(cp_out,eem)
-    }
-  } %>%
-    do.call(rbind,.)
+  exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(cp_out$C))],
+                  "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(cp_out$B))],
+                  "sample" = c()
+  )
 
-  stopCluster(cl)
+  x <- eem_list %>%
+    eem_exclude(exclude)
 
-  rownames(cp_out$A) <- eem_names(eem_list)
-  cp_out
-}
+  missingAs <- eem_parafac(x,comps = cp_out$A %>% ncol(),normalise = (!is.null(attr(cp_out,"norm_factors"))),Bfixed = cp_out$B, Cfixed = cp_out$C,cores = cores,control = cp_out$control, const = c(cp_out$const[1],0,0),...)
 
-#' Fitting amounts of components of any samples to a certain model
-#'
-#' @param cp_out parafac model
-#' @param eem eem to be fitted
-#' @param control control parameters passed to \code{\link[stats]{optim}}
-#' @param method method used in \code{\link[stats]{optim}}
-#' @param lower lower boundaries in \code{\link[stats]{optim}}, amount of a component should not be negative
-#' @param ... other parmeters passed on to \code{\link[stats]{optim}}
-#'
-#' @return vector containing amounts of components
-#' @details For parameters concerning \code{\link[stats]{optim}} please see according help.
-#'
-#' @export
-#'
-#' @importFrom stats optim
-#' @import dplyr
-#' @import tidyr
-#'
-#' @examples
-#' \donttest{
-#' data(eem_list)
-#' data(pfres_comps1)
-#'
-#' eem_fit <- eempf_fit_sample(pfres_comps2[[3]],eem_list[[1]])
-#' }
-eempf_fit_sample <- function(cp_out,eem,control=list(maxit = 10^3), method="L-BFGS-B", lower = rep(0,comps),...){
-  #eem <- eem_list[[3]]
-  comp_mat <- cp_out %>% eempf_comp_mat(gather=FALSE)
-  pf <- function(x) {
-    a <- lapply(1:length(x), function(p) comp_mat[[p]] * x[p]) %>%
-      Reduce('+',.)
-    return(sum((a - eem$x[eem$em %in% rownames(cp_out$B),eem$ex %in% rownames(cp_out$C)])^2))
-  }
-  comps <- length(comp_mat)
-  res <- optim(par=rep(0,comps),pf, control=list(maxit = 10^3), method="L-BFGS-B", lower = rep(0,comps),...)
-  names(res$par) <- paste0("Comp.",1:comps)
-  res$par
+  missingAs[[1]]
 }
 
 #' Running a Split-Half analysis on a PARAFAC model
@@ -503,6 +466,7 @@ eempf_fit_sample <- function(cp_out,eem,control=list(maxit = 10^3), method="L-BF
 #' @param cores number of parallel calculations (e.g. number of physical cores in CPU)
 #' @param maxit maximum iterations for PARAFAC algorithm
 #' @param ctol Convergence tolerance (R^2 change)
+#' @param verbose states whether you want additional information during calculation
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
 #'
 #' @return data frame containing components of the splithalf models
@@ -520,7 +484,7 @@ eempf_fit_sample <- function(cp_out,eem,control=list(maxit = 10^3), method="L-BF
 #'
 #' splithalf(eem_list,6,nstart=2)
 #' }
-splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=10,cores=parallel::detectCores()/2,maxit=10000,ctol = 10^(-5),...){
+splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=10,cores=parallel::detectCores()/2,maxit=500,ctol = 10^(-5),...,verbose =FALSE){
   a <- seq(1,eem_list %>% length())
   if(rand){
     a <- a %>% sample()
@@ -531,8 +495,8 @@ splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=
     eem_list %>% eem_extract(splits[co] %>% unlist() %>% sort(),keep=TRUE, verbose=FALSE)
 
   })
-
-  fits <- lapply(spl_eems,function(array) eem_parafac(array,comps=comps,normalise = normalise,maxit=maxit,nstart = nstart, cores = cores,ctol = ctol,...))
+  if(verbose) cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
+  fits <- lapply(spl_eems,function(eem){eem_parafac(eem,comps=comps,normalise = normalise,maxit=maxit,nstart = nstart, cores = cores,ctol = ctol,verbose=verbose,...)}) #
 
   reallign <- tcc_find_pairs(fits)
 

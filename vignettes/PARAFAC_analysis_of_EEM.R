@@ -210,26 +210,3 @@ eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[10:14], core
 eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[c(10,11,13:16)], residuals_only = TRUE, cores = cores, spp = 6)
 
 
-## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=8------------------
-# plot components in each sample, residual and whole sample
-eempf_residuals_plot(cp_out, eem_list, select = c("sample12","sample17"), residuals_only = TRUE, cores = cores, spp = 6)
-
-
-## ----eval=FALSE, include=TRUE--------------------------------------------
-#  #calculate split_half analysis
-#  sh <- splithalf(eem_list_ex, comps, normalise = TRUE, rand = FALSE, cores = cores)
-
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-data(sh)
-
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-splithalf_plot(sh)
-
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-tcc_sh_table <- splithalf_tcc(sh)
-
-tcc_sh_table
-
-## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
-write.bibtex(file="references2.bib")
-

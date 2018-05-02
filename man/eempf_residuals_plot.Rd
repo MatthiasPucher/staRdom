@@ -30,7 +30,7 @@ several ggplot objects
 A raster of plots is created. Each column shows one sample. The top n rows show the n components from the model according their occurance in the certain samples. The second last row shows the residual, not covered by any component in the model and the last row shows the whole sample.
 }
 \details{
-eem_list may contain samples not used for modelling. The amount of contained components are then calculated by \code{\link[stats]{optim}} (via \code{\link[staRdom]{eempf_fit_sample}}). This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
+eem_list may contain samples not used for modelling. Calculation is done by \code{\link[staRdom]{A_missing}}. This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
 }
 \examples{
 \donttest{

@@ -1,7 +1,5 @@
 ---
-title: |
-    | ![](staRdom384.png){width=150}
-    | Correcting raw data, Calculating peaks and indices in EEMS and absorbance (slope) parameters
+title: "Correcting raw data, Calculating peaks and indices in EEMS and absorbance (slope) parameters"
 subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
 author: "`r packageDescription('staRdom')$Maintainer`"
 date: "`r format(Sys.time(), '%B %e %Y')`"
@@ -18,6 +16,8 @@ cleanbib()
 options("citation_format" = "pandoc")
 bibliography() #style="apalike"
 ```
+
+![](staRdom384.png){width=150}
 
 # Introduction
 staRdom is a package for R `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:

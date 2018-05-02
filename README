@@ -1,0 +1,27 @@
+staRdom is a package for R to analyse fluorescence and absorbance data of dissolved organic matter (DOM). It is possible to do the following steps:
+
+* correcting excitation-emission-matrices (EEM, doi:10.1039/c3ay41160e, partly done with eemR)
+* calculating fluorescence peaks and indices (done with eemR)
+    * biological index (bix, doi:10.1016/j.orggeochem.2009.03.002)
+    * so-called Coble-peaks (b,	t, a,	m, c, `r citet("10.1016/0304-4203(95)00062-3")`)
+    * fluorescence index (fi, doi:10.4319/lo.2001.46.1.0038)
+    * humification index (hix, doi:10.1021/es0155276)
+* absorbance slope parameters (a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR, doi:10.4319/lo.2008.53.3.0955, doi:10.1016/j.marchem.2004.02.008)
+* PARAFAC/CANDECOMP analysis can separate the components of the EEMs that can be linked to chemical components in DOM (doi:10.1039/c3ay41160e).
+
+staRdom was developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (http://www.boku.ac.at/).
+
+The analysis process was already discussed in other papers and tutorials. The aim of this package was to bring a familiar way of using PARAFAC analysis for DOM to the R platform. The offered functions follow the concept of doi:10.1039/c3ay41160e. Reading it is recommended and can help your understanding!
+
+
+
+Changelog:
+1.0.3 to 1.0.5:
+  corrected severe bug in eem2array
+  corrected severe bug in norm_array
+  eem_parafac: bug in Windows multi core calculation corrected
+  A_missing computation time improved
+  maxlines computation time improved
+  help imporved on some topics
+  vaulty demo data sh corrected
+  added README
