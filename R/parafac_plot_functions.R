@@ -73,7 +73,7 @@ eempf_fits <- function(pfres){
 #' eempf_plot_comps(pfres_comps)
 #' eempf_plot_comps(pfres_comps,type=2)
 eempf_plot_comps <- function(pfres,type=1){
-  #pf_fits <- cp_out
+  #pf_fits <- pfmodel
   c <- pfres %>% lapply(eempf_comp_mat)
   tab <- lapply(c,function(c1){
     nc1 <- length(c1)
@@ -195,7 +195,7 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
 #'
 #' @description Additionally a bar plot with the amounts of each component in each sample is produced.
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #'
 #' @return ggplot
 #' @export
@@ -206,9 +206,9 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
 #' data(pfres_comps1)
 #'
 #' eempf_comp_load_plot(pfres_comps[[2]])
-eempf_comp_load_plot <- function(cp_out){
-  pl1 <- ggeem(cp_out)
-  pl2 <- eempf_load_plot(cp_out)
+eempf_comp_load_plot <- function(pfmodel){
+  pl1 <- ggeem(pfmodel)
+  pl2 <- eempf_load_plot(pfmodel)
   #pl1 %>% print()
   #pl2 %>% print()
   list(pl1,pl2)
@@ -217,7 +217,7 @@ eempf_comp_load_plot <- function(cp_out){
 
 #' Plot amount of each component in each sample as bar plot
 #'
-#' @param cp_out parafac model
+#' @param pfmodel parafac model
 #'
 #' @return ggplot
 #' @export
@@ -229,9 +229,9 @@ eempf_comp_load_plot <- function(cp_out){
 #' data(pfres_comps1)
 #'
 #' eempf_load_plot(pfres_comps[[2]])
-eempf_load_plot <- function(cp_out){
-  cp_out <- norm2A(cp_out)
-  (cp_out$A) %>%
+eempf_load_plot <- function(pfmodel){
+  pfmodel <- norm2A(pfmodel)
+  (pfmodel$A) %>%
     data.frame() %>%
     rownames_to_column("sample") %>%
     #mutate(sample = names[[3]]) %>%
@@ -245,7 +245,7 @@ eempf_load_plot <- function(cp_out){
 #'
 #' @description Interactive 3D plots are created using plotly.
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #' @param which optional, if numeric selects certain component
 #'
 #' @return plotly plot
@@ -264,8 +264,8 @@ eempf_load_plot <- function(cp_out){
 #'
 #' eempf_comps3D(pfres_comps[[3]])
 #' }
-eempf_comps3D <- function(cp_out,which=NULL){
-  data <- cp_out %>% eempf_comp_mat()
+eempf_comps3D <- function(pfmodel,which=NULL){
+  data <- pfmodel %>% eempf_comp_mat()
   z <- lapply(data,function(mat){
     #mat <- data[[1]]
     mat %>%
@@ -299,7 +299,7 @@ eempf_comps3D <- function(cp_out,which=NULL){
 #'
 #' @description A pair plot showing correlations between samples is created.
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #' @param lower style of lower plots, see \code{\link[GGally]{ggpairs}}
 #' @param mapping aesthetic mapping, see \code{\link[GGally]{ggpairs}}
 #' @param ... passed on to \code{\link[GGally]{ggpairs}}
@@ -316,8 +316,8 @@ eempf_comps3D <- function(cp_out,which=NULL){
 #' eempf_corplot(pfres_comps[[1]])
 #' }
 #'
-eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alpha=0.2),...){
-  cp_out %>%
+eempf_corplot <- function(pfmodel,lower=list(continuous="smooth"),mapping=aes(alpha=0.2),...){
+  pfmodel %>%
     norm2A() %>%
     .$A %>%
     data.frame() %>%
@@ -329,7 +329,7 @@ eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alp
 #' @description  A raster of plots is created. Each column shows one sample. The top n rows show the n components from the model according their occurance in the certain samples. The second last row shows the residual, not covered by any component in the model and the last row shows the whole sample.
 #'
 #'
-#' @param cp_out object of class parafac containing the generated model
+#' @param pfmodel object of class parafac containing the generated model
 #' @param eem_list object of class eemlist with all the samples that should be plotted
 #' @param res_data optional, data of sample residuals related to the model, output from \code{\link[staRdom]{eempf_residuals}}
 #' @param spp optional, samples per plot
@@ -356,10 +356,10 @@ eempf_corplot <- function(cp_out,lower=list(continuous="smooth"),mapping=aes(alp
 #' eempf_residuals_plot(pfres_comps[[3]],eem_list)
 #' }
 #'
-eempf_residuals_plot <- function(cp_out,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE)/2){
-  #cp_out,eem_list,select=eem_names(eem_list)[10:19]
+eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE)/2){
+  #pfmodel,eem_list,select=eem_names(eem_list)[10:19]
   if(is.null(res_data)){
-    res_data <- eempf_residuals(cp_out,eem_list,select=select,cores = cores)
+    res_data <- eempf_residuals(pfmodel,eem_list,select=select,cores = cores)
   }
   if (!is.null(select)){
     res_data <- res_data %>% filter(Sample %in% select)
@@ -451,3 +451,59 @@ splithalf_plot <- function(fits){
     theme(legend.position="none")
   pl1 %>% print()
 }
+
+
+#' Create a html report of a PARAFAC analysis
+#'
+#' @param pfmodel PARAFAC model
+#' @param export path to exported html file
+#' @param eem_list optional EEM data
+#' @param absorbance optional absorbance data
+#' @param meta optional meta data table
+#' @param metacolumns optional column names of metadata table
+#' @param splithalf optional logical, states whether split-half analysis should be included
+#' @param shmodel optional results from split-half analysis. If this data is not supplied but EEM data is available the split-half analysis is calculated on the creation of the report. Calculating the split-half analysis takes some time!
+#' @param performance calculating model performance: \code{\link[staRdom]{eempf_eemqual}}
+#' @param residuals logical, whether residuals are plotted in the report
+#' @param spp plots per page for loadgins and residuals plot
+#' @param ... arguments to or from other functions
+#'
+#' @return TRUE if report was created
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' ## no test yet
+#' }
+eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, meta = NULL, metacolumns = NULL, splithalf = FALSE, shmodel = NULL, performance = FALSE, residuals = FALSE, spp = 5, ...){
+  #shmodel <- sh
+  # rm(shmodel)
+  #splithalf = TRUE
+  rmdfile <- system.file("PARAFAC_report.Rmd",package="staRdom")
+  export <- "~/res.htm"
+  dir <- dirname(export)
+  file <- basename(export)
+  if(splithalf | performance){
+    if(!is.null(eem_list) & is.null(shmodel)){
+      splithalf <- splithalf(eem_list, comps = ncol(pfmodel$A), normalise = !is.null(attr(pfmodel,"norm_factors")),...)
+      tcc <- splithalf_tcc(shmodel)
+    } else if (!is.null(shmodel)){
+      splithalf <- shmodel
+      tcc <- splithalf_tcc(shmodel)
+    } else {
+      tcc <- NULL
+      warning("Split-half analysis and/or model performance could not be incorporated due to missing EEM data or an already calculated split-half analysis.",fill=TRUE)
+    }
+  }
+  if(performance){
+    if(!is.null(eem_list)){
+      performance <- eempf_eemqual(pfmodel,eem_list,splithalf)
+    } else{
+      warning("For a performance calculation, EEM data is needed!")
+    }
+  }
+  imgwidth <- nrow(pfmodel$A)/8
+  rmarkdown::render(rmdfile, output_file = file, output_dir = dir, params = list(pfmodel = pfmodel, eem_list = eem_list, absorbance = absorbance, meta = meta, tcc = tcc, metacolumns = metacolumns, splithalf = splithalf, performance = performance, residuals = residuals, spp = spp, imgwidth = imgwidth))
+  TRUE
+}
+

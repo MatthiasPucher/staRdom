@@ -4,10 +4,10 @@
 \alias{maxlines}
 \title{Extract data from emission and excitation wavelengths of the components of a PARAFAC model}
 \usage{
-maxlines(cp_out)
+maxlines(pfmodel)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 }
 \value{
 data frame

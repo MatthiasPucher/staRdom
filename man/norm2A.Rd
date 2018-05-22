@@ -4,10 +4,10 @@
 \alias{norm2A}
 \title{Compensate for normalisation in C-modes}
 \usage{
-norm2A(cp_out)
+norm2A(pfmodel)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 }
 \value{
 object of class parafac

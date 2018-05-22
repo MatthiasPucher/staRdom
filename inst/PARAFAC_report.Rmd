@@ -1,0 +1,132 @@
+---
+title: "PARAFAC report"
+author: "staRdom"
+date: "`r format(Sys.time(), '%B %e %Y')`"
+output: 
+  html_document:
+    df_print: paged
+    number_sections: yes
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    code_folding: hide
+---
+This report was created using the R package staRdom version `r packageVersion("staRdom")`, (`r packageDescription("staRdom")$Author`, `r unlist(strsplit(packageDescription("staRdom")$Date,"-"))[1]`)
+
+# Model summary
+
+```{r}
+pfmodel
+```
+
+
+# Results
+
+## Components 
+
+```{r fig.width=10, fig.height=6}
+comp_load <- eempf_comp_load_plot(pfmodel)
+comp_load[[1]]
+```
+
+## Loadings
+
+```{r fig.width=10, fig.height=6}
+comp_load[[2]]
+
+if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
+  pfmodel$A %>%
+    kable(format = "html", booktabs = T) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) #%>%
+  #kable_styling(font_size = 5) %>%
+  #row_spec(0, angle = -45) #%>%
+  #landscape()
+} else {
+  pfmodel$A
+}
+```
+
+# Data summary
+
+```{r}
+if(!is.null(eem_list)){
+  if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
+    eem_list %>%
+      summary() %>%
+      kable(format = "html", booktabs = T) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) #%>%
+    #kable_styling(font_size = 5) %>%
+    #row_spec(0, angle = -45) #%>%
+    #landscape()
+  } else {
+    eem_list %>%
+      summary()
+  } } else{
+    cat("Due to missing EEM data this check was skipped!", fill=TRUE)
+  }
+```
+
+# Model performance
+
+```{r}
+if(performance != FALSE){
+  performance
+} else {
+  cat("Performance test was skipped.")
+}
+```
+
+# Leverage of samples and wavelengths
+
+```{r fig.width=12, fig.height=6}
+cpl <- eempf_leverage(pfmodel)
+eempf_leverage_plot(cpl)
+```
+
+
+# Check input data
+
+```{r}
+if(!is.null(eem_list) & !is.null(abs_data)){
+  eem_checkdata(eem_list,abs_data,meta,metacolumns = metacolumns, error = FALSE)
+} else {
+  cat("Due to missing EEM and absorbance data this check was skipped!", fill=TRUE)
+}
+```
+
+# Split-half analysis
+```{r}
+if(class(sh) == "list" & class(sh[[1]][[1]]) == "parafac"){
+  if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
+    tcc %>%
+      kable(format = "html", booktabs = T) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) #%>%
+    #kable_styling(font_size = 5) %>%
+    #row_spec(0, angle = -45) #%>%
+    #landscape()
+  } else {
+    tcc
+  }
+}
+```
+
+```{r fig.width=10, fig.height=6}
+if(class(sh) == "list" & class(sh[[1]][[1]]) == "parafac"){
+  splithalf_plot(splithalf)
+} else {
+  cat("Split-half analysis was skipped.", fill=TRUE)
+}
+```
+
+# Sample loadings and residuals
+
+```{r fig.width=10, fig.height=6}
+if(residuals){
+  eempf_residuals_plot(pfmodel,eem_list,spp=spp)
+} else {
+  cat("Plotting loadings and residuals was skipped.", fill=TRUE)
+}
+```
+
+
+

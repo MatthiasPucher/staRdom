@@ -37,6 +37,9 @@ data frame containing components of the splithalf models
 \description{
 The samples are split into four subsamples: A,B,C,D. Subsamples are then combined and compared: AB vs. CD, AC vs. BD, AD vs. BC. The results show graphs from the components of each of the 6 models.
 }
+\details{
+Split data sets can be split suboptimal and cause low TCCs. Therefore, subsamples are recombined in 3 different ways and a TCC close to 1 in only one split combination per component is already a positive result. Check the split sets to check for sample independency.
+}
 \examples{
 \donttest{
 data(eem_list)

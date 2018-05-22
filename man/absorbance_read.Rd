@@ -13,10 +13,10 @@ absorbance_read(absorbance_path, order = TRUE, recursive = TRUE, ...)
 
 \item{recursive}{read files recursive, include subfolders}
 
-\item{...}{additional arguments that are passed on to \code{\link[utils]{read.table}}.}
+\item{...}{additional arguments that are passed on to \code{\link[data.table]{fread}}.}
 }
 \value{
-A data frame containing absorbance data
+A data frame containing absorbance data. An attribute "location" contains the filenames where each sample was taken from.
 }
 \description{
 Reading absorbance data from txt and csv files.
@@ -26,8 +26,8 @@ If absorbance_path is a directory, contained files that end on "csv" or "txt" ar
 }
 \examples{
 absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
-absorbance_read(absorbance_path,sep = " ", dec = ".")
+absorbance_read(absorbance_path)
 }
 \seealso{
-\code{\link[utils]{read.table}}
+\code{\link[data.table]{fread}}
 }

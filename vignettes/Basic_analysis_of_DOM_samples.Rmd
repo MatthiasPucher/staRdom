@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-```{r, message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 library(knitcitations)
 cleanbib()
 options("citation_format" = "pandoc")
@@ -69,7 +69,7 @@ knit: (function(inputFile, encoding) {
 
 In case you want to run the code chunk-wise, you need to specify the output folder on line 45.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 # Set the directory where all output files are put in.
 # The directory is automatically created if it does not exist.
 output_dir = "C:/some_folder/another_folder" # e.g. output_dir = "C:/some_folder/output/"
@@ -83,7 +83,7 @@ Please be sure to have similarly named samples in fluorometer data, photometer d
 
 The parameter sample_dir specifies the directory where your data files from the fluorometer are. They have to be a text format (Cary Eclipse .csv files, Aqualog .dat files, Shimadzu .TXT files, Fluoromax-4 .dat files) (details at [eem_read()](https://www.rdocumentation.org/packages/eemR/versions/0.1.5/topics/eem_read)). Samples can be stored in subfolders as well. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Directory containing EEM data ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set the directory with your sample files. Please see eem_read() help for details on file formats.
@@ -96,9 +96,9 @@ sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/i
 
 ### Photometer data (absorbance)
 
-Absorbance data needed for inner-filter-effect correction and the calculation of the slope parameters is taken from the folder specified with `absorbance_dir`. The filenames must be identical to the EEM files to link results from one distinct sample. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. For the calculations the cuvette length (in cm) used in the photometer has to be set. Furthermore, you can specify the cell separator and decimal point of you data files.
+Absorbance data needed for inner-filter-effect correction and the calculation of the slope parameters is taken from the folder specified with `absorbance_dir`. The filenames must be identical to the EEM files to link results from one distinct sample. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. For the calculations the cuvette length (in cm) used in the photometer has to be set.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Absorbance data ###
 #~~~~~~~~~~~~~~~~~~~~~#
 # Absorbance data is read from *.TXT or *.CSV files.
@@ -112,16 +112,13 @@ absorbance_dir = "C:/some_folder/input/absorbance/" # e.g. absorbance_dir = "C:/
 # Cuvette length in cm that was used in absorbance measurement.
 # If it is set to "meta" data from the metadata table is used (details see below).
 absorbance_cuv_len = 5 # e.g. absorbance_cuv_len = 5
-
-# separator and decimal point of absorbance data tables (tab is coded as "\t")
-abs_sep_dec = c(",",".") # e.g. abs_sep_dec = c("\t",".")
 ```
 
 ### Meta data
 
-In case your samples are diverse and you need differing parameters you can set distinct dilution factors, photometer cuvette lengths and raman areas in a table for each sample. You can skip that if your dilution factors and your cuvette lengths are similar and you used blank samples for calculating the raman area. Furthermore, you can specify the cell separator and decimal point of you data files. If your values are identic for all samples you can skip that and add the numbers as described below.
+In case your samples are diverse and you need differing parameters you can set distinct dilution factors, photometer cuvette lengths and raman areas in a table for each sample. You can skip that if your dilution factors and your cuvette lengths are similar and you used blank samples for calculating the raman area. If your values are identic for all samples you can skip that and add the numbers as described below.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Meta data ###
 #~~~~~~~~~~~~~~~#
 # Adding a table with meta data is OPTIONAL!
@@ -133,9 +130,6 @@ In case your samples are diverse and you need differing parameters you can set d
 # read table with metadata as *.TXT or *.CSV
 # either a path or FALSE if no metadata file is used.
 metadata = system.file("extdata/metatable.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv"
-
-# separator and decimal point of metadata table ("\t" is for tab).
-meta_sep_dec = c(" ",".") # e.g. meta_sep_dec = c("\t",".")
 
 ### Meta data: names of columns ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -161,7 +155,7 @@ col_raman_area = "raman"
 
 If you want to export your picked peaks and slope parameters as a table, set the parameter below `TRUE`. Exporting XLS files needs a properly configured Java environment. If any problems are encountered, a CSV is written to your output directory instead and can be opened with spreadsheet software like MS Excel as well. Furthermore, you can specify the cell separator and decimal point of you data files. 
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Table output ###
 #~~~~~~~~~~~~~~~~~~#
 # Write a table with peaks and slope parameters.
@@ -180,7 +174,7 @@ The script offers several options for exporting plots. The parameter `scale_col`
 
 With the parameters `overview` and `single_plots` these plots can be included in the report.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Plot settings PNG ###
 #~~~~~~~~~~~~~~~~~~~~~~~#
 # The scaling of the different sample plots can be chosen.
@@ -217,7 +211,7 @@ Raw data from fluorometers bears several shortcomings. `r citet("10.1039/c3ay411
 
 If samples were diluted before analysis the dilution factor can be set here and the sample will be accordingly corrected. As an example a dilution factor of 10 means a 1:10 dilution (1 part sample and 9 parts milliq). By setting `dilution = "meta"`, data from the meta table is taken and each sample can be diluted differently.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Correction of diluted samples ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a dilution factor if your sample was diluted.
@@ -232,7 +226,7 @@ dilution = "meta" # e.g. 1
 
 EEM data can be cut in both dimensions. Peaks are calculated before the reduction. Cut ranges are set with vectors containing the upper and lower limits: `c(lower,upper)`. If you want to avoid any cutting, set the vectors to `c(0,Inf)`. `Inf` means infinity, so the script keeps data from 0 to infinity. The script also allows to cut all samples to the size of the sample with the shortest range which is neccessary if you want to perform a PARAFAC analysis.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Cut data to certain range ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a vector with range of wavelengths to be plotted and saved.
@@ -251,7 +245,7 @@ cut_range_to_smallest = FALSE # e.g. FALSE
 
 Blank samples are data from measuring simple milli-Q. Systematic biases can be removed by substracting the blank sample from each sample and the raman normalisation factor is calculated from blanks. The blank sample has to contain nano, miliq, milliq, mq or blank (cases are ignored) in the file name in the same directory as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It has to be measured with each sample set (e.g. once a day) `r citep("10.1039/c3ay41160e")`.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Blank correction ###
 #~~~~~~~~~~~~~~~~~~~~~~#
 # A blank sample is substracted from each sample. Blank samples have to be
@@ -266,7 +260,7 @@ blank_correction = FALSE # e.g. FALSE
 
 Per sample absorbance data has to be measured to use the inner-filter-effects correction described in `r citet("10.4319/lom.2013.11.616")`. You can define if you want this step to be done here. Absorbance data must be available to do this step.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Inner filter effect correction ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Inner filter effects are corrected. Absorbance data is needed. File or column names
@@ -282,7 +276,7 @@ The width of the removed scatter slot can be determined. Make sure not to loose 
 
 `r citet("10.1002/cem.978")` and `r citet("10.1016/j.marchem.2004.02.006")` suggest an interpolation of the removed scattering and offer a description.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Remove scattering and interpolate missing data ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Scattering is removed from the EEM spectra.
@@ -314,7 +308,7 @@ interpolation <- TRUE # e.g. TRUE
 
 Raman normalisation can be done in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation `r citep("10.1366/000370209788964548")` or you give a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Raman normailsation ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~#
 # State whether a Raman normalisation should be performed
@@ -332,7 +326,7 @@ raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
 
 For calculating the peaks the EEMs can be smoothed (citation missing). Peaks and indices are calculated from smoothed EEMs but they are not saved.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 ### Smooth data for peak picking ###
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Moving window size for smoothing data along excitation wavelengths.
@@ -345,7 +339,7 @@ smooth = 4 # e.g. FALSE, 4
 
 If you reach the box below in the template, all parameters are set and you can finally run the analysis.
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 #############################################
 #                                           #
 #       THERE ARE NO SETTINGS BELOW.        #
@@ -421,7 +415,7 @@ https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizar
 Be sure the specified hardware existis on your system (e.g. C:/) and you have wirte access. Please also refer to "I have problems running the code chunks one after the other".
 
 # References
-```{r, message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 write.bibtex(file="references.bib")
 ```
 

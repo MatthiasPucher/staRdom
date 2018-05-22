@@ -4,11 +4,11 @@
 \alias{eempf_residuals}
 \title{Calculate residuals of EEM data according to a certain model}
 \usage{
-eempf_residuals(cp_out, eem_list, select = NULL,
+eempf_residuals(pfmodel, eem_list, select = NULL,
   cores = parallel::detectCores(logical = FALSE)/2)
 }
 \arguments{
-\item{cp_out}{PARAFAC model of class parafac}
+\item{pfmodel}{PARAFAC model of class parafac}
 
 \item{eem_list}{eemlist containing EEM data}
 

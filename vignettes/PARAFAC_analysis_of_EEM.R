@@ -22,10 +22,13 @@ eem_list <- eem_read(folder)
 ggeem(eem_list)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-data("absorbance")
+data(absorbance)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1)
+
+## ----eval=TRUE, include=TRUE---------------------------------------------
+eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 eem_list <- eem_name_replace(eem_list,c("\\(FD3\\)"),c(""))
@@ -209,4 +212,27 @@ eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[10:14], core
 # plot components in each sample, residual and whole sample
 eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[c(10,11,13:16)], residuals_only = TRUE, cores = cores, spp = 6)
 
+
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=8------------------
+# plot components in each sample, residual and whole sample
+eempf_residuals_plot(cp_out, eem_list, select = c("sample12","sample17"), residuals_only = TRUE, cores = cores, spp = 6)
+
+
+## ----eval=FALSE, include=TRUE--------------------------------------------
+#  #calculate split_half analysis
+#  sh <- splithalf(eem_list_ex, comps, normalise = TRUE, rand = FALSE, cores = cores)
+
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+data(sh)
+
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+splithalf_plot(sh)
+
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+tcc_sh_table <- splithalf_tcc(sh)
+
+tcc_sh_table
+
+## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
+write.bibtex(file="references2.bib")
 

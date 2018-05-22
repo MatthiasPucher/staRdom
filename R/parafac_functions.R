@@ -73,6 +73,35 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
   return(res)
 }
 
+#' Rescale A and B modes of PARAFAC model
+#'
+#' @description B and C modes (emission and excitation wavelengths) are rescaled to RMS of value newscale. This is compensated in A mode (sample loadings).
+#'
+#' @param pfmodel object of class parafac
+#' @param newscale Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.
+#'
+#' @return object of class parafac
+#' @export
+#'
+#' @seealso \code{\link[multiway]{rescale}}
+#'
+#' @examples
+#' data(pfres_comps1)
+#'
+#' new_pf <- eempf_rescaleAB(pfres_comps[[2]])
+eempf_rescaleAB <- function(pfmodel,newscale = 1){
+  nf <- attr(pfmodel,"norm_factors")
+  comp <- ncol(pfmodel$A)
+  pfmodel <- rescale(pfmodel,mode = "C", newscale = newscale, absorb = "A")
+  pfmodel <- rescale(pfmodel,mode = "B", newscale = newscale, absorb = "A")
+  attr(pfmodel,"norm_factors") <- nf
+  labComp <- paste("Comp.",1:comp,sep="")
+  colnames(pfmodel$A) <- labComp
+  colnames(pfmodel$B) <- labComp
+  colnames(pfmodel$C) <- labComp
+  pfmodel
+}
+
 #' Data from an eemlist is transformed into an array
 #'
 #' @description Data matrices from EEM are combined to an array that is needed for a PARAFAC analysis.
@@ -139,7 +168,7 @@ norm_array <- function(eem_array){
 #'
 #' @description The components of a PARAFAC analysis are extracted as a data frame
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #' @param gather logical value whether excitation wavelengths are a column, otherwise excitation wavelengths are column names
 #'
 #' @return a list of class data frames
@@ -153,24 +182,24 @@ norm_array <- function(eem_array){
 #' data(pfres_comps1)
 #'
 #' eempf_comp_mat(pfres_comps[[3]])
-eempf_comp_mat <- function(cp_out,gather=TRUE){
-  #b[[3]] -> cp_out
+eempf_comp_mat <- function(pfmodel,gather=TRUE){
+  #b[[3]] -> pfmodel
   #comp <- 1
-  mat <- lapply(seq(1:ncol(cp_out$A)), function(comp){
-    m <- matrix(cp_out$B[,comp]) %*% t(matrix(cp_out$C[,comp])) %>%
+  mat <- lapply(seq(1:ncol(pfmodel$A)), function(comp){
+    m <- matrix(pfmodel$B[,comp]) %*% t(matrix(pfmodel$C[,comp])) %>%
       data.frame()
-    colnames(m) <- cp_out$C %>% rownames()
-    rownames(m) <- cp_out$B %>% rownames()
+    colnames(m) <- pfmodel$C %>% rownames()
+    rownames(m) <- pfmodel$B %>% rownames()
     if(gather==TRUE) m <- m %>% rownames_to_column("em") %>% gather(ex,value,-em)
     m
   })
-  names(mat) <- colnames(cp_out$B)
+  names(mat) <- colnames(pfmodel$B)
   mat
 }
 
-#' Calculate the leverage of each emission and excitation wavelength and each sample
+#' Calculate the leverage of each emission and excitation wavelength and each sample from a single PARAFAC model
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #'
 #' @return list of 3 named vectors (emission, excitation wavelengths and samples)
 #' @export
@@ -183,13 +212,47 @@ eempf_comp_mat <- function(cp_out,gather=TRUE){
 #' data(pfres_comps1)
 #'
 #' eempf_leverage(pfres_comps[[2]])
-eempf_leverage <- function(cp_out){
-  cpl <- lapply(cp_out[c("A","B","C")], function(M) diag(M %*% pinv(t(M) %*% M) %*% t(M)))
-  names <- list(rownames(cp_out$A),rownames(cp_out$B),rownames(cp_out$C))
+eempf_leverage <- function(pfmodel){
+  cpl <- lapply(pfmodel[c("A","B","C")], function(M) diag(M %*% pinv(t(M) %*% M) %*% t(M)))
+  names <- list(rownames(pfmodel$A),rownames(pfmodel$B),rownames(pfmodel$C))
   cpl <- lapply(1:(cpl %>% length()),function(i){ cpl[[i]] %>% setNames(names[[i]])}) %>%
     setNames(c("A","B","C"))
 }
 
+#' Calculate the leverage of each emission and excitation wavelength and each sample from a list of PARAFAC models
+#'
+#' @param pfres_comps object of class parafac
+#' @param ecdf logical, transforme leverages to according empirical quantiles (\code{\link[stats]{ecdf}})
+#' @param stats logical, whether means and standard deviations are calculated from leverages
+#'
+#' @return data frame containing leverages of wavelengths and samples for each model
+#' @export
+#'
+#' @import dplyr
+#' @importFrom matrixStats rowSds
+#' @importFrom stats ecdf
+#'
+#' @examples
+#' data(pfres_comps1)
+#'
+#' eempf_mleverage(pfres_comps)
+eempf_mleverage <- function(pfres_comps,ecdf = FALSE, stats = FALSE){
+  cpls <- lapply(pfres_comps,eempf_leverage) %>%
+    lapply(unlist) %>%
+    lapply(function(ll) data.frame(parameter=names(ll),value=ll)) %>%
+    #    lapply(tibble::rownames_to_column,var="parameter") %>%
+    list_join(by = "parameter") %>%
+    `colnames<-`(c("parameter",paste0("comps",lapply(pfres_comps,function(cpout){ncol(cpout$A)}) %>% unlist())))
+  if(ecdf){
+    cpls <- cpls %>%
+      mutate_if(is.numeric,function(col) ecdf(col)(col))
+  }
+  if(stats){
+    cpls <- cpls %>%
+      mutate(mean = rowMeans(select(., -parameter)), stdev=rowSds(select(., -parameter) %>% as.matrix()))
+  }
+  cpls
+}
 
 
 #' Combine leverages into one data frame and add optional labels.
@@ -229,7 +292,7 @@ eempf_leverage_data <- function(cpl,qlabel=0.1){
 #'
 #' @description Factors used for normalisation are saved separately in the PARAFAC models. With this function, the normalisation factors are combined with the A-modes of the model and removed as a separate vector. This means former normalisation is accounted for in the amount of each component in each sample. If no normalisation was done, the original model is returned without warning.
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #'
 #' @return object of class parafac
 #' @export
@@ -238,18 +301,18 @@ eempf_leverage_data <- function(cpl,qlabel=0.1){
 #' data(pfres_comps1)
 #'
 #' pfres_comps[[2]][[3]] <- norm2A(pfres_comps[[2]][[3]])
-norm2A <- function(cp_out){
-  if(!is.null(attr(cp_out,"norm"))){
-    cp_out$A <- cp_out$A * attr(cp_out,"norm_factors")
-    attr(cp_out,"norm_factors") <- NULL
+norm2A <- function(pfmodel){
+  if(!is.null(attr(pfmodel,"norm"))){
+    pfmodel$A <- pfmodel$A * attr(pfmodel,"norm_factors")
+    attr(pfmodel,"norm_factors") <- NULL
   }
-  cp_out
+  pfmodel
 }
 
 
 #' Calculating correlations between the component loadings in all samples (C-Modes).
 #'
-#' @param cp_out results from a PARAFAC analysis, class parafac
+#' @param pfmodel results from a PARAFAC analysis, class parafac
 #' @param method method of correlation, passed to \code{\link[stats]{cor}}
 #' @param ... passed on to \code{\link[stats]{cor}}
 #'
@@ -261,8 +324,8 @@ norm2A <- function(cp_out){
 #' @examples
 #' data(pfres_comps1)
 #' eempf_cortable(pfres_comps[[2]])
-eempf_cortable <- function(cp_out,method="pearson",...){
-  cp_out %>%
+eempf_cortable <- function(pfmodel,method="pearson",...){
+  pfmodel %>%
     norm2A() %>%
     .$A %>%
     cor(method=method,...)
@@ -316,7 +379,7 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 #'
 #' @description Data of wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
 #'
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #'
 #' @return data frame
 #' @export
@@ -328,13 +391,13 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 #' data(pfres_comps1)
 #'
 #' ml <- maxlines(pfres_comps[[1]])
-maxlines <- function(cp_out){
-  #cp_out <- pfres_comps[[2]]
-  maxl <- lapply(colnames(cp_out$C),function(comp){
-    #comp <- colnames(cp_out$C)[1]
-    em = (cp_out$B[,comp]*max(cp_out$C[,comp])) %>%
+maxlines <- function(pfmodel){
+  #pfmodel <- pfres_comps[[2]]
+  maxl <- lapply(colnames(pfmodel$C),function(comp){
+    #comp <- colnames(pfmodel$C)[1]
+    em = (pfmodel$B[,comp]*max(pfmodel$C[,comp])) %>%
       data.frame(e="em", wavelength = as.numeric(names(.)),value=.)
-    ex = (cp_out$C[,comp]*max(cp_out$B[,comp])) %>%
+    ex = (pfmodel$C[,comp]*max(pfmodel$B[,comp])) %>%
       data.frame(e="ex", wavelength = as.numeric(names(.)),value=.)
     res <- bind_rows(em,ex) %>%
       setNames(c("e","wavelength",comp))
@@ -345,7 +408,7 @@ maxlines <- function(cp_out){
 
 #' Calculate residuals of EEM data according to a certain model
 #'
-#' @param cp_out PARAFAC model of class parafac
+#' @param pfmodel PARAFAC model of class parafac
 #' @param eem_list eemlist containing EEM data
 #' @param select character vector containing the names of the desired samples
 #' @param cores number of cores to use for parallel processing
@@ -365,9 +428,9 @@ maxlines <- function(cp_out){
 #'
 #' eempf_residuals(pfres_comps2[[2]],eem_list)
 #' }
-eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detectCores(logical = FALSE)/2){
-  # cp_out <- pfres_comps2[[which(comps==seq(dim_min,dim_max))]]
-  cp_out <- norm2A(cp_out)
+eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::detectCores(logical = FALSE)/2){
+  # pfmodel <- pfres_comps2[[which(comps==seq(dim_min,dim_max))]]
+  pfmodel <- norm2A(pfmodel)
   if(!is.null(select)){
     eem_list <- eem_extract(eem_list,sample = select ,keep=TRUE,verbose = FALSE)
       #lapply(select,function(s) which(s == eem_list %>% eem_names())) %>%
@@ -375,33 +438,33 @@ eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detec
       #unique() %>%
       #setdiff(seq(1,length(eem_list)),.)  %>% eem_extract(eem_list,.,verbose = FALSE)
   }
-  if(!all(eem_names(eem_list) %in% rownames(cp_out$A)) | length(eem_list) == 0){
-    cp_out <- A_missing(eem_list,cp_out,cores=cores)
+  if(!all(eem_names(eem_list) %in% rownames(pfmodel$A)) | length(eem_list) == 0){
+    pfmodel <- A_missing(eem_list,pfmodel,cores=cores)
   }
-  what <- which(rownames(cp_out$A) %in% (eem_list %>% eem_names()))
-  cp_out$A <- as.data.frame(cp_out$A)[what,]
-  res_data <- lapply(cp_out$A %>% rownames(),function(sample){
-    comps <- lapply(cp_out$A %>% colnames(),function(component){
-      cp_out$B[,component] %*% t(cp_out$C[,component]) * cp_out$A[sample,component]
+  what <- which(rownames(pfmodel$A) %in% (eem_list %>% eem_names()))
+  pfmodel$A <- as.data.frame(pfmodel$A)[what,]
+  res_data <- lapply(pfmodel$A %>% rownames(),function(sample){
+    comps <- lapply(pfmodel$A %>% colnames(),function(component){
+      pfmodel$B[,component] %*% t(pfmodel$C[,component]) * pfmodel$A[sample,component]
     })
-    names(comps) <- cp_out$C %>% colnames()
+    names(comps) <- pfmodel$C %>% colnames()
     fit <- comps %>%
       Reduce('+', .)
     eem <- eem_list[[which(eem_list %>% eem_names == sample)]]
-    samp <- eem$x[eem$em %in% rownames(cp_out$B),eem$ex %in% rownames(cp_out$C)]
+    samp <- eem$x[eem$em %in% rownames(pfmodel$B),eem$ex %in% rownames(pfmodel$C)]
     res <- samp - fit
 
-    comps <- lapply(cp_out$A %>% colnames(),function(component){
-      comps[[component]] %>% data.frame() %>% mutate(type = component, em = rownames(cp_out$B)) %>%
+    comps <- lapply(pfmodel$A %>% colnames(),function(component){
+      comps[[component]] %>% data.frame() %>% mutate(type = component, em = rownames(pfmodel$B)) %>%
         gather(ex,value,-em,-type) %>% mutate(ex = substr(ex,2,4))
     }) %>%
       bind_rows()
-    colnames(samp) <- rownames(cp_out$C)
-    samp <- samp %>% data.frame() %>% mutate(type = "sample", em = rownames(cp_out$B)) %>%
+    colnames(samp) <- rownames(pfmodel$C)
+    samp <- samp %>% data.frame() %>% mutate(type = "sample", em = rownames(pfmodel$B)) %>%
       gather(ex,value,-em,-type) %>% mutate(ex = substr(ex,2,4))
-    rownames(res) <- rownames(cp_out$B)
-    colnames(res) <- rownames(cp_out$C)
-    res <- res %>% data.frame() %>% mutate(type = "residual", em = rownames(cp_out$B)) %>%
+    rownames(res) <- rownames(pfmodel$B)
+    colnames(res) <- rownames(pfmodel$C)
+    res <- res %>% data.frame() %>% mutate(type = "residual", em = rownames(pfmodel$B)) %>%
       gather(ex,value,-em,-type) %>% mutate(ex = substr(ex,2,4))
     bind_rows(list(comps,samp,res)) %>%
       mutate(Sample = sample)
@@ -414,7 +477,7 @@ eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detec
 #' Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm.
 #'
 #' @param eem_list object of class eemlist with sample data
-#' @param cp_out object of class parafac
+#' @param pfmodel object of class parafac
 #' @param cores number of cores to use for parallel processing
 #' @param ... additional arguments passed to eem_parafac
 #'
@@ -432,23 +495,23 @@ eempf_residuals <- function(cp_out,eem_list,select=NULL, cores = parallel::detec
 #'
 #' A_missing(eem_list,pfres_comps2[[3]])
 #' }
-A_missing <- function(eem_list,cp_out,cores = parallel::detectCores(logical = FALSE)/2,...){
+A_missing <- function(eem_list,pfmodel,cores = parallel::detectCores(logical = FALSE)/2,...){
   #data("pfres_comps2")
   #data("eem_list")
   #cores=2
-  #cp_out <- pfres_comps2[[2]]
+  #pfmodel <- pfres_comps2[[2]]
 
   eem_list <- eem_red2smallest(eem_list)
 
-  exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(cp_out$C))],
-                  "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(cp_out$B))],
+  exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
+                  "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
                   "sample" = c()
   )
 
   x <- eem_list %>%
     eem_exclude(exclude)
 
-  missingAs <- eem_parafac(x,comps = cp_out$A %>% ncol(),normalise = (!is.null(attr(cp_out,"norm_factors"))),Bfixed = cp_out$B, Cfixed = cp_out$C,cores = cores,control = cp_out$control, const = c(cp_out$const[1],0,0),...)
+  missingAs <- eem_parafac(x,comps = pfmodel$A %>% ncol(),normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B, Cfixed = pfmodel$C,cores = cores,control = pfmodel$control, const = c(pfmodel$const[1],0,0),...)
 
   missingAs[[1]]
 }
@@ -468,6 +531,8 @@ A_missing <- function(eem_list,cp_out,cores = parallel::detectCores(logical = FA
 #' @param ctol Convergence tolerance (R^2 change)
 #' @param verbose states whether you want additional information during calculation
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
+#'
+#' @details Split data sets can be split suboptimal and cause low TCCs. Therefore, subsamples are recombined in 3 different ways and a TCC close to 1 in only one split combination per component is already a positive result. Check the split sets to check for sample independency.
 #'
 #' @return data frame containing components of the splithalf models
 #' @export
@@ -729,7 +794,7 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'
 #' @description openfluor.org offers the possibility to compare your results to others, that were uploaded to the database. This functions writes out a txt containing the header lines and your components. Please open the file in an editor and fill in further information that cannot be covered by this function.
 #'
-#' @param cp_out PARAFAC model
+#' @param pfmodel PARAFAC model
 #' @param file string, path to outputfile. The directory must exist, the file will be created or overwritten if already present.
 #'
 #' @return txt file
@@ -740,18 +805,188 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #' @examples
 #'   data(pfres_comps2)
 #'   eempf_openfluor(pfres_comps2[[2]],file.path(tempdir(),"openfluor_example.txt"))
-eempf_openfluor <- function(cp_out,file){
+eempf_openfluor <- function(pfmodel,file){
   if(!dir.exists(dirname(file.path(file)))){
     stop("The path do your file does not contain an existing directory. Please enter a correct path!")
   }
-  ml <- maxlines(cp_out) %>%
+  ml <- maxlines(pfmodel) %>%
     arrange(desc(e)) %>%
     mutate(e = stringr::str_replace_all(e,"e","E"))
   template <- system.file("openfluor_template.txt",package="staRdom")
   template <- readLines(template)
   template <- stringr::str_replace_all(template,"toolbox","toolbox\tstaRdom")
-  template <- stringr::str_replace_all(template,"nSample",paste0("nSample\t",cp_out$C %>% nrow()))
+  template <- stringr::str_replace_all(template,"nSample",paste0("nSample\t",pfmodel$C %>% nrow()))
   write(template,file)
   write.table(ml,file=file,append=TRUE,col.names=FALSE,row.names=FALSE,sep="\t",quote=FALSE)
   message("An openfluor file has been successfully written. Please fill in missing header fields manually!")
+}
+
+
+#' Create table of PARAFAC components and (optionally) EEM peaks and indices as well as absorbance slope parameters.
+#'
+#' @description Please refer to \code{\link[eemR]{eem_biological_index}}, \code{\link[eemR]{eem_coble_peaks}}, \code{\link[eemR]{eem_fluorescence_index}}, \code{\link[eemR]{eem_biological_index}} and \code{\link[staRdom]{abs_parms}} for details on the certain values
+#'
+#' @param pfmodel PARAFAC model where loadings of the components are extracted
+#' @param eem_list optional eemlist used for peak and indices calculation
+#' @param absorbance optional absorbance table used for absorbance slope parameter calculation
+#' @param cuvl optional cuvette length of absorbance data in cm
+#' @param n optional size of moving window in nm for data smoothing in advance of peak picking
+#' @param export optional file path of csv or txt table where data is exported
+#' @param ... additional parameters passed to \code{\link[utils]{write.table}}
+#'
+#' @return data frame
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+#' @import eemR
+#' @importFrom tibble rownames_to_column
+#'
+#' @examples
+#' \donttest{
+#' data(eem_list)
+#' data(pfres_comps2)
+#' data(abs_data)
+#'
+#' results <- eempf4analysis(pfmodel = pfres_comps2[[2]],
+#'                           eem_list = eem_list, absorbance = abs_data,
+#'                           cuvl = 5, n = 4)
+#'                           }
+eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NULL, n = 4, export = NULL,...){
+  loadings <- pfmodel$A %>%
+    norm2A() %>%
+    data.frame() %>%
+    tibble::rownames_to_column("sample")
+  if(!is.null(eem_list)){
+    eem4peaks <- eem_list %>% eem_smooth(n=n)
+    indices_peaks <- eem4peaks %>% eem_biological_index() %>%
+      full_join(eem4peaks %>% eem_coble_peaks(), by="sample")  %>%
+      full_join(eem4peaks %>% eem_fluorescence_index(), by="sample") %>%
+      full_join(eem4peaks %>% eem_humification_index(scale=TRUE), by="sample")
+    loadings <- full_join(loadings,indices_peaks,by="sample")
+  }
+  if(!is.null(absorbance)){
+    if(is.null(cuvl)){
+      warning("Because of missing cuvette length, absorbance slope parameters were not calculated!")
+    } else {
+    abs_parameters <- abs_parms(absorbance %>%
+      select(one_of(names(absorbance))), cuvl)
+    loadings <- full_join(loadings,abs_parameters,by="sample")
+    }
+  }
+  if(!is.null(export)){
+    write.table(loadings, file=export, row.names=FALSE, ...)
+  }
+  loadings
+}
+
+
+#' Create one table containing the PARAFAC models factors and optionally exporting it to csv or txt
+#'
+#' @param pfmodel PARAFAC model
+#' @param export file path to export table
+#' @param ... additional parameters passed to \code{\link[utils]{write.table}}
+#'
+#' @return data frame
+#' @export
+#'
+#' @importFrom tibble rownames_to_column
+#' @import dplyr
+#' @import tidyr
+#' @importFrom utils write.table
+#'
+#' @examples
+#' data(pfres_comps2)
+#'
+#' factor_table <- eempf_export(pfres_comps2[[2]])
+eempf_export<- function(pfmodel,export = NULL,...){
+  tabs <- list(pfmodel$A %>%
+                 as.data.frame() %>%
+                 tibble::rownames_to_column("sample") #%>%
+                 #`colnames<-`(colnames(.) %>% stringr::str_replace_all("Comp.","Fmax"))
+               ,
+               pfmodel$C %>%
+                 as.data.frame() %>%
+                 tibble::rownames_to_column("Em"),
+               pfmodel$B %>%
+                 as.data.frame() %>%
+                 tibble::rownames_to_column("Ex"))
+  rows <- lapply(tabs,nrow) %>% unlist() %>% max()
+  tabs <- lapply(tabs,function(tab){
+    if(nrow(tab) < rows){
+      tab <- rbind(tab,as.data.frame(matrix(nrow = rows - nrow(tab), ncol = ncol(tab))) %>% `colnames<-`(colnames(tab)))
+    }
+    tab <- cbind(tab,as.data.frame(matrix(nrow = rows, ncol = 1)) %>% `colnames<-`(" "))
+  })
+  tabs <- do.call(cbind,tabs)
+  if(!is.null(export)) write.table(tabs,file=export,row.names = FALSE,na="",...)
+  tabs %>% invisible()
+}
+
+
+#' Calculate the core consistancy of an EEM PARAFAC model
+#'
+#' @description This is basically a wrapper for \code{\link[multiway]{corcondia}} that deals with the normalisation of the original data., Other than \code{\link[multiway]{corcondia}}, the default dicisor = "core".
+#'
+#'
+#' @param pfmodel PARAFAC model
+#' @param eem_list eemlist
+#' @param divisor divisor, please refer to \code{\link[multiway]{corcondia}}
+#'
+#' @return numeric
+#' @export
+#'
+#' @importFrom multiway corcondia
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+#' \dontrun{
+#' # due to data limitation in package, example does not work with that data!
+#'
+#' eempf_corecondia(pfmodel,eem_list)
+#'
+#' }
+eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
+  arr <- eem_list %>% eem2array()
+  if(!is.null(attr(eem_list,"norm_factors"))) arr <- arr %>% norm_array()
+  multiway::corcondia(arr,pfmodel,divisor="core")
+}
+
+#' Calculating EEMqual which is an indicator of a PARAFAC model's quality
+#'
+#' @param pfmodel PARAFAC model
+#' @param eem_list EEM data as eemlist
+#' @param splithalf optionally, you can supplie available splithalf results from model to decrease computation time
+#' @param ... additional arguments passed to splithalf
+#'
+#' @return data frame containing fit, corcondia, product of best TCCs from splithalf analysis, eemqual and splithalf models
+#'
+#' @export
+#'
+#' @importFrom multiway corcondia
+#' @import dplyr
+#'
+#' @references Rasmus Bro, Maider Vidal, EEMizer: Automated modeling of fluorescence EEM data, Chemometrics and Intelligent Laboratory Systems, Volume 106, Issue 1, 2011, Pages 86-92, ISSN 0169-7439
+#'
+#' @examples
+#' \donttest{
+#' data(eem_list)
+#' data(pfres_comps2)
+#'
+#' pfmodel <- pfres_comps2[[2]]
+#' eempf_eemqual(eem_list,pfmodel)
+#' }
+eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
+  corec <- eempf_corcondia(pfmodel,eem_list)
+  fit <- pfmodel$Rsq
+  if(is.null(splithalf)) sh <- splithalf(eem_list,comps = pfmodel$A %>% ncol(),...) else sh <- splithalf
+  splth <- splithalf_tcc(sh) %>%
+    group_by(component) %>%
+    summarise_at(vars(contains("tcc")),max,na.rm=TRUE) %>%
+    .[c(2,3)] %>%
+    prod()
+  tab <- data.frame(components = ncol(pfmodel$A) ,fit = fit, corec = corec, splithalf = splth, eemqual = fit*corec*splth)
+  attr(tab,"shmodel") <- sh
+  tab
 }

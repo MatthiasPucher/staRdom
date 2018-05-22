@@ -144,8 +144,12 @@ eem_ife_correction <- function(data,abs_data,cuvl){
     #class(eem_list) <- "eemlist"
     nam <- eem1[[1]]$sample
     class(eem1) <- "eemlist"
-    eem1 <- eem1 %>% eem_inner_filter_effect(absorbance=abs_data,pathlength=cl)
+    if(nam %in% colnames(abs_data)){
+    eem1 <- eem1 %>% eem_inner_filter_effect(absorbance=na.omit(abs_data[c("wavelength",nam)]),pathlength=cl)
     eem1[[1]]$sample <- nam
+    } else {
+      warning(paste0("No absorbance data was found for sample ",nam,"!"))
+    }
     eem1
   }) %>%
     unlist(recursive = FALSE)

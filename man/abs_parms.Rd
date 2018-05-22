@@ -6,7 +6,7 @@
 \usage{
 abs_parms(abs_data, cuvle, limits = list(c(275, 295), c(350, 400), c(300,
   700)), l_ref = list(350, 350, 350), S = TRUE, lref = FALSE, p = FALSE,
-  model = FALSE, cores = detectCores()/2)
+  model = FALSE, cores = parallel::detectCores()/2)
 }
 \arguments{
 \item{abs_data}{data frame containing absorbance data.}

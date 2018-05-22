@@ -4,10 +4,10 @@
 \alias{eempf_openfluor}
 \title{Write out PARAFAC components to submit to openfluor.org.}
 \usage{
-eempf_openfluor(cp_out, file)
+eempf_openfluor(pfmodel, file)
 }
 \arguments{
-\item{cp_out}{PARAFAC model}
+\item{pfmodel}{PARAFAC model}
 
 \item{file}{string, path to outputfile. The directory must exist, the file will be created or overwritten if already present.}
 }

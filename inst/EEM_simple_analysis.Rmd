@@ -23,15 +23,15 @@ This report was created using the R package staRdom version `r packageVersion("s
 # Parameter specification
 ## Input parameters
 ```{r, include=FALSE}
-##################################
-### Documentation of this file ###
-##################################
+####################################
+#### Documentation of this file ####
+####################################
 # This file comes with an extensive documentation.
 # You can find it as a vignette.
 # 
-###############################
-### Define output directory ###
-###############################
+#################################
+#### Define output directory ####
+#################################
 #     .      
 #   .:;:.     Please look at the top of the file!
 # .:;;;;;:.   If you want to write a protocol with knitr,
@@ -49,13 +49,13 @@ output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output
 ```
 
 ```{r}
-###########################
-### Define data sources ###
-###########################
+#############################
+#### Define data sources ####
+#############################
 # Please avoid "-" (minus) and space in file and column names and numbers at the beginning of file and column names!
 
-### Directory containing EEM data ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Directory containing EEM data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set the directory with your sample files. Please see eem_read() help for details on file formats.
 # Sub folders are read in and are considered different sample sets.
 # Import is done with eem.read() (package eemR), please see details there.
@@ -63,8 +63,8 @@ output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output
 # by setting the path to your files!
 sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sample_dir = "C:/some_folder/input/fluor/"
 
-### Absorbance data ###
-#~~~~~~~~~~~~~~~~~~~~~#
+#### Absorbance data ####
+#~~~~~~~~~~~~~~~~~~~~~~~#
 # Absorbance data is read from *.TXT or *.CSV files.
 # Either a directory containing one or more files can be named or a single file containing all samples.
 # Absorbance data is used for inner-filter-effect correction and calculation of the slope parameters.
@@ -77,11 +77,8 @@ absorbance_dir = system.file("extdata/absorbance_eemR",package = "staRdom") # e.
 # If it is set to "meta" data from the metadata table is used (details see below).
 absorbance_cuv_len = 5 # e.g. absorbance_cuv_len = 5
 
-# separator and decimal point of absorbance data tables (tab is coded as "\t")
-abs_sep_dec = c(" ",".") # e.g. abs_sep_dec = c("\t",".")
-
-### Meta data ###
-#~~~~~~~~~~~~~~~#
+#### Meta data ####
+#~~~~~~~~~~~~~~~~~#
 # Adding a table with meta data is OPTIONAL!
 # The table can contain dilution factors, cuvette lengths of
 # the photometer and absorbance cuvette lengths and is intended
@@ -92,11 +89,8 @@ abs_sep_dec = c(" ",".") # e.g. abs_sep_dec = c("\t",".")
 # either a path or FALSE if no metadata file is used.
 metadata = system.file("extdata/metatable_eemR.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv"
 
-# separator and decimal point of metadata table ("\t" is for tab).
-meta_sep_dec = c(" ",".") # e.g. meta_sep_dec = c("\t",".")
-
-### Meta data: names of columns ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Meta data: names of columns ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # column with sample names
 col_samples = "sample"
 
@@ -114,12 +108,12 @@ col_raman_area = "raman"
 ```
 ## Output parameters
 ```{r}
-#############################
-### Define desired output ###
-#############################
+###############################
+#### Define desired output ####
+###############################
 
-### Table output ###
-#~~~~~~~~~~~~~~~~~~#
+#### Table output ####
+#~~~~~~~~~~~~~~~~~~~~#
 # Write a table with peaks and slope parameters.
 # Written as xls or, in case of missing java environment as csv.
 output_xls = TRUE # e.g. TRUE
@@ -127,8 +121,8 @@ output_xls = TRUE # e.g. TRUE
 # In case of csv export you can define the separator and the decimal point here.
 out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
 
-### Plot settings PNG ###
-#~~~~~~~~~~~~~~~~~~~~~~~#
+#### Plot settings PNG ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~#
 # The scaling of the different sample plots can be chosen.
 # Either all samples are coloured according to the range of the
 # complete sample set (TRUE) or each plot is scaled separately (FALSE).
@@ -143,8 +137,8 @@ output_overview_png = FALSE # e.g. TRUE
 ## number of EEM spectra plottet in each overview image
 overview_number = 6 # e.g. 6
 
-### Plot settings report ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Plot settings report ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # This block defines which plots are included in the report.
 #
 # Add plots with several EEM samples per plot. 
@@ -154,8 +148,8 @@ overview = TRUE # e.g. TRUE
 # State whether you want plots from single EEM spectra in the report.
 single_plots = FALSE # e.g. TRUE
 
-### Save data for further (R) analysis ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Save data for further (R) analysis ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # File name where data is stored in RData format in the output directory.
 # Set to FALSE if you dont want your eem data saved.
 data_file = "eem_data" # e.g. "eem_data"" or FALSE
@@ -167,12 +161,12 @@ eem_name = "eem_list"
 ## Correction parameters
 
 ```{r}
-#######################
-### Data correction ###
-#######################
+#########################
+#### Data correction ####
+#########################
 #
-### Correction of diluted samples ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Correction of diluted samples ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a dilution factor if your sample was diluted.
 # All samples are multiplied with this factor.
 # Please use a meta table (above) if your dilutions are differing
@@ -180,8 +174,8 @@ eem_name = "eem_list"
 # parts milliq), "meta" for data from meta table
 dilution = "meta" # e.g. 1
 
-### Cut data to certain range ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Cut data to certain range ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a vector with range of wavelengths to be plotted and saved.
 # Peak picking is done before range reduction.
 # Emission wavelength:
@@ -193,8 +187,8 @@ ex_range = c(0,Inf) # e.g. c(300,500), c(0,Inf) to use everything
 # Cut all samples to fit largest range available in all samples
 cut_range_to_smallest = FALSE # e.g. FALSE
 
-### Blank correction ###
-#~~~~~~~~~~~~~~~~~~~~~~#
+#### Blank correction ####
+#~~~~~~~~~~~~~~~~~~~~~~~~#
 # A blank sample is substracted from each sample. Blank samples have to be
 # in the same (sub)folder as the EEM samples. So different blanks are used
 # for different subsets. The file names of the blanks have to contain nano, 
@@ -202,14 +196,14 @@ cut_range_to_smallest = FALSE # e.g. FALSE
 # contain these words in their names respectively!
 blank_correction = FALSE # e.g. FALSE
 
-### Inner filter effect correction ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Inner filter effect correction ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Inner filter effects are corrected. Absorbance data is needed. File or column names
 # of the absorbance data have to resamble file names of the EEM data.
 ife_correction = TRUE # e.g. FALSE
 
-### Remove scattering and interpolate missing data ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Remove scattering and interpolate missing data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Scattering is removed from the EEM spectra.
 remove_scatter <- c() # Please leave that as it is ;-)
 
@@ -234,8 +228,8 @@ remove_scatter_width = c(15,15,15,15) # e.g. 15 or c(15,15,15,15)
 # state whether removed scattering should be interpolated
 interpolation <- TRUE # e.g. TRUE
 
-### Raman normailsation ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Raman normailsation ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # State whether a Raman normalisation should be performed
 # Either "blank" if a blank is present in each (sub)folder of the EEM data.
 # Blank samples have to be in the same (sub)folder as the EEM samples. So 
@@ -246,8 +240,8 @@ interpolation <- TRUE # e.g. TRUE
 # or "meta" if the raman areas should be taken from the meta data table.
 raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
 
-### Smooth data for peak picking ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#### Smooth data for peak picking ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Moving window size for smoothing data along excitation wavelengths.
 # Data must be interpolated if you want to use smoothing.
 # This is used for peak picking but not saved.
@@ -279,59 +273,66 @@ library(staRdom)
 ```
 
 ```{r, message=FALSE, warning=TRUE, include=FALSE}
-#################
-### Read data ###
-#################
+###################
+#### Read data ####
+###################
 
-### Read EEM data ###
-#~~~~~~~~~~~~~~~~~~~#
+#### Read EEM data ####
+#~~~~~~~~~~~~~~~~~~~~~#
 # recursive = TRUE means, that subdirectories are included in reading
 eem_list <- eem_read(sample_dir,recursive=TRUE)
 
-#eem_list <- eem_read(sample_dir,recursive=TRUE)
-
-### Read table with meta data ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-if(metadata != FALSE){
-  meta <- read.table(metadata, header = TRUE, sep = meta_sep_dec[1], dec = meta_sep_dec[2], row.names = col_samples)
-}
-
-### Read absorbance data ###
-#~~~~~~~~~~~~~~~~~~~~~~~~~~#
-if(absorbance_dir != FALSE){
-  abs_data <- absorbance_read(absorbance_dir,sep = abs_sep_dec[1], dec = abs_sep_dec[2])
-}
-
-#######################
-### Data correction ###
-#######################
-#
-### Alter names of EEM samples ###
+#### Alter names of EEM samples ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # In this case, "(FD3)" is replaced by nothing from sample name.
-# It is a Hitachi related string.
+# It is a Hitachi related thing
 eem_list <- eem_list %>% eem_name_replace(c("\\(FD3\\)"),c(""))
 
-### Blank substraction ###
+#### Read table with meta data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+if(metadata != FALSE){
+  meta <- data.table::fread(file = metadata, header = TRUE) %>%
+  mutate_at(vars(one_of(col_samples)),make.names) %>%
+  tibble::column_to_rownames(var=col_samples)
+}
+
+#### Read absorbance data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+if(absorbance_dir != FALSE){
+  abs_data <- absorbance_read(absorbance_dir)
+}
+
+####################
+#### Data check ####
+####################
+# the data is checked for several often occuring problems. Most of them are related to how you organised your data.
+# if the script stops here please have a look at the error messages and correct your data.
+eem_checkdata(eem_list,abs_data,meta,metacolumns = c(col_dilution, col_cuv_len, col_raman_area), error = TRUE)
+
+#########################
+#### Data correction ####
+#########################
+#
+#### Blank substraction ####
 #~~~~~~~~~~~~~~~~~~~~~~~~#
 # substract blank, blank needed for that, can remove scattering and other noise partly
 if(blank_correction) eem_list <- eem_list %>% eem_remove_blank()
 
-### Inner filter effects correction ###
+#### Inner filter effects correction ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(absorbance_dir != FALSE){
   if(absorbance_cuv_len == "meta") cuvl <- meta[col_cuv_len] else cuvl <- absorbance_cuv_len
   if(ife_correction) eem_list <- eem_list %>% eem_ife_correction(abs_data,cuvl)
 }
 
-### Raman normalisation ###
+#### Raman normalisation ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(raman_normalisation != FALSE){
   if(raman_normalisation == "meta") ram_data <- meta[col_raman_area] else ram_data <- raman_normalisation
   eem_list <- eem_list %>% eem_raman_normalisation2(ram_data)
 }
 
-### Remove blank samples from sample list ###
+#### Remove blank samples from sample list ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Blanks used for correction are not needed anymore from this step
 eem_list <- eem_list %>%
@@ -340,38 +341,38 @@ eem_list <- eem_list %>%
 abs_data <- abs_data %>%
   select(-matches("nano|miliq|milliq|mq|blank",ignore.case=TRUE))
 
-### Remove scattering ###
+#### Remove scattering ####
 #~~~~~~~~~~~~~~~~~~~~~~~#
 # raman and rayleigh scattering
 eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
 
-### Interpolate scattering ###
+#### Interpolate scattering ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Removing scattering left NAs. They will be interpolated.
 if(interpolation) eem_list <- eem_list %>% eem_interp()
 
-### Correct dilution ###
+#### Correct dilution ####
 #~~~~~~~~~~~~~~~~~~~~~~#
 # Samples are multiplyed with dilution factor
 if(dilution == "meta") dil_data <- meta[col_dilution] else dil_data <- dilution
 eem_list <- eem_list %>% eem_dilution(dil_data)
 
-### Smooth data for peak picking only ###
+#### Smooth data for peak picking only ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(smooth != FALSE & interpolation) eem4peaks <- eem_list %>% eem_smooth(n=smooth) else eem4peaks <- eem_list
 
 ####################################################
-### Peak picking and slope parameter calculation ###
+#### Peak picking and slope parameter calculation ####
 ####################################################
 #
-### Peak picking ###
+#### Peak picking ####
 #~~~~~~~~~~~~~~~~~~#
 indices_peaks <- eem4peaks %>% eem_biological_index() %>%
   full_join(eem4peaks %>% eem_coble_peaks(), by="sample")  %>%
   full_join(eem4peaks %>% eem_fluorescence_index(), by="sample") %>%
   full_join(eem4peaks %>% eem_humification_index(scale=TRUE), by="sample") 
 
-### Slope parameter calculation ###
+#### Slope parameter calculation ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(absorbance_dir != FALSE){
   indices_peaks <- indices_peaks %>%
@@ -379,26 +380,26 @@ if(absorbance_dir != FALSE){
 }
 
 ################################
-### Reduction of wavelengths ###
+#### Reduction of wavelengths ####
 ################################
 #
-### Reduce to defined range ###
+#### Reduce to defined range ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 eem_list <- eem_list %>% eem_range(ex=ex_range,em=em_range)
 
-### Reduce to largest range found in all samples ###
+#### Reduce to largest range found in all samples ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(cut_range_to_smallest) eem_list <- eem_list %>% eem_red2smallest()
 
 ##################################
-### Write out data and results ###
+#### Write out data and results ####
 ##################################
 #
-### Create output directory if neccessary ###
+#### Create output directory if neccessary ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(!dir.exists(file.path(output_dir))) dir.create(file.path(output_dir),recursive=TRUE)
 
-### Write out table with results ###
+#### Write out table with results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Write picked peaks and absorbance slope parameters to table.
 # First try to write XLS, if not possible CSV.
@@ -411,7 +412,7 @@ if(output_xls){
   
 }
 
-### Write RData files with corrected EEM data and absorbance ###
+#### Write RData files with corrected EEM data and absorbance ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Rename to variable name stated above and saved to file stated
 # above with current date and time added.
@@ -425,7 +426,7 @@ if(data_file != FALSE){
 
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
 ###################################################
-### Summary of your EEM data as table in report ###
+#### Summary of your EEM data as table in report ####
 ###################################################
 
 if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
@@ -444,7 +445,7 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
 # Results from peak picking
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
 #########################################################################
-### Results from peak picking and slope parameters as table in report ###
+#### Results from peak picking and slope parameters as table in report ####
 #########################################################################
 
 if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
@@ -462,7 +463,7 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
 # Plots of EEM spectra
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
 ######################
-### Overview plots ###
+#### Overview plots ####
 ######################
 # 
 # Overview plots are generated and printed into report
@@ -481,7 +482,7 @@ if(overview){
 
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
 ####################
-### Single plots ###
+#### Single plots ####
 ####################
 # 
 # Single plots are generated and printed into report
@@ -500,7 +501,7 @@ if(single_plots){
 
 ```{r, message=TRUE, warning=TRUE, include=FALSE, paged.print=FALSE}
 #################
-### PNG plots ###
+#### PNG plots ####
 #################
 # 
 # PNGs of plots are written to output directory

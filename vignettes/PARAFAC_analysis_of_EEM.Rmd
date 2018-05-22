@@ -93,7 +93,7 @@ ggeem(eem_list)
 Absorbance data is imported with `absorbance_read`. It is read from CSV or TXT files. The column header containig the wavelength must be either "wavelength" or "Wavelength". A multi-sample file must have sample names as column names. A single-sample file can have sample name as column name or sample name as file name and "Abs." as column name. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
 
 ```{r eval=TRUE, include=TRUE}
-data("absorbance")
+data(absorbance)
 ```
 
 Dilution factors were saved in a table to demonstrate cases where dilution factors vary between samples.
@@ -101,6 +101,14 @@ Dilution factors were saved in a table to demonstrate cases where dilution facto
 ```{r eval=TRUE, include=TRUE}
 meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1)
 ```
+
+## Check data
+The imported data is checked against common problems. In case of sever problems, an error message is produced.
+
+```{r eval=TRUE, include=TRUE}
+eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
+```
+
 
 # Data preparation and correction
 

@@ -16,6 +16,14 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.5 to 1.0.6:
+  absorbance_read: sep and dec are set automatically, location of files is saved
+  eem_checkdata: added functions to check imported data, checks sample names, missing data
+  eempf4analysis: create and optionally export table containing loadings from parafac, peaks, indices and absorbance slope parameters
+  eempf_eemqual: calculate model quality
+  eempf_report: create a report from a PARAFAC model and write out as html
+
+
 1.0.3 to 1.0.5:
   corrected severe bug in eem2array
   corrected severe bug in norm_array

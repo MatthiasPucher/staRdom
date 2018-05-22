@@ -4,10 +4,10 @@
 \alias{eempf_comp_mat}
 \title{Extract EEM matrix for single components determined in the PARAFAC analysis}
 \usage{
-eempf_comp_mat(cp_out, gather = TRUE)
+eempf_comp_mat(pfmodel, gather = TRUE)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 
 \item{gather}{logical value whether excitation wavelengths are a column, otherwise excitation wavelengths are column names}
 }

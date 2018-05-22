@@ -2,18 +2,18 @@
 % Please edit documentation in R/parafac_functions.R
 \name{eempf_leverage}
 \alias{eempf_leverage}
-\title{Calculate the leverage of each emission and excitation wavelength and each sample}
+\title{Calculate the leverage of each emission and excitation wavelength and each sample from a single PARAFAC model}
 \usage{
-eempf_leverage(cp_out)
+eempf_leverage(pfmodel)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 }
 \value{
 list of 3 named vectors (emission, excitation wavelengths and samples)
 }
 \description{
-Calculate the leverage of each emission and excitation wavelength and each sample
+Calculate the leverage of each emission and excitation wavelength and each sample from a single PARAFAC model
 }
 \examples{
 data(pfres_comps1)

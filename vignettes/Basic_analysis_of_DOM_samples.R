@@ -1,4 +1,4 @@
-## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
+## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
 library(knitcitations)
 cleanbib()
 options("citation_format" = "pandoc")
@@ -16,12 +16,12 @@ bibliography() #style="apalike"
 #                          output_file=file.path(output_dir,paste0('DOM_EEM_analysis_report_',format(Sys.time(), "%Y%m%d_%H%M%S"),'.htm')))
 #                          })
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  # Set the directory where all output files are put in.
 #  # The directory is automatically created if it does not exist.
 #  output_dir = "C:/some_folder/another_folder" # e.g. output_dir = "C:/some_folder/output/"
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Directory containing EEM data ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Set the directory with your sample files. Please see eem_read() help for details on file formats.
@@ -31,7 +31,7 @@ bibliography() #style="apalike"
 #  # by setting the path to your files!
 #  sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/input/fluor/"
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Absorbance data ###
 #  #~~~~~~~~~~~~~~~~~~~~~#
 #  # Absorbance data is read from *.TXT or *.CSV files.
@@ -45,11 +45,8 @@ bibliography() #style="apalike"
 #  # Cuvette length in cm that was used in absorbance measurement.
 #  # If it is set to "meta" data from the metadata table is used (details see below).
 #  absorbance_cuv_len = 5 # e.g. absorbance_cuv_len = 5
-#  
-#  # separator and decimal point of absorbance data tables (tab is coded as "\t")
-#  abs_sep_dec = c(",",".") # e.g. abs_sep_dec = c("\t",".")
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Meta data ###
 #  #~~~~~~~~~~~~~~~#
 #  # Adding a table with meta data is OPTIONAL!
@@ -61,9 +58,6 @@ bibliography() #style="apalike"
 #  # read table with metadata as *.TXT or *.CSV
 #  # either a path or FALSE if no metadata file is used.
 #  metadata = system.file("extdata/metatable.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv"
-#  
-#  # separator and decimal point of metadata table ("\t" is for tab).
-#  meta_sep_dec = c(" ",".") # e.g. meta_sep_dec = c("\t",".")
 #  
 #  ### Meta data: names of columns ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -82,7 +76,7 @@ bibliography() #style="apalike"
 #  # of the column containing the raman areas and set raman_normalisation = "meta" (below)
 #  col_raman_area = "raman"
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Table output ###
 #  #~~~~~~~~~~~~~~~~~~#
 #  # Write a table with peaks and slope parameters.
@@ -92,7 +86,7 @@ bibliography() #style="apalike"
 #  # In case of csv export you can define the separator and the decimal point here.
 #  out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Plot settings PNG ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~#
 #  # The scaling of the different sample plots can be chosen.
@@ -120,7 +114,7 @@ bibliography() #style="apalike"
 #  # State whether you want plots from single EEM spectra in the report.
 #  single_plots = FALSE # e.g. TRUE
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Correction of diluted samples ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Set a dilution factor if your sample was diluted.
@@ -130,7 +124,7 @@ bibliography() #style="apalike"
 #  # parts milliq), "meta" for data from meta table
 #  dilution = "meta" # e.g. 1
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Cut data to certain range ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Set a vector with range of wavelengths to be plotted and saved.
@@ -144,7 +138,7 @@ bibliography() #style="apalike"
 #  # Cut all samples to fit largest range available in all samples
 #  cut_range_to_smallest = FALSE # e.g. FALSE
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Blank correction ###
 #  #~~~~~~~~~~~~~~~~~~~~~~#
 #  # A blank sample is substracted from each sample. Blank samples have to be
@@ -154,14 +148,14 @@ bibliography() #style="apalike"
 #  # contain these words in their names respectively!
 #  blank_correction = FALSE # e.g. FALSE
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Inner filter effect correction ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Inner filter effects are corrected. Absorbance data is needed. File or column names
 #  # of the absorbance data have to resamble file names of the EEM data.
 #  ife_correction = TRUE # e.g. FALSE
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Remove scattering and interpolate missing data ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Scattering is removed from the EEM spectra.
@@ -188,7 +182,7 @@ bibliography() #style="apalike"
 #  # state whether removed scattering should be interpolated
 #  interpolation <- TRUE # e.g. TRUE
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Raman normailsation ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # State whether a Raman normalisation should be performed
@@ -201,7 +195,7 @@ bibliography() #style="apalike"
 #  # or "meta" if the raman areas should be taken from the meta data table.
 #  raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  ### Smooth data for peak picking ###
 #  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #  # Moving window size for smoothing data along excitation wavelengths.
@@ -209,7 +203,7 @@ bibliography() #style="apalike"
 #  # This is used for peak picking but not saved.
 #  smooth = 4 # e.g. FALSE, 4
 
-## ---- eval=FALSE---------------------------------------------------------
+## ----eval=FALSE----------------------------------------------------------
 #  #############################################
 #  #                                           #
 #  #       THERE ARE NO SETTINGS BELOW.        #
@@ -230,6 +224,6 @@ bibliography() #style="apalike"
 #  #                                           #
 #  #############################################
 
-## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
+## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
 write.bibtex(file="references.bib")
 

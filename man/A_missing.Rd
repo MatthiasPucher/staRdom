@@ -4,13 +4,13 @@
 \alias{A_missing}
 \title{Calculate the amount of each component for samples not involved in model building}
 \usage{
-A_missing(eem_list, cp_out, cores = parallel::detectCores(logical = FALSE)/2,
+A_missing(eem_list, pfmodel, cores = parallel::detectCores(logical = FALSE)/2,
   ...)
 }
 \arguments{
 \item{eem_list}{object of class eemlist with sample data}
 
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 
 \item{cores}{number of cores to use for parallel processing}
 

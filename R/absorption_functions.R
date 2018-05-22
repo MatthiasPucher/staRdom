@@ -4,30 +4,28 @@
 #' @param absorbance_path directory containing absorbance data files or path to single file. See details for format of absorbance data.
 #' @param order logical, data is ordered according to wavelength
 #' @param recursive read files recursive, include subfolders
-#' @param ... additional arguments that are passed on to \code{\link[utils]{read.table}}.
+#' @param ... additional arguments that are passed on to \code{\link[data.table]{fread}}.
 #'
 #' @details If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is passed on. Tables can either contain data from one sample or from several samples in columns. The column header containig the wavelength must be either "wavelength" or "Wavelength". A multi-sample file must have sample names as column names. A single-sample file can have sample name as column name or sample name as file name and "Abs." as column name. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
 #'
-#' @return A data frame containing absorbance data
+#' @return A data frame containing absorbance data. An attribute "location" contains the filenames where each sample was taken from.
 #'
-#' @seealso \code{\link[utils]{read.table}}
+#' @seealso \code{\link[data.table]{fread}}
 #'
 #' @import dplyr tidyr
 #' @importFrom utils read.table
 #' @importFrom stringr str_replace_all str_replace
+#' @importFrom data.table fread
 #'
 #' @export
 #'
 #' @examples
 #' absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
-#' absorbance_read(absorbance_path,sep = " ", dec = ".")
+#' absorbance_read(absorbance_path)
 absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,...){
   if(dir.exists(absorbance_path)){
-    #absorbance_path <- absorbance_dir
     abs_data <- list.files(absorbance_path, full.names = TRUE, recursive = recursive, no.. = TRUE, include.dirs = FALSE, pattern = "*.txt|*.csv", ignore.case = TRUE)
     abs_data <- abs_data[!file.info(abs_data)$isdir]
-    #abs_data <- dir(absorbance_path, pattern=".txt|.csv") %>%
-    #  paste0(absorbance_path,"/",.)
   } else if(file.exists(absorbance_path)){
     abs_data <- absorbance_path
   } else stop("Absorbance data was not found!")
@@ -35,19 +33,28 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,...){
     lapply(function(tab) {
       #print(tab)
       #tab <- abs_data[1]
-      #table <- read.table(tab,header=TRUE,row.names=NULL,sep = ",", dec = ".",skip=1) %>%
-      table <- read.table(tab,header=TRUE,row.names=NULL,...) %>%
-        rename_(.dots=setNames(names(.), names(.) %>%
+      table <- try(data.table::fread(tab, header = TRUE, skip="avelength") %>%  #,...
+        setNames(names(.) %>%
                                  stringr::str_replace_all("^.*Wavelength.*$|^.*wavelength.*$","wavelength") %>%
                                  stringr::str_replace_all("Abs.",tab %>% basename() %>%
-                                                            stringr::str_replace_all(".txt$|.csv$","") #%>%
-                                                          #                                                            stringr::str_replace("(^[:digit:]){1}","X\\1")
-                                 ) #%>%
-                               #                                 make.names()
+                                                            stringr::str_replace_all(".txt$|.csv$",""))
         ))
+      if(class(table)[1] == "try-error") stop("An error occured processing ", tab,".")
+      attr(table,"location") <- rep(tab,ncol(table) - 1)
+      table
     })
-  if(abs_data %>% length() == 1) abs_data <- abs_data[[1]] %>% as.data.frame() else abs_data <- abs_data %>%     list_join(by="wavelength")
+  locations <- lapply(abs_data,function(tab){
+    attr(tab,"location")
+  }) %>%
+    unlist()
+  wlproblem <- lapply(abs_data,function(table){
+    if(!colnames(table)[1] == "wavelength") attr(table,"location")[1] else NA
+  }) %>%
+    unlist() %>% .[!is.na(.)]
+  if(length(wlproblem) > 0) stop("No wavelength column could be found in: ",paste0(wlproblem,collapse=", "),"! Please correct that files and read data again!")
+  if(length(abs_data) == 1) abs_data <- abs_data[[1]] %>% as.data.frame() else abs_data <- abs_data %>% list_join(by="wavelength")
   if(order) abs_data <- abs_data %>% arrange(wavelength)
+  attr(abs_data,"location") <- locations
   abs_data
 }
 
@@ -99,7 +106,7 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,...){
 #' abs_parms(abs_data[,1:5],5)
 #' abs_parms(abs_data[,1:5],5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
 #' }
-abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,cores = detectCores()/2){
+abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,cores = parallel::detectCores()/2){
   #samp <- names(abs_data)[2]
   #library(doParallel)
   #cores=2
