@@ -9,7 +9,7 @@ eempf_rescaleAB(pfmodel, newscale = 1)
 \arguments{
 \item{pfmodel}{object of class parafac}
 
-\item{newscale}{Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.}
+\item{newscale}{Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If newscale = "Fmax", each component will be scaled so the maximum of each component is 1.}
 }
 \value{
 object of class parafac

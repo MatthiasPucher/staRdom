@@ -16,6 +16,10 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.6 to 1.0.7:
+  correction of sample normalisation
+  functions for merging diluted and undiluted samples
+
 1.0.5 to 1.0.6:
   absorbance_read: sep and dec are set automatically, location of files is saved
   eem_checkdata: added functions to check imported data, checks sample names, missing data

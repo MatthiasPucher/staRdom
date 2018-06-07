@@ -4,12 +4,12 @@
 \alias{eempf_residuals_plot}
 \title{Plot samples by means of whole sample, each single component and residuum}
 \usage{
-eempf_residuals_plot(cp_out, eem_list, res_data = NULL, spp = 5,
+eempf_residuals_plot(pfmodel, eem_list, res_data = NULL, spp = 5,
   select = NULL, residuals_only = FALSE,
   cores = parallel::detectCores(logical = FALSE)/2)
 }
 \arguments{
-\item{cp_out}{object of class parafac containing the generated model}
+\item{pfmodel}{object of class parafac containing the generated model}
 
 \item{eem_list}{object of class eemlist with all the samples that should be plotted}
 

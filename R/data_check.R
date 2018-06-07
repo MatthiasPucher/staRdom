@@ -129,12 +129,12 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
     .[. != "wavelength"]
   if(length(abs_no_eem) > 0){
     cat(fill=TRUE)
-  cat("Absorbance data with missing EEM samples:",fill=TRUE)
-  lapply(abs_no_eem,function(dup){
-    locs <- attr(absorbance,"location")[which(colnames(absorbance) == dup) - 1]
-    cat(dup,"in ",paste0(locs,collapse=", "), fill=TRUE)
-  }) %>% invisible()
-  cat("This can happen if you diluted for EEM and have additional undiluted absorbance samples.",fill=TRUE)
+    cat("Absorbance data with missing EEM samples:",fill=TRUE)
+    lapply(abs_no_eem,function(dup){
+      locs <- attr(absorbance,"location")[which(colnames(absorbance) == dup) - 1]
+      cat(dup,"in ",paste0(locs,collapse=", "), fill=TRUE)
+    }) %>% invisible()
+    cat("This can happen if you diluted for EEM and have additional undiluted absorbance samples.",fill=TRUE)
   }
 
   duplse <- eem_duplicates(eem_list)
@@ -277,4 +277,194 @@ eem_metatemplate <- function(eem_list = NULL, absorbance = NULL){
     if(exists("t1")) t1 <- full_join(t1,t2,by="sample") else t1 <- t2
   }
   t1
+}
+
+
+#' Return names of samples where certain corrections are missing.
+#'
+#' @param eem_list eemlist to be checked
+#'
+#' @return prints out sample names
+#' @export
+#'
+#' @examples
+#' data(eem_list)
+#'
+#' eem_corrections(eem_list)
+eem_corrections <- function(eem_list){
+  lapply(c("is_blank_corrected","is_scatter_corrected","is_ife_corrected","is_raman_normalized"), function(cor){
+    cat("", fill=TRUE)
+    cat(cor,"== FALSE", fill=TRUE)
+    lapply(eem_list,function(eem){
+      if(!attr(eem,cor)) cat(eem$sample, fill=TRUE)
+    }) %>% invisible()
+  }) %>% invisible()
+}
+
+#' Create table how samples should be corrected because of dilution
+#'
+#' @description Due to dilution absorbance spectra need to be multiplied by the dilution factor and names of EEM samples can be adjusted to be similar to their undiluted absorbance sample. The table contains information about these two steps. Undiluted samples are suggested by finding absorbance samples match the beginning of EEM sample name (see details).
+#'
+#' @param eem_list eemlist
+#' @param abs_data absorbance data as data frame
+#' @param dilution dilution data as data frame with rownames
+#' @param auto way how to deal with dilution is chosen automatically. See details.
+#' @param verbose print out more information
+#'
+#' @details If you choose an automatic analysis EEMs are renamed if there is only one matching undiluted absorbance sample. Matching samples is done by comparing the beginning of the sample name (e.g. "sample3_1to10" fits "sample3").
+#'
+#' @return data frame
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+#' data(eem_list)
+#' data(abs_data)
+#'
+#' abs_data <- abs_data[1:31]
+#'
+#' dilution <- data.frame(dilution = c(rep(1,10),rep(5,10),rep(10,10)))
+#' rownames(dilution) <- eem_names(eem_list)
+#'
+#' dilcorr <- eem_dilcorr(eem_list,abs_data,dilution, auto = TRUE, verbose = FALSE)
+eem_dilcorr <- function(eem_list,abs_data,dilution, auto = FALSE, verbose = TRUE){
+  if(verbose){
+    warning("Please read carefully, this function needs some imput from you!", immediate. = TRUE)
+  cat("Diluted absorbance can be treated either by replacing it with undiluted data from the same sample or by multiplying it with the dilution factor. Here you can choose which suggested undiluted sample you would like to use or if the multiplication with the dilution factor should be done.",fill=TRUE)
+  }
+  ab <- lapply(eem_list,function(eem){
+    #cat(eem$sample,fill=TRUE)
+    if(dilution[eem$sample,] > 1){
+      #abs <- grep(colnames(abs_data),eem$sample,value=TRUE)
+      abs <- sapply(colnames(abs_data),function(pattern) grep(paste0("^",pattern),x=eem$sample,value=TRUE)) %>% unlist() %>% .[names(.) != eem$sample]
+      #abs <- stringr::str_extract(colnames(abs_data),eem$sample) %>% na.omit()
+      #abs <- colnames(abs_data)[grep(colnames(abs_data),eem$sample,value=TRUE)]
+      if(length(abs) > 0) abstext <- sapply(1:length(abs), function(n) paste0("[",n,"]: ",names(abs)[n])) %>% unlist() else abstext <- NULL
+      abstext <- c(abstext, paste0("[d]: multiply by factor ",dilution[eem$sample,], ", [blank]: do nothing > ")) %>%
+        paste0(collapse=", ")
+      #cat(abstext,fill=TRUE)
+      if(!auto){
+        if(verbose) cat(eem$sample,"was diluted and needs to be treated with in some way. Please choose an option and confirm with [enter]!",fill=TRUE)
+        input <- readline(prompt = abstext)
+      } else{
+        if(length(abs) == 1) input <- "1" else input <- "d"
+      }
+      abs_factor <- NA
+      abs_del <- NA
+      eem_comment <- NA
+      eem_newname <- NA
+      if(input == "d"){
+        abs_factor <- dilution[eem$sample,] %>% as.numeric()
+        eem_comment <- paste0("diluted absorbance data multiplied by ",dilution[eem$sample,])
+      } else if(input == ""){
+        abs_factor <- 1
+        eem_comment <- "diluted absorbance data not treated"
+      } else if(input %in% 1:length(abs)){
+        abs_factor <- 1
+        abs_del <- eem$sample
+        eem_comment <- paste0("original EEM sample: ",eem$sample)
+        eem_newname <- abs[as.numeric(input)]
+      } else{
+        if(verbose) warning("The input '",input,"' for sample ",eem$sample, " could not be propperly interpreted!")
+        eem_comment <- "error in combining diluted and undiluted sample data"
+      }
+      data.frame(eem_sample = eem$sample, abs_factor = abs_factor,abs_del = abs_del,eem_comment = eem_comment,
+                 eem_newname = ifelse(is.null(names(eem_newname)),NA,names(eem_newname)), stringsAsFactors = FALSE)
+    }else{
+      data.frame(eem_sample = eem$sample, abs_factor = 1,abs_del = as.character(NA),eem_comment = "no dilution",eem_newname = as.character(NA), stringsAsFactors = FALSE)
+    }
+  }) %>%
+    bind_rows() %>%
+    `rownames<-`(eem_names(eem_list))
+}
+
+#' Multiply absorbance data according to the dilution and remove absorbance from samples where undiluted data is used.
+#'
+#' @description According to dilution data absorbance is either multiplied by the according factor or the undiluted absorbance data is deleted. You can either specify the cor_data data table coming from \code{\link{eem_dilcorr}} or supply an eemlist, and the dilution data to created on the fly.
+#'
+#' @param abs_data absorbance data
+#' @param eem_list optional eemlist
+#' @param dilution optional dilution data as data frame
+#' @param cor_data optional output from \code{\link{eem_dilcorr}} as data frame
+#' @param auto optional, see \code{\link{eem_dilcorr}}
+#' @param verbose optional, see \code{\link{eem_dilcorr}}
+#'
+#' @return data frame
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+#' data(eem_list)
+#' data(abs_data)
+#'
+#' abs_data <- abs_data[1:31]
+#'
+#' dilution <- data.frame(dilution = c(rep(1,10),rep(5,10),rep(10,10)))
+#' rownames(dilution) <- eem_names(eem_list)
+#'
+#' abs_data2 <- eem_absdil(abs_data,eem_list,dilution)
+#'
+eem_absdil <- function(abs_data,eem_list = NULL,dilution = NULL, cor_data = NULL, auto = TRUE, verbose = FALSE){
+  if(is.null(cor_data)){
+    if(!is.null(eem_list) | !is.null(dilution)){
+      cor_data <- eem_dilcorr(eem_list,abs_data,dilution, auto = auto, verbose = verbose)
+    } else {
+      stop("You need to specify either cor_data or eem_list and dilution!")
+    }
+  }
+  ad <- abs_data
+  abs_factor <- cor_data %>%
+    select(eem_sample, abs_factor) %>%
+    filter(abs_factor > 1) #%>%
+    #tibble::column_to_rownames("eem_sample")
+  ad[abs_factor$eem_sample] <- as.data.frame(as.matrix(ad[abs_factor$eem_sample]) %*% diag(abs_factor %>% unlist()))
+  eem_sample <- cor_data$eem_newname %>% unlist() %>% na.omit()
+  abs_del <- cor_data$abs_del %>% unlist() %>% na.omit() %>%
+    .[!. %in% eem_sample]
+  ad <- ad[!colnames(ad) %in% abs_del]
+  ad
+}
+
+#' Correct names of EEM samples to match undiluted absorbance data.
+#'
+#' @param eem_list eemlist
+#' @param abs_data optinal absorbance data as data frame
+#' @param dilution optinal dilution data as data frame
+#' @param cor_data optional output from \code{\link{eem_dilcorr}} as data frame
+#' @param auto optional, see \code{\link{eem_dilcorr}}
+#' @param verbose optional, see \code{\link{eem_dilcorr}}
+#'
+#' @return eemlist
+#' @export
+#'
+#' @import dplyr
+#' @import eemR
+#'
+#' @examples
+#' data(eem_list)
+#' data(abs_data)
+#'
+#' dilution <- data.frame(dilution = c(rep(1,10),rep(5,10),rep(10,10)))
+#' rownames(dilution) <- eem_names(eem_list)
+#'
+#' eem_list2 <- eem_eemdil(eem_list,abs_data,dilution)
+#'
+eem_eemdil <- function(eem_list,abs_data = NULL, dilution = NULL, cor_data = NULL, auto = TRUE, verbose = FALSE){
+  if(is.null(cor_data)){
+    if(!is.null(eem_list) | !is.null(dilution)){
+      cor_data <- eem_dilcorr(eem_list,abs_data,dilution, auto = auto, verbose = verbose)
+    } else {
+      stop("You need to specify either cor_data or abs_data and dilution!")
+    }
+  }
+  eem_sample <- cor_data$eem_newname %>% `names<-`(cor_data$eem_sample) %>% na.omit()
+  eel <- lapply(eem_list, function(eem){
+    if(!is.na(eem_sample[eem$sample])) eem$sample <- eem_sample[eem$sample] %>% unname()
+    eem
+  }) %>%
+    `class<-`("eemlist")
 }

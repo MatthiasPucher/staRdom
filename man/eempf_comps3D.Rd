@@ -4,10 +4,10 @@
 \alias{eempf_comps3D}
 \title{3D plots of PARAFAC components}
 \usage{
-eempf_comps3D(cp_out, which = NULL)
+eempf_comps3D(pfmodel, which = NULL)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 
 \item{which}{optional, if numeric selects certain component}
 }

@@ -69,7 +69,7 @@ if(!is.null(eem_list)){
 # Model performance
 
 ```{r}
-if(performance != FALSE){
+if(performance[1] != FALSE){
   performance
 } else {
   cat("Performance test was skipped.")
@@ -96,7 +96,7 @@ if(!is.null(eem_list) & !is.null(abs_data)){
 
 # Split-half analysis
 ```{r}
-if(class(sh) == "list" & class(sh[[1]][[1]]) == "parafac"){
+if(class(splithalf) == "list" & class(splithalf[[1]][[1]]) == "parafac"){
   if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
     tcc %>%
       kable(format = "html", booktabs = T) %>%
@@ -111,7 +111,7 @@ if(class(sh) == "list" & class(sh[[1]][[1]]) == "parafac"){
 ```
 
 ```{r fig.width=10, fig.height=6}
-if(class(sh) == "list" & class(sh[[1]][[1]]) == "parafac"){
+if(class(splithalf) == "list" & class(splithalf[[1]][[1]]) == "parafac"){
   splithalf_plot(splithalf)
 } else {
   cat("Split-half analysis was skipped.", fill=TRUE)

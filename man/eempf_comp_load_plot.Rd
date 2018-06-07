@@ -4,10 +4,10 @@
 \alias{eempf_comp_load_plot}
 \title{Plot components from a PARAFAC model}
 \usage{
-eempf_comp_load_plot(cp_out)
+eempf_comp_load_plot(pfmodel)
 }
 \arguments{
-\item{cp_out}{object of class parafac}
+\item{pfmodel}{object of class parafac}
 }
 \value{
 ggplot

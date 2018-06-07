@@ -78,7 +78,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
 #' @description B and C modes (emission and excitation wavelengths) are rescaled to RMS of value newscale. This is compensated in A mode (sample loadings).
 #'
 #' @param pfmodel object of class parafac
-#' @param newscale Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.
+#' @param newscale Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If newscale = "Fmax", each component will be scaled so the maximum of each component is 1.
 #'
 #' @return object of class parafac
 #' @export
@@ -92,8 +92,19 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
 eempf_rescaleAB <- function(pfmodel,newscale = 1){
   nf <- attr(pfmodel,"norm_factors")
   comp <- ncol(pfmodel$A)
+  if(newscale == "Fmax"){
+    Bmax <- pfmodel$B %>% matrixStats::colMaxs()
+    Cmax <- pfmodel$C %>% matrixStats::colMaxs()
+    pfmodel$B <- pfmodel$B %*% diag(1/Bmax, nrow=comp) %>%
+      `colnames<-`(colnames(pfmodel$B))
+    pfmodel$C <- pfmodel$C %*% diag(1/Cmax, nrow=comp) %>%
+      `colnames<-`(colnames(pfmodel$B))
+    pfmodel$A <- pfmodel$A %*% diag(Bmax, nrow=comp) %*% diag(Cmax, nrow=comp) %>%
+      `colnames<-`(colnames(pfmodel$B))
+  } else {
   pfmodel <- rescale(pfmodel,mode = "C", newscale = newscale, absorb = "A")
   pfmodel <- rescale(pfmodel,mode = "B", newscale = newscale, absorb = "A")
+  }
   attr(pfmodel,"norm_factors") <- nf
   labComp <- paste("Comp.",1:comp,sep="")
   colnames(pfmodel$A) <- labComp
@@ -144,6 +155,7 @@ eem2array <- function(eem_list){
 #'
 #' @import dplyr
 #' @import tidyr
+#' @importFrom stats sd
 #'
 #' @examples
 #' data(eem_list)
@@ -152,8 +164,8 @@ eem2array <- function(eem_list){
 #' an <- norm_array(a)
 norm_array <- function(eem_array){
   norm_factors <- lapply(1:(dim(eem_array)[1]),function(s) {
-    apply(eem_array[s,,], c(1,2), function(x) x^2) %>% sum(na.rm=TRUE)
-  }) %>% unlist() / (10^7)
+    sd(eem_array[s,,], na.rm=TRUE)
+  }) %>% unlist()
   eem_array <- eem_array / norm_factors
   #eem_array <- lapply(1:(dim(eem_array)[1]),function(s) {
   #  eem_array[s,,]/norm_factors[s]
@@ -313,6 +325,7 @@ norm2A <- function(pfmodel){
 #' Calculating correlations between the component loadings in all samples (C-Modes).
 #'
 #' @param pfmodel results from a PARAFAC analysis, class parafac
+#' @param normalisation logical, whether normalisation is undone or not
 #' @param method method of correlation, passed to \code{\link[stats]{cor}}
 #' @param ... passed on to \code{\link[stats]{cor}}
 #'
@@ -324,9 +337,9 @@ norm2A <- function(pfmodel){
 #' @examples
 #' data(pfres_comps1)
 #' eempf_cortable(pfres_comps[[2]])
-eempf_cortable <- function(pfmodel,method="pearson",...){
+eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
+  if(normalisation) pfmodel <- norm2A(pfmodel)
   pfmodel %>%
-    norm2A() %>%
     .$A %>%
     cor(method=method,...)
 }
@@ -807,17 +820,18 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'   eempf_openfluor(pfres_comps2[[2]],file.path(tempdir(),"openfluor_example.txt"))
 eempf_openfluor <- function(pfmodel,file){
   if(!dir.exists(dirname(file.path(file)))){
-    stop("The path do your file does not contain an existing directory. Please enter a correct path!")
+    stop("The path to your file does not contain an existing directory. Please enter a correct path!")
   }
-  ml <- maxlines(pfmodel) %>%
-    arrange(desc(e)) %>%
-    mutate(e = stringr::str_replace_all(e,"e","E"))
+  factors <- rbind(pfmodel$C %>%
+    data.frame(mode = "Ex", wl = rownames(.),.),
+    pfmodel$B %>%
+      data.frame(mode = "Em", wl = rownames(.),.))
   template <- system.file("openfluor_template.txt",package="staRdom")
   template <- readLines(template)
   template <- stringr::str_replace_all(template,"toolbox","toolbox\tstaRdom")
   template <- stringr::str_replace_all(template,"nSample",paste0("nSample\t",pfmodel$C %>% nrow()))
   write(template,file)
-  write.table(ml,file=file,append=TRUE,col.names=FALSE,row.names=FALSE,sep="\t",quote=FALSE)
+  write.table(factors,file=file,append=TRUE,col.names=FALSE,row.names=FALSE,sep="\t",quote=FALSE)
   message("An openfluor file has been successfully written. Please fill in missing header fields manually!")
 }
 

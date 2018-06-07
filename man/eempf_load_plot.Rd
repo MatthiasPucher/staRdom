@@ -4,10 +4,10 @@
 \alias{eempf_load_plot}
 \title{Plot amount of each component in each sample as bar plot}
 \usage{
-eempf_load_plot(cp_out)
+eempf_load_plot(pfmodel)
 }
 \arguments{
-\item{cp_out}{parafac model}
+\item{pfmodel}{parafac model}
 }
 \value{
 ggplot

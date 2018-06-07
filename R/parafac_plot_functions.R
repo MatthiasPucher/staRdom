@@ -295,11 +295,34 @@ eempf_comps3D <- function(pfmodel,which=NULL){
 }
 
 
+#' Calculating correlations between the component loadings in all samples (C-Modes).
+#'
+#' @param pfmodel results from a PARAFAC analysis, class parafac
+#' @param normalisation logical, whether normalisation is undone or not
+#' @param method method of correlation, passed to \code{\link[stats]{cor}}
+#' @param ... passed on to \code{\link[stats]{cor}}
+#'
+#' @return matrix
+#' @export
+#'
+#' @importFrom stats cor
+#'
+#' @examples
+#' data(pfres_comps1)
+#' eempf_cortable(pfres_comps[[2]])
+eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
+  if(normalisation) pfmodel <- norm2A(pfmodel)
+  pfmodel %>%
+    .$A %>%
+    cor(method=method,...)
+}
+
 #' Plot correlations of components in samples
 #'
 #' @description A pair plot showing correlations between samples is created.
 #'
 #' @param pfmodel object of class parafac
+#' @param normalisation logical, whether normalisation is undone or not
 #' @param lower style of lower plots, see \code{\link[GGally]{ggpairs}}
 #' @param mapping aesthetic mapping, see \code{\link[GGally]{ggpairs}}
 #' @param ... passed on to \code{\link[GGally]{ggpairs}}
@@ -316,9 +339,9 @@ eempf_comps3D <- function(pfmodel,which=NULL){
 #' eempf_corplot(pfres_comps[[1]])
 #' }
 #'
-eempf_corplot <- function(pfmodel,lower=list(continuous="smooth"),mapping=aes(alpha=0.2),...){
+eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smooth"),mapping=aes(alpha=0.2),...){
+  if(normalisation) pfmodel <- norm2A(pfmodel)
   pfmodel %>%
-    norm2A() %>%
     .$A %>%
     data.frame() %>%
     ggpairs(lower=lower,mapping=mapping,...)
@@ -480,7 +503,6 @@ eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, me
   # rm(shmodel)
   #splithalf = TRUE
   rmdfile <- system.file("PARAFAC_report.Rmd",package="staRdom")
-  export <- "~/res.htm"
   dir <- dirname(export)
   file <- basename(export)
   if(splithalf | performance){
