@@ -4,7 +4,8 @@
 \alias{absorbance_read}
 \title{Reading absorbance data from txt and csv files.}
 \usage{
-absorbance_read(absorbance_path, order = TRUE, recursive = TRUE, ...)
+absorbance_read(absorbance_path, order = TRUE, recursive = TRUE,
+  dec = NULL, ...)
 }
 \arguments{
 \item{absorbance_path}{directory containing absorbance data files or path to single file. See details for format of absorbance data.}
@@ -12,6 +13,8 @@ absorbance_read(absorbance_path, order = TRUE, recursive = TRUE, ...)
 \item{order}{logical, data is ordered according to wavelength}
 
 \item{recursive}{read files recursive, include subfolders}
+
+\item{dec}{optional, either you set a decimal separator or the table is tested for . and ,}
 
 \item{...}{additional arguments that are passed on to \code{\link[data.table]{fread}}.}
 }

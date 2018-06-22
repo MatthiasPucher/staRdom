@@ -93,8 +93,10 @@ eem_duplicates.data.frame <- function(data){
 #' @param metacolumns character vector of columns that are checkt for complete data sets
 #' @param error logical, whether a problem should cause an error or not.
 #'
-#' @return logical, whether severe errors occured
+#' @return writes out possible porblems to command line, additionally list with sample names where possible problems were found, see details.
 #' @export
+#'
+#' @details The returned list contains character vectors with sample names where possible problems were found: problem (logical, whether a severe problem was found), nas (sample names with NAs in EEM data), missing_correction (correction of EEM samples was not done or not done successfully),eem_no_abs (EEM samples with no absorbance data), abs_no_eem (samples with present absorbance but no EEM data), duplse (duplicate sample names in EEM data), duplsa (duplicate sample names in absorbance data), invalid_eem (invalid EEM sample name), invalid_abs (invalid absorbance sample name), range_mismatch (wavelength ranges of EEM and absorbance data are mismatching), metadupls (duplicate sample names in metadata), metamissing (EEM samples where metadata is missing), metaadd (samples in metadata without EEM data)
 #'
 #' @import dplyr
 #' @import tidyr
@@ -107,11 +109,23 @@ eem_duplicates.data.frame <- function(data){
 #' eem_checkdata(eem_list,abs_data)
 eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NULL, error = TRUE){
   problem = FALSE
+
   nas <- which(eem_is.na(eem_list))
   if(length(nas) > 0){
     cat("NAs were found in the following samples: ",paste0(names(nas),collapse = ", ", sep=", "),fill=TRUE)
     problem = TRUE
   }
+
+  missing_correction <- lapply(c("is_blank_corrected","is_scatter_corrected","is_ife_corrected","is_raman_normalized") %>% `names<-`(.,.), function(cor){
+    cat("", fill=TRUE)
+    cat("samples missing \"", cor, "\"", fill=TRUE)
+    lapply(eem_list,function(eem){
+      if(!attr(eem,cor)){
+        cat(eem$sample, fill=TRUE)
+        eem$sample %>% invisible()
+        }
+    }) %>% unlist() %>% invisible()
+  }) %>% invisible()
 
   eem_no_abs <- eem_names(eem_list)[!eem_names(eem_list) %in% colnames(absorbance)]
   if(length(eem_no_abs) > 0){
@@ -160,7 +174,6 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
       cat(dup,"in ",paste0(locs,collapse=", "), fill=TRUE)
     }) %>% invisible()
     cat("If sample names contain dots, please check if dots were in the original sample name or added by R due to duplicate sample names!")
-    problem = TRUE
   }
 
   invalid_eem <- eem_names(eem_list)[!eem_names(eem_list) %in% make.names(eem_names(eem_list))]
@@ -177,7 +190,6 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
 
   invalid_abs <- colnames(absorbance)[!colnames(absorbance) %in% make.names(colnames(absorbance))]
   if(length(invalid_abs) > 0){
-    problem = TRUE
     cat(fill=TRUE)
     cat("Invalid sample names in absorbance data:",fill=TRUE)
     lapply(invalid_abs,function(inv){
@@ -205,16 +217,19 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
 
   #metadata <- meta
   #metacolumns <- c("dilution")
+  metadupls <- c()
+  metamissing <- c()
+  metaadd <- c()
   if(!is.null(metadata)){
-    dupls <- rownames(metadata) %>%
+    metadupls <- rownames(metadata) %>%
       table() %>%
       data.frame() %>%
       filter(Freq > 1) %>%
       .[,1] %>%
       as.character()
-    if(length(dupls) > 0) {
+    if(length(metadupls) > 0) {
       cat(fill=TRUE)
-      cat("The following sample names were duplicate in metadata:",paste0(dupls,collapse=", "),fill=TRUE)
+      cat("The following sample names were duplicate in metadata:",paste0(metadupls,collapse=", "),fill=TRUE)
     }
     if(!is.null(metacolumns)){
       problem <- lapply(metacolumns,function(col){
@@ -225,16 +240,16 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
           #cat(col)
           #metadata[col] >= 0
           valid <- rownames(metadata)[metadata[col] >= 0]# %>%
-          missing <- eem_names(eem_list)[!eem_names(eem_list) %in% valid]
-          if(length(missing) > 0){
+          metamissing <- eem_names(eem_list)[!eem_names(eem_list) %in% valid]
+          if(length(meta) > 0){
             cat(fill=TRUE)
-            cat("Metadata column",col,"misses data for samples:",paste0(missing,collapse=", "),fill=TRUE)
+            cat("Metadata column",col,"misses data for samples:",paste0(metamissing,collapse=", "),fill=TRUE)
             problem <- TRUE
           }
-          missing <- valid[!valid %in% eem_names(eem_list)]
-          if(length(missing) > 0){
+          metaadd <- valid[!valid %in% eem_names(eem_list)]
+          if(length(metaadd) > 0){
             cat(fill=TRUE)
-            cat("Metadata column",col,"contains additional data for samples with no EEM data present:",paste0(missing,collapse=", "),fill=TRUE)
+            cat("Metadata column",col,"contains additional data for samples with no EEM data present:",paste0(metaadd,collapse=", "),fill=TRUE)
           }
         } else cat("Column",col,"was not found in the table.", fill=TRUE)
         problem
@@ -246,7 +261,7 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
   } else cat("No metadata was checked. Table was missing.",fill=TRUE)
 
   if(problem & error) stop("Please read the messages above carefully and correct the problems before continuing the analysis!")
-  invisible(problem)
+  invisible(list(problem,nas,missing_correction,eem_no_abs,abs_no_eem,duplse,duplsa,invalid_eem,invalid_abs,range_mismatch,metadupls,metamissing,metaadd))
 }
 
 #' Create table that contains sample names and locations of files.
@@ -332,7 +347,7 @@ eem_corrections <- function(eem_list){
 eem_dilcorr <- function(eem_list,abs_data,dilution, auto = FALSE, verbose = TRUE){
   if(verbose){
     warning("Please read carefully, this function needs some imput from you!", immediate. = TRUE)
-  cat("Diluted absorbance can be treated either by replacing it with undiluted data from the same sample or by multiplying it with the dilution factor. Here you can choose which suggested undiluted sample you would like to use or if the multiplication with the dilution factor should be done.",fill=TRUE)
+    cat("Diluted absorbance can be treated either by replacing it with undiluted data from the same sample or by multiplying it with the dilution factor. Here you can choose which suggested undiluted sample you would like to use or if the multiplication with the dilution factor should be done.",fill=TRUE)
   }
   ab <- lapply(eem_list,function(eem){
     #cat(eem$sample,fill=TRUE)
@@ -420,7 +435,7 @@ eem_absdil <- function(abs_data,eem_list = NULL,dilution = NULL, cor_data = NULL
   abs_factor <- cor_data %>%
     select(eem_sample, abs_factor) %>%
     filter(abs_factor > 1) #%>%
-    #tibble::column_to_rownames("eem_sample")
+  #tibble::column_to_rownames("eem_sample")
   ad[abs_factor$eem_sample] <- as.data.frame(as.matrix(ad[abs_factor$eem_sample]) %*% diag(abs_factor %>% unlist()))
   eem_sample <- cor_data$eem_newname %>% unlist() %>% na.omit()
   abs_del <- cor_data$abs_del %>% unlist() %>% na.omit() %>%

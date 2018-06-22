@@ -9,7 +9,7 @@
 #' @param nstart number of random starts
 #' @param cores number of parallel calculations (e.g. number of physical cores in CPU)
 #' @param ctol Convergence tolerance (R^2 change)
-#' @param const constraints of PARAFAC analysis
+#' @param const constraints of PARAFAC analysis. Default is non-negative ("nonneg"), alternatively smooth and non-negative ("smonon") might be interesting for an EEM analysis.
 #' @param verbose print infos
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
 #'
@@ -37,7 +37,7 @@
 #' pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
 #'     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
 #' }
-eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),nstart = 10,ctol=10^-4,cores = parallel::detectCores()/2, verbose = FALSE, ...){
+eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c("nonneg","nonneg","nonneg"),nstart = 10,ctol=10^-4,cores = parallel::detectCores()/2, verbose = FALSE, ...){
   #eem_list <- eem_list %>% eem_red2smallest()
   eem_array <- eem2array(eem_list)
   if(normalise){
@@ -73,7 +73,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
   return(res)
 }
 
-#' Rescale A and B modes of PARAFAC model
+#' Rescale B and C modes of PARAFAC model
 #'
 #' @description B and C modes (emission and excitation wavelengths) are rescaled to RMS of value newscale. This is compensated in A mode (sample loadings).
 #'
@@ -88,8 +88,8 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c(2,2,2),n
 #' @examples
 #' data(pfres_comps1)
 #'
-#' new_pf <- eempf_rescaleAB(pfres_comps[[2]])
-eempf_rescaleAB <- function(pfmodel,newscale = 1){
+#' new_pf <- eempf_rescaleBC(pfres_comps[[2]])
+eempf_rescaleBC <- function(pfmodel,newscale = 1){
   nf <- attr(pfmodel,"norm_factors")
   comp <- ncol(pfmodel$A)
   if(newscale == "Fmax"){
@@ -524,7 +524,7 @@ A_missing <- function(eem_list,pfmodel,cores = parallel::detectCores(logical = F
   x <- eem_list %>%
     eem_exclude(exclude)
 
-  missingAs <- eem_parafac(x,comps = pfmodel$A %>% ncol(),normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B, Cfixed = pfmodel$C,cores = cores,control = pfmodel$control, const = c(pfmodel$const[1],0,0),...)
+  missingAs <- eem_parafac(x,comps = pfmodel$A %>% ncol(),normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B, Cfixed = pfmodel$C,cores = cores,control = pfmodel$control, const = pfmodel$const,...)
 
   missingAs[[1]]
 }

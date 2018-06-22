@@ -267,14 +267,11 @@ eempf_load_plot <- function(pfmodel){
 eempf_comps3D <- function(pfmodel,which=NULL){
   data <- pfmodel %>% eempf_comp_mat()
   z <- lapply(data,function(mat){
-    #mat <- data[[1]]
     mat %>%
       data.frame() %>%
-      #mutate_all(as.numeric()) %>%
       spread(em,value) %>%
       remove_rownames() %>%
       column_to_rownames("ex") %>%
-      #select(-ex) %>%
       as.matrix()
   })
   ex <- lapply(data,function(mat){
@@ -292,29 +289,6 @@ eempf_comps3D <- function(pfmodel,which=NULL){
         add_surface()
     }
   })
-}
-
-
-#' Calculating correlations between the component loadings in all samples (C-Modes).
-#'
-#' @param pfmodel results from a PARAFAC analysis, class parafac
-#' @param normalisation logical, whether normalisation is undone or not
-#' @param method method of correlation, passed to \code{\link[stats]{cor}}
-#' @param ... passed on to \code{\link[stats]{cor}}
-#'
-#' @return matrix
-#' @export
-#'
-#' @importFrom stats cor
-#'
-#' @examples
-#' data(pfres_comps1)
-#' eempf_cortable(pfres_comps[[2]])
-eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
-  if(normalisation) pfmodel <- norm2A(pfmodel)
-  pfmodel %>%
-    .$A %>%
-    cor(method=method,...)
 }
 
 #' Plot correlations of components in samples

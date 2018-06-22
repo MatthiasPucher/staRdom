@@ -4,9 +4,9 @@
 \alias{eem_parafac}
 \title{Runs a PARAFAC analysis on EEM data}
 \usage{
-eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE, const = c(2,
-  2, 2), nstart = 10, ctol = 10^-4, cores = parallel::detectCores()/2,
-  verbose = FALSE, ...)
+eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE,
+  const = c("nonneg", "nonneg", "nonneg"), nstart = 10, ctol = 10^-4,
+  cores = parallel::detectCores()/2, verbose = FALSE, ...)
 }
 \arguments{
 \item{eem_list}{object of class \code{\link[eemR]{eem}}}
@@ -17,7 +17,7 @@ eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE, const = c(2,
 
 \item{normalise}{state whether EEM data should be normalised in advance}
 
-\item{const}{constraints of PARAFAC analysis}
+\item{const}{constraints of PARAFAC analysis. Default is non-negative ("nonneg"), alternatively smooth and non-negative ("smonon") might be interesting for an EEM analysis.}
 
 \item{nstart}{number of random starts}
 

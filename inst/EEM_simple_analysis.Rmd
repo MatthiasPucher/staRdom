@@ -290,9 +290,11 @@ eem_list <- eem_list %>% eem_name_replace(c("\\(FD3\\)"),c(""))
 
 #### Read table with meta data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# There is an additional step to automatically reread the table with comma decimal separator if dot did not work.
 if(metadata != FALSE){
-  meta <- data.table::fread(file = metadata, header = TRUE) %>%
-  mutate_at(vars(one_of(col_samples)),make.names) %>%
+  meta <- data.table::fread(file = metadata, header = TRUE)
+  if(!all(sapply(meta,is.numeric)[-which(colnames(meta) == col_samples)])) meta <- data.table::fread(file = metadata, header = TRUE,dec=",")
+  meta <- meta %>% mutate_at(vars(one_of(col_samples)),make.names) %>%
   tibble::column_to_rownames(var=col_samples)
 }
 
@@ -302,13 +304,18 @@ if(absorbance_dir != FALSE){
   abs_data <- absorbance_read(absorbance_dir)
 }
 
+```
+
+```{r echo=FALSE, message=TRUE, warning=TRUE}
 ####################
 #### Data check ####
 ####################
 # the data is checked for several often occuring problems. Most of them are related to how you organised your data.
 # if the script stops here please have a look at the error messages and correct your data.
-eem_checkdata(eem_list,abs_data,meta,metacolumns = c(col_dilution, col_cuv_len, col_raman_area), error = TRUE)
+eem_checkdata(eem_list,abs_data,meta,metacolumns = c(col_dilution, col_cuv_len, col_raman_area), error = FALSE)
+```
 
+```{r message=FALSE, warning=TRUE, include=FALSE}
 #########################
 #### Data correction ####
 #########################

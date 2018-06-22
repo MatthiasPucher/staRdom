@@ -28,7 +28,7 @@ data(absorbance)
 meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
+problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 eem_list <- eem_name_replace(eem_list,c("\\(FD3\\)"),c(""))
@@ -151,10 +151,13 @@ data(pfres_comps1)
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
 eempf_compare(pfres_comps)
 
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+pfres_comps <- lapply(pfres_comps, eempf_rescaleBC, newscale = "Fmax")
+
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 comps <- 6
 
-cp_out <- pfres_comps[[which(comps==seq(dim_min,dim_max))]]
+cp_out <- pfres_comps[[which(comps == seq(dim_min, dim_max))]]
 
 ## ----fig.width=7---------------------------------------------------------
 # calculate leverage
@@ -182,6 +185,8 @@ eem_list_ex <- eem_exclude(eem_list, exclude)
 data(pfres_comps2)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+pfres_comps2 <- lapply(pfres_comps2, eempf_rescaleBC, newscale = "Fmax")
+
 eempf_compare(pfres_comps2)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
@@ -232,6 +237,15 @@ splithalf_plot(sh)
 tcc_sh_table <- splithalf_tcc(sh)
 
 tcc_sh_table
+
+## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
+#  corcondia <- eempf_corcondia(cp_out, eem_list_ex)
+
+## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
+#  eemqual <- eempf_eemqual(cp_out, eem_list_ex, sh)
+
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+
 
 ## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
 write.bibtex(file="references2.bib")

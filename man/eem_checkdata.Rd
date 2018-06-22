@@ -19,10 +19,13 @@ eem_checkdata(eem_list, absorbance, metadata = NULL, metacolumns = NULL,
 \item{error}{logical, whether a problem should cause an error or not.}
 }
 \value{
-logical, whether severe errors occured
+writes out possible porblems to command line, additionally list with sample names where possible problems were found, see details.
 }
 \description{
 The function tries to lead you to possible problems in your data.
+}
+\details{
+The returned list contains character vectors with sample names where possible problems were found: problem (logical, whether a severe problem was found), nas (sample names with NAs in EEM data), missing_correction (correction of EEM samples was not done or not done successfully),eem_no_abs (EEM samples with no absorbance data), abs_no_eem (samples with present absorbance but no EEM data), duplse (duplicate sample names in EEM data), duplsa (duplicate sample names in absorbance data), invalid_eem (invalid EEM sample name), invalid_abs (invalid absorbance sample name), range_mismatch (wavelength ranges of EEM and absorbance data are mismatching), metadupls (duplicate sample names in metadata), metamissing (EEM samples where metadata is missing), metaadd (samples in metadata without EEM data)
 }
 \examples{
 data(eem_list)

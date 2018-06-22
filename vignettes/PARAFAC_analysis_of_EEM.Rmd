@@ -103,10 +103,11 @@ meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom")
 ```
 
 ## Check data
-The imported data is checked against common problems. In case of sever problems, an error message is produced.
+The data can be checked for possible incorrect entries. The results are to help you to reorganise your data and revise the steps above in case of any problems. No correction is done automatically!
+Checks are done on NAs in data, duplicate and invalid sample names, wavelength range mismatches and missing data in either inconsistencies in samples names between EEM, absorbance and metadata (like samples missing in one of the three sets).
 
 ```{r eval=TRUE, include=TRUE}
-eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
+problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 ```
 
 
@@ -294,11 +295,13 @@ eem_list <- eem_import_dir(dir)
 
 Due to package size issues, no example data is included for this function.
 
+You might reuse `eem_checkdata` before continuing the further analysis!
+
 ## Number of components
 
 It is crucial to find an appropriate number of components in the analysis. To help you comparing the different numbers, a series of PARAFAC models can be calculated and compared. In this case 4 models ranging from 5 to 8 components are calculated.
 
-The analysis can happen to find local minima so a certain number of similar models with differnt random starting values is calculated and the best is kept for further steps. `nstart` is the number of these models and 10 might by a good start.
+The analysis can happen to find local minima so a certain number of similar models with differnt random starting values is calculated and the best is kept for further steps. `nstart` is the number of these models and 4 might by a good start although for a profound analysis higher values (e.g. 10) are suggested.
 
 You can speed up the calculations by using multiple `cores`. Beware, that calculating a PARAFAC model can take some time!
 
@@ -332,18 +335,25 @@ Plot created model's components. You can see the models fits and the components 
 eempf_compare(pfres_comps)
 ```
 
-Choosing 6 components.
+In case of uneven peak heights, `eempf_rescaleAB` can help you imporving your graphs. The parameter `newscale` specifies the root mean-squared error of each column in matrices B and C. This is compensated in the A-mode (sample loadings). Alternatively `newscale` can be set `"Fmax"`, each peak has a height of 1 then.
+
+```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+pfres_comps <- lapply(pfres_comps, eempf_rescaleBC, newscale = "Fmax")
+```
+
+Here, we choose 6 compoents.
 Do not choose the 6th component in the list of models, as 6 was the 2nd model created!
 
 ```{r eval=TRUE, include=TRUE}
 comps <- 6
 
-cp_out <- pfres_comps[[which(comps==seq(dim_min,dim_max))]]
+cp_out <- pfres_comps[[which(comps == seq(dim_min, dim_max))]]
 ```
 
 ## Find and exclude outliers leverage
 
-The leverage is calculated by `eempf_leverage` and can be plotted with `eempf_leverage_plot`. Using `eempf_leverage_ident` to plot the leverage shows an interactive plot where you can klick an certain values to save them in a variable. `qlabel` defines the size of the upper percentile that is labeled in the plots.
+The leverage is calculated by `eempf_leverage` and can be plotted with `eempf_leverage_plot`. Using `eempf_leverage_ident` to plot the leverage shows an interactive plot where you can klick an certain values to save them in a variable. `qlabel` defines the size of the upper percentile that is labeled in the plots. `eempf_mleverage` can be used to compare the leverages of samples in differnt models.
+
 ```{r fig.width=7}
 # calculate leverage
 cpl <- eempf_leverage(cp_out)
@@ -379,9 +389,11 @@ Results are already added to the package and can be loaded:
 data(pfres_comps2)
 ```
 
-And again, you need to decide on the number of components to use for further analysis.
+And again, you need to decide on the number of components to use for further analysis. In advance you can rescale the components.
 
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+pfres_comps2 <- lapply(pfres_comps2, eempf_rescaleBC, newscale = "Fmax")
+
 eempf_compare(pfres_comps2)
 ```
 
@@ -479,9 +491,47 @@ tcc_sh_table <- splithalf_tcc(sh)
 tcc_sh_table
 ```
 
+## Further model validation
+
+### Core consistancy
+
+As a way of model validation the core consistancy can be calculated.
+
+```{r eval=FALSE, include=TRUE, fig.width=7}
+corcondia <- eempf_corcondia(cp_out, eem_list_ex)
+```
+
+### EEMqual
+
+EEMqual according to `r citet("10.1016/j.chemolab.2010.06.005")`can be calculated.
+
+```{r eval=FALSE, include=TRUE, fig.width=7}
+eemqual <- eempf_eemqual(cp_out, eem_list_ex, sh)
+```
+
 ## Comparing your data using openfluor.org
 
 You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org `r citet("10.1039/c3ay41935e")`. Please check the file header manually after export as some values cannot be determined automatically.
+
+## Creating a report on your analysis
+The report contains important settings and results from your analysis and is exported as an html file. You can specify the data you want to include.
+
+## Exporting the model
+Using `eempf_export` you can export your model matrices to a csv file.
+
+`eem_metatemplate` is intended as a list of samples and a template for a table containing metadata. Writing this table to a file easens the step of gathering needed values for all samples.
+
+## Combine results and care for dilution issues
+
+`eem_dilcorr` creates a table containing information on how to handle diluted samples. Absorbance spectra need to be replaced by undiluted measurements preferably or multiplied by the dilution factor. Names of EEM samples can be adjusted to be similar to their undiluted absorbance sample. You can choose for each sample how you want to proceed on the command line. The table contains information about these two steps.
+
+`eem_absdil` takes information from the table generated by `eem_dilcorr` and multiplies or deletes undiluted absorbance sample data.
+
+`eem_eemdil` takes information from the table generated by `eem_dilcorr` and renames EEM samples to match undiluted absorbance samples.
+
+```{r eval=TRUE, include=TRUE, fig.width=7}
+
+```
 
 # References
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
