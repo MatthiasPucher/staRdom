@@ -20,7 +20,7 @@ data frame containing leverages of wavelengths and samples for each model
 Calculate the leverage of each emission and excitation wavelength and each sample from a list of PARAFAC models
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_mleverage(pfres_comps)
+eempf_mleverage(pf4)
 }

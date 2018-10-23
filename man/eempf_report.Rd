@@ -5,8 +5,9 @@
 \title{Create a html report of a PARAFAC analysis}
 \usage{
 eempf_report(pfmodel, export, eem_list = NULL, absorbance = NULL,
-  meta = NULL, metacolumns = NULL, splithalf = FALSE, shmodel = NULL,
-  performance = FALSE, residuals = FALSE, spp = 5, ...)
+  meta = NULL, metacolumns = NULL, splithalf = FALSE,
+  shmodel = NULL, performance = FALSE, residuals = FALSE, spp = 5,
+  ...)
 }
 \arguments{
 \item{pfmodel}{PARAFAC model}

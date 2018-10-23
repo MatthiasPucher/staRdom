@@ -4,8 +4,8 @@
 \alias{eem_absdil}
 \title{Multiply absorbance data according to the dilution and remove absorbance from samples where undiluted data is used.}
 \usage{
-eem_absdil(abs_data, eem_list = NULL, dilution = NULL, cor_data = NULL,
-  auto = TRUE, verbose = FALSE)
+eem_absdil(abs_data, eem_list = NULL, dilution = NULL,
+  cor_data = NULL, auto = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{abs_data}{absorbance data}
@@ -27,14 +27,6 @@ data frame
 According to dilution data absorbance is either multiplied by the according factor or the undiluted absorbance data is deleted. You can either specify the cor_data data table coming from \code{\link{eem_dilcorr}} or supply an eemlist, and the dilution data to created on the fly.
 }
 \examples{
-data(eem_list)
-data(abs_data)
-
-abs_data <- abs_data[1:31]
-
-dilution <- data.frame(dilution = c(rep(1,10),rep(5,10),rep(10,10)))
-rownames(dilution) <- eem_names(eem_list)
-
-abs_data2 <- eem_absdil(abs_data,eem_list,dilution)
+# no appropriate exmaple data available yet
 
 }

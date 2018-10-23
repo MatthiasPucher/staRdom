@@ -23,9 +23,9 @@ The plots are intended to help with a suitable number of components.
 }
 \examples{
 \donttest{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_compare(pfres_comps)
+eempf_compare(pf4)
 }
 }
 \seealso{

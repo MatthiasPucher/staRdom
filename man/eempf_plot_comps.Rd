@@ -18,8 +18,8 @@ object of class ggplot
 The components can be plottet in two ways: either as a colour map or as two lines (emission, excitation wavelengths) intersecting at the component maximum.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_plot_comps(pfres_comps)
-eempf_plot_comps(pfres_comps,type=2)
+eempf_plot_comps(pf4)
+eempf_plot_comps(pf4,type=2)
 }

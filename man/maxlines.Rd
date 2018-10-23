@@ -16,7 +16,7 @@ data frame
 Data of wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-ml <- maxlines(pfres_comps[[1]])
+ml <- maxlines(pf4[[4]])
 }

@@ -27,13 +27,6 @@ Due to dilution absorbance spectra need to be multiplied by the dilution factor 
 If you choose an automatic analysis EEMs are renamed if there is only one matching undiluted absorbance sample. Matching samples is done by comparing the beginning of the sample name (e.g. "sample3_1to10" fits "sample3").
 }
 \examples{
-data(eem_list)
-data(abs_data)
+# no appropriate exmaple data available yet
 
-abs_data <- abs_data[1:31]
-
-dilution <- data.frame(dilution = c(rep(1,10),rep(5,10),rep(10,10)))
-rownames(dilution) <- eem_names(eem_list)
-
-dilcorr <- eem_dilcorr(eem_list,abs_data,dilution, auto = TRUE, verbose = FALSE)
 }

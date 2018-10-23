@@ -18,9 +18,9 @@ object of class parafac
 B and C modes (emission and excitation wavelengths) are rescaled to RMS of value newscale. This is compensated in A mode (sample loadings).
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-new_pf <- eempf_rescaleBC(pfres_comps[[2]])
+new_pf <- eempf_rescaleBC(pf4[[4]])
 }
 \seealso{
 \code{\link[multiway]{rescale}}

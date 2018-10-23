@@ -18,9 +18,9 @@ data.frame containing the TCCs
 Componets must be passed as peak lines \code{\link[staRdom]{maxlines}}
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-ml <- maxlines(pfres_comps[[2]])
+ml <- maxlines(pf4[[4]])
 
 tcc(ml)
 }

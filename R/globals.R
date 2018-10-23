@@ -43,5 +43,7 @@ globalVariables(c(
   "comb",
   "Freq",
   "parameter",
-  "meta"
+  "meta",
+  "i",
+  "z"
 ), package = "staRdom")

@@ -4,28 +4,37 @@
 \alias{eem_interp}
 \title{Missing values are interpolated within EEM data}
 \usage{
-eem_interp(data, cores = detectCores(logical = FALSE)/2)
+eem_interp(data, cores = parallel::detectCores(logical = FALSE)/2,
+  type = TRUE, verbose = FALSE, nonneg = TRUE, ...)
 }
 \arguments{
 \item{data}{object of class eemlist with spectra containing missing values}
 
 \item{cores}{specify number of cores for parallel computation}
+
+\item{type}{numeric 0 to 4 or TRUE which resambles type 2}
+
+\item{verbose}{logical, whether more information on calculation should be provided}
+
+\item{nonneg}{logical, whether negative values should be replaced by 0}
+
+\item{...}{arguments passed on to other functions (pchip, na.approx, mba.points)}
 }
 \value{
 object of class eemlist with interpoleted spectra.
 }
 \description{
-Missing EEM data can be interpolated. Usually it is the result of removing scatter. It is done along each excitation wavelength. This step is recommended if you aim for a PARAFAC analysis. Interpolation is done with hermitean interpolation polynomials using \code{\link[pracma]{pchip}}.
+Missing EEM data can be interpolated. Usually it is the result of removing scatter or other parts where noise is presumed. Different interpolation algorithms can be used (see details).
+}
+\details{
+The types of interpolation are (0) setting all NAs to 0, (1) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) spline interpolation with \code{\link[MBA]{mba.points}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible.
 }
 \examples{
 \donttest{
 data(eem_list)
 
-remove_scatter <- c()
-remove_scatter["raman1"] = TRUE
-remove_scatter["raman2"] = TRUE
-remove_scatter["rayleigh1"] = TRUE
-remove_scatter["rayleigh2"] = TRUE
+remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
+
 remove_scatter_width = c(15,10,16,12)
 
 eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
@@ -38,5 +47,5 @@ Elcoroaristizabal, S., Bro, R., García, J., Alonso, L. 2015. PARAFAC models of 
 \url{https://doi.org/10.1016/j.chemolab.2015.01.017}
 }
 \seealso{
-\code{\link[pracma]{pchip}}
+\code{\link[pracma]{pchip}}, \code{\link[MBA]{mba.points}}, \code{\link[zoo]{na.approx}}
 }

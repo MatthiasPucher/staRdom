@@ -16,7 +16,7 @@ object of class parafac
 Factors used for normalisation are saved separately in the PARAFAC models. With this function, the normalisation factors are combined with the A-modes of the model and removed as a separate vector. This means former normalisation is accounted for in the amount of each component in each sample. If no normalisation was done, the original model is returned without warning.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-pfres_comps[[2]][[3]] <- norm2A(pfres_comps[[2]][[3]])
+pf4[[4]][[3]] <- norm2A(pf4[[4]][[3]])
 }

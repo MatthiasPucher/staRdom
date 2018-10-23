@@ -35,9 +35,9 @@ eem_list may contain samples not used for modelling. Calculation is done by \cod
 \examples{
 \donttest{
 data(eem_list)
-data(pfres_comps1)
+data(pf_models)
 
-eempf_residuals_plot(pfres_comps[[3]],eem_list)
+eempf_residuals_plot(pf4[[4]],eem_list)
 }
 
 }

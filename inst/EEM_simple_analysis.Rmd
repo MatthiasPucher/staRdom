@@ -1,6 +1,6 @@
 ---
 title: "DOM analysis"
-subtitle: "EEM peak picking"
+subtitle: "EEM peak picking, absorbance slope parameters"
 date: "`r format(Sys.time(), '%B %e %Y')`"
 author: "WCL"
 knit: (function(inputFile, encoding) {
@@ -42,8 +42,6 @@ This report was created using the R package staRdom version `r packageVersion("s
 # Set the directory where all output files are put in.
 # The directory is automatically created if it does not exist.
 # Folder delimiters can be / or \\, \ as usually used in Windows will not work!
-#
-# This is the only parameter that has to be set!
 output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output/"
 
 ```
@@ -61,7 +59,7 @@ output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output
 # Import is done with eem.read() (package eemR), please see details there.
 # The template refers to data coming with the package. Please use your data
 # by setting the path to your files!
-sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sample_dir = "C:/some_folder/input/fluor/"
+sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the exmaple data coming with the package!
 
 #### Absorbance data ####
 #~~~~~~~~~~~~~~~~~~~~~~~#
@@ -71,23 +69,23 @@ sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sa
 # Those steps can be skipped but keep in mind it is important for a profound analysis!
 #
 # path of adsorbance data as directory or single file, sub folders are not read:
-absorbance_dir = system.file("extdata/absorbance_eemR",package = "staRdom") # e.g. absorbance_dir = "C:/some_folder/input/absorbance/"
+absorbance_dir = system.file("extdata/absorbance_eemR",package = "staRdom") # e.g. absorbance_dir = "C:/some_folder/input/absorbance/", system.file() accesses the exmaple data coming with the package!
 
-# Cuvette length in cm that was used in absorbance measurement.
+# Path length of absorbance measurment in cm that was used in absorbance measurement.
 # If it is set to "meta" data from the metadata table is used (details see below).
-absorbance_cuv_len = 5 # e.g. absorbance_cuv_len = 5
+absorbance_path = 5 # e.g. absorbance_path = 5
 
 #### Meta data ####
 #~~~~~~~~~~~~~~~~~#
 # Adding a table with meta data is OPTIONAL!
-# The table can contain dilution factors, cuvette lengths of
-# the photometer and absorbance cuvette lengths and is intended
+# The table can contain dilution factors, path lengths of
+# the photometer and raman areas and is intended
 # for cases where different values should be used for different
 # samples. Each column can be used optionally.
 
 # read table with metadata as *.TXT or *.CSV
 # either a path or FALSE if no metadata file is used.
-metadata = system.file("extdata/metatable_eemR.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv"
+metadata = system.file("extdata/metatable_eemR.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv", system.file() accesses the exmaple data coming with the package!
 
 #### Meta data: names of columns ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -99,7 +97,7 @@ col_samples = "sample"
 col_dilution = "dilution"
 
 # if you want to use the cuvette length (in cm) for the absorbance from the meta data table,
-# state the name of the column containing the cuvette lengths and set absorbance_cuv_len = "meta" (below)
+# state the name of the column containing the cuvette lengths and set absorbance_path = "meta" (below)
 col_cuv_len = "cuv_len"
 
 # if you want to use the raman area (under the curve) data from the meta data table, state the name 
@@ -115,19 +113,14 @@ col_raman_area = "raman"
 #### Table output ####
 #~~~~~~~~~~~~~~~~~~~~#
 # Write a table with peaks and slope parameters.
-# Written as xls or, in case of missing java environment as csv.
+# Written as xls or, in case of missing java environment or the package xlsx as csv.
 output_xls = TRUE # e.g. TRUE
 
-# In case of csv export you can define the separator and the decimal point here.
+# In case of a csv export you can define the separator and the decimal point here.
 out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
 
 #### Plot settings PNG ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~#
-# The scaling of the different sample plots can be chosen.
-# Either all samples are coloured according to the range of the
-# complete sample set (TRUE) or each plot is scaled separately (FALSE).
-scale_col = FALSE # e.g. TRUE
-
 # State whether you want pngs of the single EEM spectra written in your output directory
 output_single_png = FALSE # e.g. TRUE
 
@@ -136,6 +129,11 @@ output_overview_png = FALSE # e.g. TRUE
 
 ## number of EEM spectra plottet in each overview image
 overview_number = 6 # e.g. 6
+
+# The scaling of the different sample plots can be chosen.
+# Either all samples are coloured according to the range of the
+# complete sample set (TRUE) or each plot is scaled separately (FALSE).
+scale_col = FALSE # e.g. TRUE
 
 #### Plot settings report ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -152,6 +150,7 @@ single_plots = FALSE # e.g. TRUE
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # File name where data is stored in RData format in the output directory.
 # Set to FALSE if you dont want your eem data saved.
+# Date, time and file extension is added automatically so you do not overwrite previous saved data.
 data_file = "eem_data" # e.g. "eem_data"" or FALSE
 
 # Desired name for the variable containing the eem data.
@@ -165,6 +164,14 @@ eem_name = "eem_list"
 #### Data correction ####
 #########################
 #
+#### Normalising absorbance data to baseline ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Absorbance data can be corrected by subtracting a baseline value from each sample.
+# In high wavelength ranges (default 680-700 nm), the absorbance is assumed to be 0.
+# The average value of that range (or any other range) is subtracted from the whole spectrum.
+# abs_norm can be set TRUE to use the default range, you can specify the desired range by a vector of length 2 and you can set it FALSE to skip this correction.
+abs_norm = TRUE # e.g. TRUE, c(700,800)
+
 #### Correction of diluted samples ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a dilution factor if your sample was diluted.
@@ -173,6 +180,16 @@ eem_name = "eem_list"
 # 1 for no dilution, 10 for dilution 1:10 (1 part sample and 9
 # parts milliq), "meta" for data from meta table
 dilution = "meta" # e.g. 1
+
+# In case of diluted samples, two absorbance measurements of the
+# same sample in different dilutions might be present. If this is
+# the case, EEMs are renamed to the undiluted sample, absorbance
+# data might be multiplied by the dilution factor if it is only
+# presentas diluted sample. This can be done automatically. In the
+# final protocol a table shows, what has been done to the samples.
+# Please check this table and see, if the output is what you
+# wanted it to be!
+dil_sample_name_correction = FALSE
 
 #### Cut data to certain range ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -190,7 +207,7 @@ cut_range_to_smallest = FALSE # e.g. FALSE
 #### Blank correction ####
 #~~~~~~~~~~~~~~~~~~~~~~~~#
 # A blank sample is substracted from each sample. Blank samples have to be
-# in the same (sub)folder as the EEM samples. So different blanks are used
+# in the same (sub)folder as the according EEM samples. So different blanks are used
 # for different subsets. The file names of the blanks have to contain nano, 
 # miliq, milliq, mq or blank (cases are ignored). Other samples must not 
 # contain these words in their names respectively!
@@ -198,28 +215,16 @@ blank_correction = FALSE # e.g. FALSE
 
 #### Inner filter effect correction ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Inner filter effects are corrected. Absorbance data is needed. File or column names
+# Inner filter effects are corrected. Absorbance data is needed. File or column designations
 # of the absorbance data have to resamble file names of the EEM data.
 ife_correction = TRUE # e.g. FALSE
 
 #### Remove scattering and interpolate missing data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Scattering is removed from the EEM spectra.
-remove_scatter <- c() # Please leave that as it is ;-)
+remove_scatter <- c(TRUE, TRUE, TRUE, TRUE) # logical values, ordered by raman1,raman2,rayleigh1,rayleigh2
 
-# remove Raman scatter order 1
-remove_scatter["raman1"] = TRUE # e.g. TRUE
-
-# remove Raman scatter order 2 
-remove_scatter["raman2"] = TRUE # e.g. TRUE
-
-# remove Rayleigh scatter order 1 
-remove_scatter["rayleigh1"] = TRUE # e.g. TRUE
-
-# remove Rayleigh scatter order 2
-remove_scatter["rayleigh2"] = TRUE # e.g. TRUE
-
-# Set the width of removed scatter slot (usually 10 to 16).
+# Set the width of removed scatter slot (usually 10 to 20).
 # If you can still see traces of scattering after interpolation,
 # this value should be increased. You can specify a vector containing
 # separate widths for each scatter c(15,16,16,14), ordered by raman1,raman2,rayleigh1,rayleigh2.
@@ -240,9 +245,10 @@ interpolation <- TRUE # e.g. TRUE
 # or "meta" if the raman areas should be taken from the meta data table.
 raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
 
+
 #### Smooth data for peak picking ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Moving window size for smoothing data along excitation wavelengths.
+# Moving window size in nm for smoothing data along excitation wavelengths.
 # Data must be interpolated if you want to use smoothing.
 # This is used for peak picking but not saved.
 smooth = 4 # e.g. FALSE, 4
@@ -269,6 +275,8 @@ smooth = 4 # e.g. FALSE, 4
 #############################################
 
 # load staRdom package
+library(dplyr)
+library(tidyr)
 library(staRdom)
 ```
 
@@ -295,13 +303,17 @@ if(metadata != FALSE){
   meta <- data.table::fread(file = metadata, header = TRUE)
   if(!all(sapply(meta,is.numeric)[-which(colnames(meta) == col_samples)])) meta <- data.table::fread(file = metadata, header = TRUE,dec=",")
   meta <- meta %>% mutate_at(vars(one_of(col_samples)),make.names) %>%
-  tibble::column_to_rownames(var=col_samples)
+    tibble::column_to_rownames(var=col_samples)
 }
 
 #### Read absorbance data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(absorbance_dir != FALSE){
-  abs_data <- absorbance_read(absorbance_dir)
+  abs_data <- absorbance_read(absorbance_dir, verbose = FALSE)
+  if(abs_norm != FALSE){
+    if(abs_norm == TRUE) abs_norm <- c(680, 700)
+    abs_data <- abs_blcor(abs_data,abs_norm)
+  }
 }
 
 ```
@@ -328,7 +340,7 @@ if(blank_correction) eem_list <- eem_list %>% eem_remove_blank()
 #### Inner filter effects correction ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(absorbance_dir != FALSE){
-  if(absorbance_cuv_len == "meta") cuvl <- meta[col_cuv_len] else cuvl <- absorbance_cuv_len
+  if(absorbance_path == "meta") cuvl <- meta[col_cuv_len] else cuvl <- absorbance_path
   if(ife_correction) eem_list <- eem_list %>% eem_ife_correction(abs_data,cuvl)
 }
 
@@ -364,6 +376,17 @@ if(interpolation) eem_list <- eem_list %>% eem_interp()
 if(dilution == "meta") dil_data <- meta[col_dilution] else dil_data <- dilution
 eem_list <- eem_list %>% eem_dilution(dil_data)
 
+# Sample names are corrected to put similar samples together and
+# correct absorbance data according to dilution
+if(dil_sample_name_correction){
+  # find out what is done
+  dc <- eem_dilcorr(eem_list, abs_data, dilution = dil_data, auto=TRUE)
+  # apply to absorbance data
+  abs_data <- eem_absdil(abs_data, cor_data = dc)
+  # apply to EEM data
+  eem_list <- eem_eemdil(eem_list, cor_data = dc)
+}
+
 #### Smooth data for peak picking only ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(smooth != FALSE & interpolation) eem4peaks <- eem_list %>% eem_smooth(n=smooth) else eem4peaks <- eem_list
@@ -383,7 +406,7 @@ indices_peaks <- eem4peaks %>% eem_biological_index() %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(absorbance_dir != FALSE){
   indices_peaks <- indices_peaks %>%
-    full_join(abs_parms(abs_data,cuvl), by="sample")
+    full_join(abs_parms(abs_data,cuvl,p=TRUE), by="sample")
 }
 
 ################################
@@ -426,7 +449,7 @@ if(output_xls){
 assign(eem_name,eem_list)
 
 if(data_file != FALSE){
-  save(list=c(eem_name),file = paste0(output_dir,data_file,"_",format(Sys.time(), "%Y%m%d_%H%M%S"),".RData"))
+  save(list=c(eem_name,"abs_data","meta"),file = paste0(output_dir,data_file,"_",format(Sys.time(), "%Y%m%d_%H%M%S"),".RData"))
 }
 ```
 # Sample overview
@@ -441,14 +464,32 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
     summary() %>%
     kable(format = "html", booktabs = T) %>%
     kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) #%>%
-    #kable_styling(font_size = 5) %>%
-    #row_spec(0, angle = -45) #%>%
+  #kable_styling(font_size = 5) %>%
+  #row_spec(0, angle = -45) #%>%
   #landscape()
 } else {
   eem_list %>%
     summary()
 }
+if (exists("dc")){
 ```
+# Dilution correction
+  
+```{r, echo=FALSE, message=FALSE, warning=TRUE}
+###################################################################
+#### Summary of corrections that were done for dilution issues ####
+###################################################################
+  
+  if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
+    dc %>%
+      kable(format = "html", booktabs = T) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+  } else {
+    dc
+  }
+}
+```
+
 # Results from peak picking
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
 #########################################################################
@@ -458,8 +499,8 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
 if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
   kable(indices_peaks %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),format = "html", booktabs = T) %>%
     kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) #%>%
-    #kable_styling(font_size = 5) %>%
-    #row_spec(0, angle = 45) #%>%
+  #kable_styling(font_size = 5) %>%
+  #row_spec(0, angle = 45) #%>%
   #landscape()
 } else {
   indices_peaks %>%

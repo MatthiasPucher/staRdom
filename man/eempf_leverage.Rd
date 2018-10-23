@@ -16,7 +16,7 @@ list of 3 named vectors (emission, excitation wavelengths and samples)
 Calculate the leverage of each emission and excitation wavelength and each sample from a single PARAFAC model
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_leverage(pfres_comps[[2]])
+eempf_leverage(pf4[[4]])
 }

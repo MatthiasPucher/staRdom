@@ -20,7 +20,7 @@ data frame
 Create one table containing the PARAFAC models factors and optionally exporting it to csv or txt
 }
 \examples{
-data(pfres_comps2)
+data(pf_models)
 
-factor_table <- eempf_export(pfres_comps2[[2]])
+factor_table <- eempf_export(pf4[[4]])
 }

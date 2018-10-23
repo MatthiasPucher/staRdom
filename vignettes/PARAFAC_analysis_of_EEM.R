@@ -1,5 +1,7 @@
 ## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
 library(knitcitations)
+library(dplyr)
+library(tidyr)
 cleanbib()
 options("citation_format" = "pandoc")
 bibliography() #style="apalike"
@@ -12,20 +14,20 @@ cores <- 2
 #  cores <- parallel::detectCores()/2
 
 ## ----eval=FALSE, include=FALSE-------------------------------------------
-#  data(eem_list)
+#  data(eem_list) # load example data
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-folder <- system.file("extdata/cary/scans_day_1", package = "eemR")
+folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
 eem_list <- eem_read(folder)
 
 ## ----eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE----
 ggeem(eem_list)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-data(absorbance)
+data(absorbance) # load example data
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1)
+meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1) # load example data
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
@@ -34,7 +36,10 @@ problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),er
 eem_list <- eem_name_replace(eem_list,c("\\(FD3\\)"),c(""))
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-eem_list <- eem_list <- eem_remove_blank(eem_list)
+absorbance <- abs_blcor(absorbance,wlrange = c(680,700))
+
+## ----eval=TRUE, include=TRUE---------------------------------------------
+eem_list <- eem_remove_blank(eem_list)
 
 ## ----eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE----
 ggeem(eem_list)
@@ -57,7 +62,7 @@ eem_list <- eem_extract(eem_list, c("nano", "miliq", "milliq", "mq", "blank"),ig
 absorbance <- select(absorbance, -matches("nano|miliq|milliq|mq|blank", ignore.case = TRUE))
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-remove_scatter <- c("raman1" = TRUE, "raman2" = TRUE, "rayleigh1" = TRUE, "rayleigh2" = TRUE)
+remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
 remove_scatter_width <- c(15,15,15,15)
 
 eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatter_width = remove_scatter_width)
@@ -66,7 +71,7 @@ eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatt
 ggeem(eem_list)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
-eem_list <- eem_interp(eem_list, cores = cores)
+eem_list <- eem_interp(eem_list, cores = cores, type = 3)
 
 ## ----eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE----
 ggeem(eem_list)
@@ -127,41 +132,98 @@ slope_parms
 #      row_spec(0, angle = 45) #%>%
 
 ## ----include=TRUE--------------------------------------------------------
-data(eem_list)
+data(eem_list) # load example data
+
+## ----include=TRUE--------------------------------------------------------
+eem_list <- eem_rem_scat(eem_list, remove_scatter = c(TRUE, TRUE, TRUE, TRUE), remove_scatter_width = c(15,15,18,19), interpolation = FALSE, cores = cores)
 
 ## ----include=TRUE,eval=FALSE---------------------------------------------
 #  eem_list <- eem_import_dir(dir)
 
 ## ----include=TRUE--------------------------------------------------------
-# minimum and maximum of numbers of components
-dim_min <- 5
-dim_max <- 8
+eem_list %>% 
+  eem_extract(sample = "^667sf$", keep = TRUE) %>%
+  ggeem()
 
-## ----eval=FALSE,include=TRUE---------------------------------------------
-#  nstart <- 10 # number of similar models from which best is chosen
-#  cores <- parallel::detectCores()/2 # use all cores but do not use all threads
-#  maxit = 500 # maximum number of iterations in PARAFAC analysis
-#  ctol <- 10^-5 # tolerance in PARAFAC analysis
-#  
-#  pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+## ----eval=FALSE, message=FALSE, warning=FALSE, include=TRUE--------------
+#  eem_list <- eem_range(eem_list, ex = c(250,Inf), em = c(0,580))
+
+## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
+eem_example <- eem_list %>% 
+  eem_extract(sample = "^667sf$", keep = TRUE) %>%
+  `eem_names<-`("667sf_2_cut") %>%
+  eem_bind(eem_example,.)
+
+## ------------------------------------------------------------------------
+eem_list <- eem_list %>%
+  eem_setNA(sample = 176, ex = 345:350, interpolate = FALSE) %>%
+  eem_setNA(em = 560:576, ex = 280:295, interpolate = FALSE)
+
+## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
+eem_example <- eem_list %>% 
+  eem_extract(sample = "^667sf$", keep = TRUE) %>%
+  `eem_names<-`("667sf_3_rem_noise") %>%
+  eem_bind(eem_example,.)
+
+## ------------------------------------------------------------------------
+eem_list <- eem_interp(eem_list, type = 3, cores = cores)
+
+## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
+eem_example <- eem_list %>% 
+  eem_extract(sample = "^667sf$", keep = TRUE) %>%
+  `eem_names<-`("667sf_4_interp") %>%
+  eem_bind(eem_example,.)
+
+## ----echo=FALSE, message=FALSE, warning=FALSE, fig.width=7---------------
+ggeem(eem_example)
 
 ## ----include=TRUE--------------------------------------------------------
-data(pfres_comps1)
+# minimum and maximum of numbers of components
+dim_min <- 3
+dim_max <- 7
+
+## ----eval=FALSE,include=TRUE---------------------------------------------
+#  nstart <- 16 # number of similar models from which best is chosen
+#  maxit = 1000 # maximum number of iterations in PARAFAC analysis
+#  ctol <- 10^-5 # tolerance in PARAFAC analysis
+#  
+#  # calculating PARAFAC models, one for each number of components
+#  pf1 <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = FALSE, const = c("uncons", "uncons", "uncons"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#  
+#  pf1n <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = FALSE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#  
+#  # rescale B and C modes
+#  pf1 <- lapply(pf1, eempf_rescaleBC, newscale = "Fmax")
+#  pf1n <- lapply(pf1n, eempf_rescaleBC, newscale = "Fmax")
+
+## ----include=TRUE--------------------------------------------------------
+data(pf_models)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-eempf_compare(pfres_comps)
+eempf_compare(pf1)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-pfres_comps <- lapply(pfres_comps, eempf_rescaleBC, newscale = "Fmax")
+eempf_compare(pf1n)
 
-## ----eval=TRUE, include=TRUE---------------------------------------------
-comps <- 6
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+# check for correlation between components table
+eempf_cortable(pf1n[[4]])
 
-cp_out <- pfres_comps[[which(comps == seq(dim_min, dim_max))]]
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+eempf_corplot(pf1n[[4]], progress = FALSE)
+
+## ----eval=FALSE,include=TRUE---------------------------------------------
+#  pf2 <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#  
+#  # rescale B and C modes
+#  pf2 <- lapply(pf2, eempf_rescaleBC, newscale = "Fmax")
+
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+eempf_compare(pf2)
 
 ## ----fig.width=7---------------------------------------------------------
 # calculate leverage
-cpl <- eempf_leverage(cp_out)
+cpl <- eempf_leverage(pf2[[4]])
 # plot leverage (nice plot)
 eempf_leverage_plot(cpl,qlabel=0.1)
 # plot leverage, not so nice plot but interactive to select what to exclude
@@ -170,62 +232,52 @@ exclude <- eempf_leverage_ident(cpl,qlabel=0.1)
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 # samples, excitation and emission wavelengths to exclude, makes sense after calculation of leverage
-exclude <- list("ex" = c(200,205,210,215,220,225,230,235,240,245,250,255,260,265,270,275,280,285,290,295,300),
-                "em" = c(534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600),
-                "sample" = c("sample87","sample78","sample95","sample12","sample17","sample51")
+exclude <- list("ex" = c(),
+                "em" = c(),
+                "sample" = c("sfb676psp","sgb447wt")
 )
 
 # exclude outliers if neccessary. if so, restart analysis
 eem_list_ex <- eem_exclude(eem_list, exclude)
 
 ## ----eval=FALSE, include=TRUE--------------------------------------------
-#  pfres_comps2 <- eem_parafac(eem_list_ex, comps = seq(dim_min,dim_max), normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
-
-## ----include=TRUE--------------------------------------------------------
-data(pfres_comps2)
+#  pf3 <- eem_parafac(eem_list_ex, comps = seq(dim_min,dim_max), normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#  pf3 <- lapply(pf3, eempf_rescaleBC, newscale = "Fmax")
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-pfres_comps2 <- lapply(pfres_comps2, eempf_rescaleBC, newscale = "Fmax")
+eempf_compare(pf3)
 
-eempf_compare(pfres_comps2)
-
-## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-comps <- 6
-
-cp_out <- pfres_comps2[[which(comps==seq(dim_min,dim_max))]]
+eempf_leverage_plot(eempf_leverage(pf3[[4]]),qlabel=0.1)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
-eempf_comp_load_plot(cp_out)
+eempf_residuals_plot(pf3[[4]], eem_list, residuals_only = TRUE, select = eem_list %>% eem_names() %>% .[c(1:16,205,208)], spp = 9, cores = cores)
 
-## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
-#  eempf_comps3D(cp_out)
+## ----eval=FALSE, include=TRUE--------------------------------------------
+#  ctol <- 10^-8 # tolerance in PARAFAC analysis
+#  
+#  pf4 <- eem_parafac(eem_list_ex, comps = seq(dim_min,dim_max), normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#  
+#  pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-# check for correlation between components table
-# high correlations should be avoided
-# try to normalise data or remove outliers as first step
-eempf_cortable(cp_out)
-# plot correlations
-eempf_corplot(cp_out)
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+eempf_compare(pf4)
+
+eempf_leverage_plot(eempf_leverage(pf4[[4]]))
+
+eempf_corplot(pf4[[4]], progress = FALSE)
+
+## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=6------------------
+eempf_comp_load_plot(pf4[[4]])
+#eempf_plot_comps(pf4[4], type = 2)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=8------------------
 # plot components in each sample, residual and whole sample
-eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[10:14], cores = cores)
-
-
-## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=8------------------
-# plot components in each sample, residual and whole sample
-eempf_residuals_plot(cp_out, eem_list, select = eem_names(eem_list)[c(10,11,13:16)], residuals_only = TRUE, cores = cores, spp = 6)
-
-
-## ----eval=TRUE, include=TRUE, fig.width=7, fig.height=8------------------
-# plot components in each sample, residual and whole sample
-eempf_residuals_plot(cp_out, eem_list, select = c("sample12","sample17"), residuals_only = TRUE, cores = cores, spp = 6)
+eempf_residuals_plot(pf4[[4]], eem_list, select = eem_names(eem_list)[10:14], cores = cores)
 
 
 ## ----eval=FALSE, include=TRUE--------------------------------------------
 #  #calculate split_half analysis
-#  sh <- splithalf(eem_list_ex, comps, normalise = TRUE, rand = FALSE, cores = cores)
+#  sh <- splithalf(eem_list_ex, 6, normalise = TRUE, rand = FALSE, cores = cores, nstart = nstart, maxit = maxit, ctol = ctol)
 
 ## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
 data(sh)
@@ -233,19 +285,32 @@ data(sh)
 ## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
 splithalf_plot(sh)
 
+## ----eval=FALSE, include=TRUE--------------------------------------------
+#  sh_r <- splithalf(eem_list_ex, 6, normalise = TRUE, rand = TRUE, cores = cores, nstart = nstart, maxit = maxit, ctol = ctol)
+
 ## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-tcc_sh_table <- splithalf_tcc(sh)
+splithalf_plot(sh_r)
+
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+tcc_sh_table <- splithalf_tcc(sh_r)
 
 tcc_sh_table
 
-## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
-#  corcondia <- eempf_corcondia(cp_out, eem_list_ex)
+## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+corcondia <- eempf_corcondia(pf4[[4]], eem_list_ex)
 
-## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
-#  eemqual <- eempf_eemqual(cp_out, eem_list_ex, sh)
+corcondia
 
 ## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
+eemqual <- eempf_eemqual(pf4[[4]], eem_list_ex, sh_r, cores = cores)
 
+eemqual
+
+## ----eval=FALSE, include = TRUE------------------------------------------
+#  eempf_openfluor(pf4[[4]], file = "my_model_openfluor.txt")
+
+## ----eval=FALSE, include = TRUE------------------------------------------
+#  eempf_report(pf4[[4]], export = "my_model_openfluor.txt", eem_list = eem_list, shmodel = sh, performanec = TRUE)
 
 ## ---- message=FALSE, warning=FALSE, include=FALSE------------------------
 write.bibtex(file="references2.bib")

@@ -25,8 +25,8 @@ Calculate residuals of EEM data according to a certain model
 \examples{
 \donttest{
 data(eem_list)
-data(pfres_comps2)
+data(pf_models)
 
-eempf_residuals(pfres_comps2[[2]],eem_list)
+eempf_residuals(pf4[[4]],eem_list)
 }
 }

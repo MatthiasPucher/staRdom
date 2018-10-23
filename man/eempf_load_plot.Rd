@@ -16,7 +16,7 @@ ggplot
 Plot amount of each component in each sample as bar plot
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_load_plot(pfres_comps[[2]])
+eempf_load_plot(pf4[[4]])
 }

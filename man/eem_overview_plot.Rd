@@ -4,12 +4,14 @@
 \alias{eem_overview_plot}
 \title{Plot fluorescence data from several samples split into several plots.}
 \usage{
-eem_overview_plot(data, spp = 8)
+eem_overview_plot(data, spp = 8, ...)
 }
 \arguments{
 \item{data}{fluorescence data of class eemlist}
 
 \item{spp}{number of samples per plot}
+
+\item{...}{arguments passed on to \code{\link[staRdom]{ggeem}}}
 }
 \value{
 list of ggplots
@@ -20,6 +22,6 @@ Plot fluorescence data from several samples split into several plots.
 \examples{
 \donttest{
 data(eem_list)
-eem_overview_plot(eem_list,spp=3)
+eem_overview_plot(eem_list,spp=9)
 }
 }

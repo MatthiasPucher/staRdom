@@ -5,8 +5,10 @@
 \title{Calculating slopes and slope ratios of a data frame of absorbance data.}
 \usage{
 abs_parms(abs_data, cuvle, limits = list(c(275, 295), c(350, 400), c(300,
-  700)), l_ref = list(350, 350, 350), S = TRUE, lref = FALSE, p = FALSE,
-  model = FALSE, cores = parallel::detectCores()/2)
+  700)), l_ref = list(350, 350, 350), S = TRUE, lref = FALSE,
+  p = FALSE, model = FALSE, Sint = FALSE, interval = 21,
+  r2threshold = 0.8, cores = parallel::detectCores()/2,
+  verbose = FALSE)
 }
 \arguments{
 \item{abs_data}{data frame containing absorbance data.}
@@ -25,7 +27,15 @@ abs_parms(abs_data, cuvle, limits = list(c(275, 295), c(350, 400), c(300,
 
 \item{model}{logical, include complete model in data frame}
 
+\item{Sint}{logical, wether the spectral curve is calculated interval-wise (\code{\link[cdom]{cdom_spectral_curve}})}
+
+\item{interval}{passed on to \code{\link[cdom]{cdom_spectral_curve}}}
+
+\item{r2threshold}{passed on to \code{\link[cdom]{cdom_spectral_curve}}}
+
 \item{cores}{number of cores to be used for parallel processing}
+
+\item{verbose}{logical, additional information is provided}
 }
 \value{
 A data frame containing the adsorption slopes and slope ratios in column, one line for each sample.
@@ -54,8 +64,8 @@ For further details please refer to Helm et al. (2008).
 \examples{
 \donttest{
 data(abs_data)
-abs_parms(abs_data[,1:5],5)
-abs_parms(abs_data[,1:5],5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
+a1 <- abs_parms(abs_data[,1:5],cuvle=5, verbose = TRUE)
+a2 <- abs_parms(abs_data[,1:5],cuvle=5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
 }
 }
 \references{

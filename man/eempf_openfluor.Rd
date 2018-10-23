@@ -18,6 +18,6 @@ txt file
 openfluor.org offers the possibility to compare your results to others, that were uploaded to the database. This functions writes out a txt containing the header lines and your components. Please open the file in an editor and fill in further information that cannot be covered by this function.
 }
 \examples{
-  data(pfres_comps2)
-  eempf_openfluor(pfres_comps2[[2]],file.path(tempdir(),"openfluor_example.txt"))
+  data(pf_models)
+  eempf_openfluor(pf4[[4]],file.path(tempdir(),"openfluor_example.txt"))
 }

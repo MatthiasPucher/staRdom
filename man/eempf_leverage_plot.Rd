@@ -18,9 +18,9 @@ ggplot
 The labels to be shown can be selected by adding the quatile of samples with highest leverages to be labeled.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-leverage <- eempf_leverage(pfres_comps[[3]])
+leverage <- eempf_leverage(pf4[[4]])
 eempf_leverage_plot(leverage)
 }
 \seealso{

@@ -4,8 +4,8 @@
 \alias{A_missing}
 \title{Calculate the amount of each component for samples not involved in model building}
 \usage{
-A_missing(eem_list, pfmodel, cores = parallel::detectCores(logical = FALSE)/2,
-  ...)
+A_missing(eem_list, pfmodel, cores = parallel::detectCores(logical =
+  FALSE)/2, ...)
 }
 \arguments{
 \item{eem_list}{object of class eemlist with sample data}
@@ -25,8 +25,8 @@ Samples from an eemlist that were not used in the modelling process are added as
 \examples{
 \donttest{
 data(eem_list)
-data(pfres_comps2)
+data(pf_models)
 
-A_missing(eem_list,pfres_comps2[[3]])
+A_missing(eem_list,pf4[[4]])
 }
 }

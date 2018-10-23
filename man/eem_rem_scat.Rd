@@ -5,7 +5,8 @@
 \title{Remove Raman and Rayleigh scattering in fluorescence data}
 \usage{
 eem_rem_scat(data, remove_scatter, remove_scatter_width = 10,
-  interpolation = FALSE, cores = parallel::detectCores()/2)
+  interpolation = FALSE, cores = parallel::detectCores()/2,
+  verbose = FALSE)
 }
 \arguments{
 \item{data}{object of class eemlist}
@@ -17,6 +18,8 @@ eem_rem_scat(data, remove_scatter, remove_scatter_width = 10,
 \item{interpolation}{logical, optionally states whether interpolation is done right away}
 
 \item{cores}{optional, CPU cores to use for interpolation}
+
+\item{verbose}{logical, provide additional information}
 }
 \value{
 eemlist
@@ -27,11 +30,8 @@ Wrapper function to remove several scatterings in one step using \code{\link[eem
 \examples{
 data(eem_list)
 
-remove_scatter <- c()
-remove_scatter["raman1"] = TRUE
-remove_scatter["raman2"] = TRUE
-remove_scatter["rayleigh1"] = TRUE
-remove_scatter["rayleigh2"] = TRUE
+remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
+
 remove_scatter_width = c(15,10,16,12)
 
 eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)

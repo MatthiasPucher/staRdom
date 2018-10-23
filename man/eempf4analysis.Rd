@@ -4,8 +4,8 @@
 \alias{eempf4analysis}
 \title{Create table of PARAFAC components and (optionally) EEM peaks and indices as well as absorbance slope parameters.}
 \usage{
-eempf4analysis(pfmodel, eem_list = NULL, absorbance = NULL, cuvl = NULL,
-  n = 4, export = NULL, ...)
+eempf4analysis(pfmodel, eem_list = NULL, absorbance = NULL,
+  cuvl = NULL, n = 4, export = NULL, ...)
 }
 \arguments{
 \item{pfmodel}{PARAFAC model where loadings of the components are extracted}
@@ -31,10 +31,10 @@ Please refer to \code{\link[eemR]{eem_biological_index}}, \code{\link[eemR]{eem_
 \examples{
 \donttest{
 data(eem_list)
-data(pfres_comps2)
+data(pf_models)
 data(abs_data)
 
-results <- eempf4analysis(pfmodel = pfres_comps2[[2]],
+results <- eempf4analysis(pfmodel = pf4[[4]],
                           eem_list = eem_list, absorbance = abs_data,
                           cuvl = 5, n = 4)
                           }

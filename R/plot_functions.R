@@ -21,7 +21,7 @@
 #' @examples
 #' ## plotting one distinct sample
 #' data(eem_list)
-#' eem <- eem_extract(eem_list,c("sample6","sample7"),keep=TRUE)
+#' eem <- eem_extract(eem_list,c("^0679sfK$", "^0684sfK$"),keep=TRUE)
 #' ggeem(eem)
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
 
@@ -37,7 +37,7 @@ ggeem.eemlist <- function(data,fill_max=FALSE,...)
 {
   table <- data %>% lapply(as.data.frame) %>% bind_rows()
   #filename <- paste0('EEM_spectra_',suffix,format(Sys.time(), "%Y%m%d_%H%M%S"))
-  ggeem(table,fill_max=fill_max)
+  ggeem(table,fill_max=fill_max,...)
 }
 
 #' @rdname ggeem
@@ -86,6 +86,10 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
     plot <- plot +
       scale_fill_gradientn(colours=c(rainbow(75)[58],rainbow(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
   }
+  #if(contour){
+  #  plot <- plot +
+  #    stat_contour(bins=15,aes(x=ex,y=em,z=value), color="black", size=0.6)
+  #}
   plot
 }
 
@@ -94,6 +98,7 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
 #'
 #' @param data fluorescence data of class eemlist
 #' @param spp number of samples per plot
+#' @param ... arguments passed on to \code{\link[staRdom]{ggeem}}
 #'
 #' @return list of ggplots
 #' @export
@@ -101,9 +106,9 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
 #' @examples
 #' \donttest{
 #' data(eem_list)
-#' eem_overview_plot(eem_list,spp=3)
+#' eem_overview_plot(eem_list,spp=9)
 #' }
-eem_overview_plot <- function(data,spp = 8){
+eem_overview_plot <- function(data,spp = 8,...){
   #data <- eem_list
   ppp <- data %>% length()/spp
   fill_max <- data %>% eem_scale_ext() %>% .[2]
@@ -112,7 +117,7 @@ eem_overview_plot <- function(data,spp = 8){
     #pos <- 2
     data[(spp*(pos-1)+1):(spp*pos)] %>%
       `attr<-`("class", "eemlist") %>%
-      ggeem(fill_max=fill_max)
+      ggeem(fill_max=fill_max,...)
   })
   ov_plot
 }

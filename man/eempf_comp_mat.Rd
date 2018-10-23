@@ -18,7 +18,7 @@ a list of class data frames
 The components of a PARAFAC analysis are extracted as a data frame
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_comp_mat(pfres_comps[[3]])
+eempf_comp_mat(pf4[[4]])
 }

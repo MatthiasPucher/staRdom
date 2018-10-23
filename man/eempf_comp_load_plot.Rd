@@ -16,9 +16,9 @@ ggplot
 Additionally a bar plot with the amounts of each component in each sample is produced.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_comp_load_plot(pfres_comps[[2]])
+eempf_comp_load_plot(pf4[[4]])
 }
 \seealso{
 \code{\link[staRdom]{ggeem}}, \code{\link[staRdom]{eempf_load_plot}}

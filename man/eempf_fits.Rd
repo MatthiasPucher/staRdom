@@ -16,7 +16,7 @@ object of class ggplot
 Fits vs. components of PARAFAC models are plotted
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-eempf_fits(pfres_comps)
+eempf_fits(pf4)
 }

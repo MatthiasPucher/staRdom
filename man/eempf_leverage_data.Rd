@@ -18,8 +18,8 @@ data frame
 Combine leverages into one data frame and add optional labels.
 }
 \examples{
-data(pfres_comps1)
+data(pf_models)
 
-leverage <- eempf_leverage(pfres_comps[[2]])
+leverage <- eempf_leverage(pf4[[4]])
 lev_data <- eempf_leverage_data(leverage)
 }

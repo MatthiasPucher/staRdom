@@ -26,8 +26,8 @@ A pair plot showing correlations between samples is created.
 }
 \examples{
 \donttest{
-data(pfres_comps1)
-eempf_corplot(pfres_comps[[1]])
+data(pf_models)
+eempf_corplot(pf4[[4]])
 }
 
 }

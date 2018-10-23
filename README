@@ -16,6 +16,17 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.8 to 1.0.9
+  Re-worked PARAFAC tutorial
+  abs_blcor does a baseline correction of absorbance data
+  abs_parms additionally calculates the spectral slope according to Loiselle, 2009
+  eem_setNA can remove defined data and optionally interpolate
+  additional methods for interpolation added
+  eem_matmult multiplies eem data with a certain matrix to cur out data ranges where you expect noise
+  eem_checkdata additionally checks the size of EEMs
+  abs_fit_slope does not produce errors (but a warning) if the absorbance wavelength is smaller than the desired slope limits.
+  absorbance_read is more reliable now and can deal with more formats
+
 1.0.7 to 1.0.8
   documentation was extended
   reading absorbance data can determine decimal separator automatically

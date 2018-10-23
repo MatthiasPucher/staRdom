@@ -4,8 +4,8 @@
 \alias{eem_checkdata}
 \title{Check your EEM, absorption and metadata before processing}
 \usage{
-eem_checkdata(eem_list, absorbance, metadata = NULL, metacolumns = NULL,
-  error = TRUE)
+eem_checkdata(eem_list, absorbance, metadata = NULL,
+  metacolumns = NULL, correction = FALSE, error = TRUE)
 }
 \arguments{
 \item{eem_list}{eemlist continaing EEM data.}
@@ -15,6 +15,8 @@ eem_checkdata(eem_list, absorbance, metadata = NULL, metacolumns = NULL,
 \item{metadata}{optional data.frame containing metadata.}
 
 \item{metacolumns}{character vector of columns that are checkt for complete data sets}
+
+\item{correction}{logical, whether EEMs should be checked for applied corrections}
 
 \item{error}{logical, whether a problem should cause an error or not.}
 }
@@ -31,5 +33,5 @@ The returned list contains character vectors with sample names where possible pr
 data(eem_list)
 data(abs_data)
 
-eem_checkdata(eem_list,abs_data)
+eem_checkdata(eem_list, abs_data, error = FALSE)
 }

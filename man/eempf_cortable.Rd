@@ -22,6 +22,6 @@ matrix
 Calculating correlations between the component loadings in all samples (C-Modes).
 }
 \examples{
-data(pfres_comps1)
-eempf_cortable(pfres_comps[[2]])
+data(pf_models)
+eempf_cortable(pf4[[4]])
 }

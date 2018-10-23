@@ -43,6 +43,6 @@ The data can be of different sources:
 \examples{
 ## plotting one distinct sample
 data(eem_list)
-eem <- eem_extract(eem_list,c("sample6","sample7"),keep=TRUE)
+eem <- eem_extract(eem_list,c("^0679sfK$", "^0684sfK$"),keep=TRUE)
 ggeem(eem)
 }

@@ -5,6 +5,8 @@
 #' @param order logical, data is ordered according to wavelength
 #' @param recursive read files recursive, include subfolders
 #' @param dec optional, either you set a decimal separator or the table is tested for . and ,
+#' @param sep optional, either you set a field separator or it is tried to be determined automatically
+#' @param verbose logical, provide more information
 #' @param ... additional arguments that are passed on to \code{\link[data.table]{fread}}.
 #'
 #' @details If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is passed on. Tables can either contain data from one sample or from several samples in columns. The column header containig the wavelength must be either "wavelength" or "Wavelength". A multi-sample file must have sample names as column names. A single-sample file can have sample name as column name or sample name as file name and "Abs." as column name. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
@@ -23,45 +25,48 @@
 #' @examples
 #' absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
 #' absorbance_read(absorbance_path)
-absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,...){
+absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,sep=NULL,verbose = FALSE,...){
   if(dir.exists(absorbance_path)){
     abs_data <- list.files(absorbance_path, full.names = TRUE, recursive = recursive, no.. = TRUE, include.dirs = FALSE, pattern = "*.txt|*.csv", ignore.case = TRUE)
     abs_data <- abs_data[!file.info(abs_data)$isdir]
   } else if(file.exists(absorbance_path)){
     abs_data <- absorbance_path
   } else stop("Absorbance data was not found!")
-  abs_data <- abs_data %>%
-    lapply(function(tab) {
-      #print(tab)
-      #tab <- abs_data[1]
-      if(is.null(dec)){
-        table <- try(data.table::fread(tab, header = TRUE, skip="avelength",dec=".",...))
-        if(!all(sapply(table,is.numeric))){
-          table <- try(data.table::fread(tab, header = TRUE, skip="avelength",dec=",",...))
-        }
-        if(!all(sapply(table,is.numeric))) not_numeric = TRUE
-      } else {
-        table <- try(data.table::fread(tab, header = TRUE, skip="avelength",dec = dec, ...))
-      }
-      if(class(table)[1] == "try-error" | exists("not_numeric")) stop("An error occured processing ", tab,".")
-      table <- table
-      attr(table,"location") <- rep(tab,ncol(table) - 1)
-      table %>%
-        setNames(names(.) %>%
-                   stringr::str_replace_all("^.*Wavelength.*$|^.*wavelength.*$","wavelength") %>%
-                   stringr::str_replace_all("Abs.",tab %>% basename() %>%
-                                              stringr::str_replace_all(".txt$|.csv$",""))
-        )
-    })
+
+  abs_data <- lapply(abs_data, function(tab) {
+    if(verbose) cat("processing",tab,fill=TRUE)
+    #tab <- abs_data[2]
+    data <- readLines(tab)
+    first_number <- min(which(!(substr(data,1,1) %>% as.numeric() %>% is.na())))
+    last_number <- max(which(!(substr(data,1,1) %>% as.numeric() %>% is.na())))
+    example_number <- data[first_number] %>% stringr::str_replace("([0-9]+[.,]?[0-9]+)([^-0-9]*)([-]?[0-9]+[.,]?[0-9]+)","\\1")
+    if(is.null(sep)) sep <- data[first_number] %>% stringr::str_replace("([0-9]+[.,]?[0-9]+)([^[-0-9]]+)([-]?[0-9]+[.,]?[0-9]+.*)","\\2")
+    if(is.null(dec)) dec <- ","
+    if(verbose) cat("using",sep,"as field separator", fill=TRUE)
+    data <- stringr::str_split(data,sep)
+    table <- data[(first_number-1):last_number] %>%
+      unlist() %>%
+      matrix(ncol = length(data[[first_number]]), byrow = TRUE) %>%
+      data.frame(stringsAsFactors = FALSE) %>%
+      setNames(.[1,]) %>%
+      .[-1,] %>%
+      mutate_all(stringr::str_replace_all,pattern=dec,replacement=".") %>%
+      mutate_all(as.numeric)
+    attr(table,"location") <- rep(tab,ncol(table) - 1)
+    if(ncol(table) == 2) {samples <- tab %>%
+      basename() %>%
+      stringr::str_replace_all(stringr::regex(".txt$|.csv$", ignore_case = TRUE),"")
+    } else {
+      samples <- colnames(table) %>% .[2:ncol(table)]
+    }
+    table <- table %>%
+      setNames(c("wavelength",samples)
+      )
+  })
   locations <- lapply(abs_data,function(tab){
     attr(tab,"location")
   }) %>%
     unlist()
-  wlproblem <- lapply(abs_data,function(table){
-    if(!colnames(table)[1] == "wavelength") attr(table,"location")[1] else NA
-  }) %>%
-    unlist() %>% .[!is.na(.)]
-  if(length(wlproblem) > 0) stop("No wavelength column could be found in: ",paste0(wlproblem,collapse=", "),"! Please correct that files and read data again!")
   if(length(abs_data) == 1) abs_data <- abs_data[[1]] %>% as.data.frame() else abs_data <- abs_data %>% list_join(by="wavelength")
   if(order) abs_data <- abs_data %>% arrange(wavelength)
   attr(abs_data,"location") <- locations
@@ -78,7 +83,11 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,.
 #' @param lref logical, include reference wavelength in the table
 #' @param p logical, include ps of the coefficients in the table
 #' @param model logical, include complete model in data frame
+#' @param Sint logical, wether the spectral curve is calculated interval-wise (\code{\link[cdom]{cdom_spectral_curve}})
+#' @param interval passed on to \code{\link[cdom]{cdom_spectral_curve}}
+#' @param r2threshold passed on to \code{\link[cdom]{cdom_spectral_curve}}
 #' @param cores number of cores to be used for parallel processing
+#' @param verbose logical, additional information is provided
 #'
 #' @details The absorbance data is a data frame with the first column called "wavelength" containg the wavelength. Each other column contains the data from one sample. You can use \link{absorbance_read} to read in appropriate data.
 #'
@@ -108,34 +117,49 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,.
 #' @importFrom stats coef
 #' @import drc
 #' @importFrom tibble rownames_to_column
+#' @importFrom cdom cdom_spectral_curve
 #' @export
 #'
 #' @examples
 #' \donttest{
 #' data(abs_data)
-#' abs_parms(abs_data[,1:5],5)
-#' abs_parms(abs_data[,1:5],5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
+#' a1 <- abs_parms(abs_data[,1:5],cuvle=5, verbose = TRUE)
+#' a2 <- abs_parms(abs_data[,1:5],cuvle=5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
 #' }
-abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,cores = parallel::detectCores()/2){
+abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores()/2, verbose = FALSE){
   #samp <- names(abs_data)[2]
-  #library(doParallel)
   #cores=2
   #cuvle = cuvl
-  cl <- makeCluster(spec = cores, type = "PSOCK")
-  registerDoParallel(cl)
+  if(S | lref | p | model){
+    cl <- makeCluster(spec = cores, type = "PSOCK")
+    doParallel::registerDoParallel(cl)
 
-  res <- foreach(samp = abs_data %>% names() %>% .[. != "wavelength"]) %dopar% {
-    r <- lapply(seq(1,length(limits)),function(n){
-      wllim <- limits[[n]]
-      ref <- l_ref[[n]]
-      do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]/cuvle*100,wllim,ref))
-    }) %>%
-      bind_cols(as_tibble(samp),.) %>%
-      setNames(c("sample",lapply(limits,paste0,collapse="_") %>% unlist() %>% paste0("model",.)))
-  } %>%
-    bind_rows()
+    if(verbose){
+      cat("calculating slopes of",ncol(abs_data)-1,"absorbance spectra...", fill=TRUE)
+      #pb <- txtProgressBar(max = length(data), style = 3)
+      #progress <- function(n) setTxtProgressBar(pb, n)
+      #opts <- list(progress = progress)
+    } else {
+      #opts <- NULL
+    }
 
-  stopCluster(cl)
+
+    res <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { #, .options.snow = opts
+      #i <- 1
+      samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
+      r <- lapply(seq(1,length(limits)),function(n){
+        wllim <- limits[[n]]
+        ref <- l_ref[[n]]
+        do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]/cuvle*100,wllim,ref))
+      }) %>%
+        bind_cols(as_tibble(samp),.) %>%
+        setNames(c("sample",lapply(limits,paste0,collapse="_") %>% unlist() %>% paste0("model",.)))
+    } %>%
+      bind_rows()
+
+    stopCluster(cl)
+    #if(verbose) close(pb)
+  }
 
   if(S){
     res <- res %>%
@@ -179,6 +203,39 @@ abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700
       select(-contains("model"))
   }
 
+  if(Sint){
+    cl <- parallel::makeCluster(spec = cores, type = "PSOCK")
+    doParallel::registerDoParallel(cl)
+
+    if(verbose){
+      cat("calculating spectral curves interval-wise",ncol(abs_data)-1,"absorbance spectra...", fill=TRUE)
+      #pb <- txtProgressBar(max = length(data), style = 3)
+      #progress <- function(n) setTxtProgressBar(pb, n)
+      #opts <- list(progress = progress)
+    } else {
+      #opts <- NULL
+    }
+
+    resSint <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { # , .options.snow = opts
+      #i <- 1
+      samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
+      r <- do(abs_data,Sint = cdom::cdom_spectral_curve(.$wavelength,.[[samp]]/cuvle*100,interval = interval, r2threshold = r2threshold)) %>%
+        bind_cols(as_tibble(samp),.) %>%
+        setNames(c("sample","Sint"))
+    } %>%
+      bind_rows()
+
+    stopCluster(cl)
+    #if(verbose) close(pb)
+
+    if(S | lref | p | model){
+      res <- full_join(res,resSint,by="sample")
+    } else {
+      res <- resSint
+    }
+
+    res
+  }
 
   res <- abs_data %>%
     filter(wavelength == 250 | wavelength == 254 | wavelength == 300 | wavelength == 365 | wavelength == 465 | wavelength == 665) %>%
@@ -218,42 +275,73 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
   #library(minpack.lm)
   #library(nls2)
   if(!all(is.na(wl)) & !all(is.na(abs))){
-    #abs <- abs_data[[3]]
-    #wl <- abs_data[[1]]
-    #lim <- limits[[1]]
-    abs <- 2.303*abs
-    al <- abs[wl > lim[1] & wl < lim[2]]
-    l <- wl[wl > lim[1] & wl < lim[2]]
-    dal <- diff(abs)/diff(wl)
-    dal <- c(dal[1],dal)
-    #lref <- l
-    #library(drc)
-    if(is.na(l_ref)){
-      abs_curve_lr <- function(x, parm,al1=abs,ll=wl){approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))} ## parameters: Q,b,Q0
-      abs_derivx_lr <- function(x, parm,al1=abs,ll=wl){approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(-parm[,2])} ## parameters: Q,b,Q0
-      abs_deriv1_lr <- function(x, parm,al1=abs,ll=wl,d=dal){c(approx(y=d,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(-parm[,2]) + approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(parm[,2]),approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(parm[,1]-x))} ## parameters: Q,b,Q0
-      abs_ssfct_lr <- function(dframe){c(350,0.01)}
-      lowerl = c(min(wl),0)
-      upperl = c(max(wl),Inf)
-      res <- try(suppressWarnings(drm(formula = al ~ l, data = data.frame(al,l),
-                                      fct = list(fct = abs_curve_lr, ssfct = abs_ssfct_lr, names = c("lref","S"), deriv1 = abs_deriv1_lr, derivx = abs_derivx_lr),
-                                      robust = "lts", start=c(350, 0.01), lowerl = lowerl, upperl = upperl, control = control, ...)),
-                 silent=TRUE)
+    if(lim[1] < min(wl) | lim[2] > max(wl)){
+      warning("The absorbance wavelength is between ",min(wl)," and ",max(wl)," so slope calculations between ",lim[1]," and ",lim[2]," are not possible.")
+      res <- NA
+      attr(res, "lref") <- NA
     } else {
-      abs_curve <- function(x, parm,al1=abs,ll=wl,lref = l_ref){approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))} ## parameters: Q,b,Q0
-      abs_derivx <- function(x, parm,al1=abs,ll=wl,lref = l_ref){approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))*(-parm[,2])} ## parameters: Q,b,Q0
-      abs_deriv1 <- function(x, parm,al1=abs,ll=wl,d=dal,lref = l_ref){c(approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))*(lref-x))} ## parameters: Q,b,Q0
-      abs_ssfct <- function(dframe){c(0.01)}
-      res <- try(suppressWarnings(drm(formula = al ~ l, data = data.frame(al,l),
-                                      fct = list(fct = abs_curve, ssfct = abs_ssfct, names = c("S"), deriv1 = abs_deriv1, derivx = abs_derivx),
-                                      robust = "lts", start=c(0.01), lowerl = c(0), upperl = c(Inf), control = control, ...)),
-                 silent=TRUE)
-      attr(res, "lref") <- l_ref
+      #abs <- abs_data[[3]]
+      #wl <- abs_data[[1]]
+      #lim <- limits[[1]]
+      abs <- 2.303*abs
+      al <- abs[wl > lim[1] & wl < lim[2]]
+      l <- wl[wl > lim[1] & wl < lim[2]]
+      dal <- diff(abs)/diff(wl)
+      dal <- c(dal[1],dal)
+      #lref <- l
+      #library(drc)
+      if(is.na(l_ref)){
+        abs_curve_lr <- function(x, parm,al1=abs,ll=wl){approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))} ## parameters: Q,b,Q0
+        abs_derivx_lr <- function(x, parm,al1=abs,ll=wl){approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(-parm[,2])} ## parameters: Q,b,Q0
+        abs_deriv1_lr <- function(x, parm,al1=abs,ll=wl,d=dal){c(approx(y=d,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(-parm[,2]) + approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(parm[,2]),approx(y=al1,x=ll,xout=parm[,1])[[2]]*exp(-parm[,2]*(x-parm[,1]))*(parm[,1]-x))} ## parameters: Q,b,Q0
+        abs_ssfct_lr <- function(dframe){c(350,0.01)}
+        lowerl = c(min(wl),0)
+        upperl = c(max(wl),Inf)
+        res <- try(suppressWarnings(drm(formula = al ~ l, data = data.frame(al,l),
+                                        fct = list(fct = abs_curve_lr, ssfct = abs_ssfct_lr, names = c("lref","S"), deriv1 = abs_deriv1_lr, derivx = abs_derivx_lr),
+                                        robust = "lts", start=c(350, 0.01), lowerl = lowerl, upperl = upperl, control = control, ...)),
+                   silent=TRUE)
+      } else {
+        abs_curve <- function(x, parm,al1=abs,ll=wl,lref = l_ref){approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))} ## parameters: Q,b,Q0
+        abs_derivx <- function(x, parm,al1=abs,ll=wl,lref = l_ref){approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))*(-parm[,2])} ## parameters: Q,b,Q0
+        abs_deriv1 <- function(x, parm,al1=abs,ll=wl,d=dal,lref = l_ref){c(approx(y=al1,x=ll,xout=lref)[[2]]*exp(-parm[,1]*(x-lref))*(lref-x))} ## parameters: Q,b,Q0
+        abs_ssfct <- function(dframe){c(0.01)}
+        res <- try(suppressWarnings(drm(formula = al ~ l, data = data.frame(al,l),
+                                        fct = list(fct = abs_curve, ssfct = abs_ssfct, names = c("S"), deriv1 = abs_deriv1, derivx = abs_derivx),
+                                        robust = "lts", start=c(0.01), lowerl = c(0), upperl = c(Inf), control = control, ...)),
+                   silent=TRUE)
+        attr(res, "lref") <- l_ref
+      }
     }
     #if(class(res) == "drc") res[[1,2]]$coefficients <- setNames(res[[1,2]]$coefficients,res[[1,2]]$parNames[[2]])
   } else {
     warning("Data columns are empty.")
     res <- NA
+    attr(res, "lref") <- NA
   }
   res
+}
+
+
+#' Baseline correction for absorbance data
+#'
+#' @param abs_data data.frame containing samples in columns, the column containing wavelengths must be named "wavelength"
+#' @param wlrange range of wavelengths that should be used for correction, absorbance mean in that range is subtracted from each value (sample-wise)
+#'
+#' @return data.frame
+#' @export
+#'
+#' @import dplyr
+#'
+#' @examples
+#' data(abs_data)
+#' abs_data_cor <- abs_blcor(abs_data)
+abs_blcor <- function(abs_data, wlrange = c(680,700)){
+  ad <- abs_data %>%
+    .[.$wavelength >= wlrange[1] & .$wavelength <= wlrange[2],] %>%
+    apply(2,mean)
+  ad2 <- sweep(data.matrix(abs_data),2,ad) %>%
+    as.data.frame() %>%
+    .[,2:ncol(.)] %>%
+    cbind(wavelength = abs_data$wavelength,.)
 }
