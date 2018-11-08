@@ -21,7 +21,7 @@ bibliography() #style="apalike"
 ## ----eval=FALSE----------------------------------------------------------
 #  # Set the directory where all output files are put in.
 #  # The directory is automatically created if it does not exist.
-#  # Folder delimiters can be / or \\, \ as usually used in Windows will not work!
+#  # Folder delimiters can be / or \\. \, as it is usually used in Windows, will not work!
 #  output_dir = "C:/some_folder/another_folder" # e.g. output_dir = "C:/some_folder/output/"
 
 ## ----eval=FALSE----------------------------------------------------------
@@ -30,7 +30,7 @@ bibliography() #style="apalike"
 #  # Import is done with eem.read() (package eemR), please see details there.
 #  # The template refers to data coming with the package. Please use your data
 #  # by setting the path to your files!
-#  sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the exmaple data coming with the package!
+#  sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
 
 ## ----eval=FALSE----------------------------------------------------------
 #  ### Absorbance data ###
@@ -43,7 +43,7 @@ bibliography() #style="apalike"
 #  # path of adsorbance data as directory or single file, sub folders are not read:
 #  absorbance_dir = "C:/some_folder/input/absorbance/" # e.g. absorbance_dir = "C:/some_folder/input/absorbance/", system.file() accesses the exmaple data coming with the package!
 #  
-#  # Path length of absorbance measurment in cm that was used in absorbance measurement.
+#  # Path length of absorbance measurement in cm that was used in absorbance measurement.
 #  # If it is set to "meta" data from the metadata table is used (details see below).
 #  absorbance_path = 5 # e.g. absorbance_path = 5
 
@@ -173,7 +173,7 @@ bibliography() #style="apalike"
 ## ----eval=FALSE----------------------------------------------------------
 #  ### Blank correction ###
 #  #~~~~~~~~~~~~~~~~~~~~~~#
-#  # A blank sample is substracted from each sample. Blank samples have to be
+#  # A blank sample is subtracted from each sample. Blank samples have to be
 #  # in the same (sub)folder as the according EEM samples. So different blanks are used
 #  # for different subsets. The file names of the blanks have to contain nano,
 #  # miliq, milliq, mq or blank (cases are ignored). Other samples must not
@@ -240,7 +240,7 @@ bibliography() #style="apalike"
 #  #                                           #
 #  #             Please read the               #
 #  #        error messages carefully!          #
-#  #    Naming of the imput files and table    #
+#  #    Naming of the input files and table    #
 #  #     column and row names is crucial!      #
 #  #                                           #
 #  #############################################

@@ -4,12 +4,14 @@
 \alias{eempf_plot_comps}
 \title{Plot all components of PARAFAC models}
 \usage{
-eempf_plot_comps(pfres, type = 1)
+eempf_plot_comps(pfres, type = 1, names = TRUE)
 }
 \arguments{
 \item{pfres}{list of PARAFAC models}
 
-\item{type}{1 for a colour map and 2 for peak lines}
+\item{type}{1 for a colour map and 2 for em and ex wavelength loadings}
+
+\item{names}{logical, whether names of components should be written into the plot}
 }
 \value{
 object of class ggplot

@@ -113,6 +113,74 @@ eempf_rescaleBC <- function(pfmodel,newscale = 1){
   pfmodel
 }
 
+#' Extract names from PARAFAC model components
+#'
+#' @param pfmodel parafac model
+#'
+#' @return vector of names or list of vecters of names
+#' @export
+#'
+#' @examples
+#' data(pf_models)
+#' eempf_comp_names(pf4)
+#'
+#' eempf_comp_names(pf4) <- c("A","B","C","D","E","F","G")
+#'
+#' value <- list(c("A1","B1","C1","D","E","F","G"),
+#' c("A2","B2","C","D","E","F","G"),
+#' c("A3","B3","C","D","E","F","G"),
+#' c("A4","B4","C","D","E","F","G"),
+#' c("A5","B5","C","D","E","F","G5")
+#' )
+#'
+#' eempf_comp_names(pf4) <- value
+#' eempf_comp_names(pf4)
+#'
+eempf_comp_names <- function(pfmodel){
+  if(class(pfmodel) == "parafac") {
+    colnames(pfmodel$A)
+    }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
+      lapply(pfmodel, function(pfm) colnames(pfm$A))
+    } else{
+    stop("pfmodel is not a parafac model or a list of parafac models!")
+  }
+}
+
+#' Set names of PARAFAC components
+#'
+#' @param pfmodel model of class parafac
+#' @param value character vector containing the new names for the components
+#'
+#' @return parafac model
+#'
+#' @import dplyr
+#'
+#' @export
+#'
+#' @examples
+#' data(pf_models)
+#'
+#' eempf_comp_names(pf4) <- c("A","B","C","D","E","F","G")
+`eempf_comp_names<-` <- function(pfmodel, value){
+  if(class(pfmodel) == "parafac") {
+    colnames(pfmodel$A) <- value
+    colnames(pfmodel$B) <- value
+    colnames(pfmodel$C) <- value
+    pfmodel %>% `class<-`("parafac")
+  }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
+
+    if(!is.list(value) | (length(value) == 1 & length(pfmodel) > 1)) value <- lapply(1:length(pfmodel), function(x) value)
+    lapply(1:length(pfmodel), function(pfn){
+      colnames(pfmodel[[pfn]]$A) <- value[[pfn]][1:ncol(pfmodel[[pfn]]$A)]
+      colnames(pfmodel[[pfn]]$B) <- value[[pfn]][1:ncol(pfmodel[[pfn]]$A)]
+      colnames(pfmodel[[pfn]]$C) <- value[[pfn]][1:ncol(pfmodel[[pfn]]$A)]
+      pfmodel[[pfn]] %>% `class<-`("parafac")
+    })
+  } else{
+    stop("pfmodel is not a parafac model or a list of parafac models!")
+  }
+}
+
 #' Data from an eemlist is transformed into an array
 #'
 #' @description Data matrices from EEM are combined to an array that is needed for a PARAFAC analysis.
@@ -953,7 +1021,7 @@ eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
 #' data(pf_models)
 #'
 #' pfmodel <- pf4[[4]]
-#' eempf_eemqual(eem_list,pfmodel)
+#' eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 #' }
 eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
   corec <- eempf_corcondia(pfmodel,eem_list)
@@ -968,3 +1036,77 @@ eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
   attr(tab,"shmodel") <- sh
   tab
 }
+
+#' Calculate the importance of each component.
+#'
+#' @param pfmodel model of class parafac
+#' @param eem_list eemlist used to calculate that model
+#' @param cores cores to be used for the calculation
+#' @param ... other aruments passed to eem_parafac
+#'
+#' @details The importance of each variable is calculated by means of creating a model without a specific component and calculating the difference between the original R-squared and the one with the left out component. The derived values state the loss in model fit if one component is not used in the modeling process. For the creation of the new models, the exact components of the original model are used.
+#'
+#' @return numeric vector, values are in the same order of the components in the supplied model.
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+#' \donttest{
+#' data(pfmodel)
+#' data(eem_list)
+#'
+#' eempf_varimp(pf4[[4]],eem_list)
+#' }
+eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores()/2,...){
+
+  exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
+                  "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
+                  "sample" = c()
+  )
+
+  x <- eem_list %>%
+    eem_red2smallest() %>%
+    eem_exclude(exclude)
+
+  mods <- lapply(1:(pfmodel$A %>% ncol()), function(c){
+    eem_parafac(x,comps = ncol(pfmodel$A)-1,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B[,-c], Cfixed = pfmodel$C[,-c],cores = cores,control = pfmodel$control, const = pfmodel$const)
+  })
+  Rsq_al <- pfmodel$Rsq - (mods %>% lapply(function(mod) {mod[[1]]$Rsq}) %>% unlist())
+}
+
+
+#' Reorder PARAFAC components
+#'
+#' @param pfmodel model of class parafac
+#' @param order vector containing desired new order or "em" or "ex" to reorder according to emission or excitation wavelengths of the peaks
+#' @param decreasing logical, whether components are reordered according to peak wvalengths in a decreasing direction
+#'
+#' @return parafac model
+#'
+#' @import dplyr
+#' @importFrom multiway reorder.parafac
+#'
+#' @export
+#'
+#' @examples
+#' data(pf_models)
+#' ggeem(pf4[[4]])
+#'
+#' pf4r <- eempf_reorder(pf4[[4]],"ex")
+#' ggeem(pf4r)
+eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
+  if(!(order == "em" | order == "ex" | is.vector(order))) stop("no valid data suppli ed for order!")
+  if(order == "em") order <- apply(pfmodel$B,2,which.max) %>% sort.list(decreasing = decreasing)
+  if(order == "ex") order <- apply(pfmodel$C,2,which.max) %>% sort.list(decreasing = decreasing)
+  if(ncol(pfmodel$A) != length(order)) stop("the length of the order vector does not fit the number of components")
+
+  mod <- try(multiway::reorder.parafac(pfmodel,neworder = order), silent=TRUE)
+  if(class(mod) =="try-error") stop(mod) else {
+    mod
+  }
+  #ggeem(pfmodel)
+  #ggeem(mod)
+}
+

@@ -22,6 +22,7 @@
 #' eempf_compare(pf4)
 #' }
 eempf_compare <- function(pfres){
+  #pfres <- pf4
   p1 <- eempf_fits(pfres)
   p2 <- eempf_plot_comps(pfres,type=1)
   p3 <- eempf_plot_comps(pfres,type=2)
@@ -46,10 +47,12 @@ eempf_compare <- function(pfres){
 #' eempf_fits(pf4)
 eempf_fits <- function(pfres){
   pl <- data.frame(comps=lapply(pfres,"[[","A") %>% lapply(ncol) %>% unlist(),
-                   fit=lapply(pfres,"[[","Rsq") %>% unlist()) %>%
+                   fit=lapply(pfres,"[[","Rsq") %>% unlist(), mod_name = ifelse(is.null(names(pfres)),rep(NA,length(pfres)),names(pfres))) %>%
+    rowwise() %>%
+    mutate(comps = ifelse(is.na(mod_name),paste0(comps, " comps"),paste0(mod_name," (",comps, " comps)"))) %>%
     ggplot(aes(x=comps,y=fit))+
+    labs(x="model", y="model fit (Rsq)")+
     geom_point(size=5,shape=4)
-  #pl %>% print()
   pl
 }
 
@@ -58,7 +61,8 @@ eempf_fits <- function(pfres){
 #' @description The components can be plottet in two ways: either as a colour map or as two lines (emission, excitation wavelengths) intersecting at the component maximum.
 #'
 #' @param pfres list of PARAFAC models
-#' @param type 1 for a colour map and 2 for peak lines
+#' @param type 1 for a colour map and 2 for em and ex wavelength loadings
+#' @param names logical, whether names of components should be written into the plot
 #'
 #' @return object of class ggplot
 #' @export
@@ -70,10 +74,9 @@ eempf_fits <- function(pfres){
 #' @examples
 #' data(pf_models)
 #'
-#' eempf_plot_comps(pf4)
-#' eempf_plot_comps(pf4,type=2)
-eempf_plot_comps <- function(pfres,type=1){
-  #pf_fits <- pfmodel
+#' eempf_plot_comps(pf4, type = 1)
+eempf_plot_comps <- function(pfres,type=1,names=TRUE){
+  #pfres <- pf4
   c <- pfres %>% lapply(eempf_comp_mat)
   tab <- lapply(c,function(c1){
     nc1 <- length(c1)
@@ -251,9 +254,6 @@ eempf_load_plot <- function(pfmodel){
 #' @return plotly plot
 #' @export
 #'
-#' @importFrom plotly plot_ly
-#' @importFrom plotly layout
-#' @importFrom plotly add_surface
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble remove_rownames
 #' @importFrom grDevices rainbow
@@ -284,9 +284,9 @@ eempf_comps3D <- function(pfmodel,which=NULL){
                 yaxis=list(title="ex"))
   lapply(1:length(ex),function(comp){
     if(is.null(which) | comp %in% which){
-      plot_ly(x=em[[comp]],y=ex[[comp]], z=z[[comp]],colors = rainbow(12)[9:1]) %>%
-        layout(scene=scene) %>%
-        add_surface()
+      plotly::plot_ly(x=em[[comp]],y=ex[[comp]], z=z[[comp]],colors = rainbow(12)[9:1]) %>%
+        plotly::layout(scene=scene) %>%
+        plotly::add_surface()
     }
   })
 }

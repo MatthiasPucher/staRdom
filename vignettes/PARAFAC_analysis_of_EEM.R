@@ -26,8 +26,13 @@ ggeem(eem_list)
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 data(absorbance) # load example data
 
+## ----eval=FALSE, include=TRUE--------------------------------------------
+#  absorbance_read(absorbance_path) # load csv or txt tables in folder absorbance_path
+
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1) # load example data
+
+meta
 
 ## ----eval=TRUE, include=TRUE---------------------------------------------
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
@@ -156,7 +161,7 @@ eem_example <- eem_list %>%
 
 ## ------------------------------------------------------------------------
 eem_list <- eem_list %>%
-  eem_setNA(sample = 176, ex = 345:350, interpolate = FALSE) %>%
+  eem_setNA(sample = 1, ex = 345:350, interpolate = FALSE) %>%
   eem_setNA(em = 560:576, ex = 280:295, interpolate = FALSE)
 
 ## ----message=FALSE, warning=FALSE, include=FALSE-------------------------
@@ -296,15 +301,11 @@ tcc_sh_table <- splithalf_tcc(sh_r)
 
 tcc_sh_table
 
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-corcondia <- eempf_corcondia(pf4[[4]], eem_list_ex)
+## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
+#  corcondia <- eempf_corcondia(pf4[[4]], eem_list_ex) # calculation this example is not possible with the limited example data available with the package
 
-corcondia
-
-## ----eval=TRUE, include=TRUE, fig.width=7--------------------------------
-eemqual <- eempf_eemqual(pf4[[4]], eem_list_ex, sh_r, cores = cores)
-
-eemqual
+## ----eval=FALSE, include=TRUE, fig.width=7-------------------------------
+#  eemqual <- eempf_eemqual(pf4[[4]], eem_list_ex, sh_r, cores = cores) # calculation this example is not possible with the limited example data available with the package
 
 ## ----eval=FALSE, include = TRUE------------------------------------------
 #  eempf_openfluor(pf4[[4]], file = "my_model_openfluor.txt")

@@ -13,7 +13,7 @@ eem_checksize(eem_list)
 character vector
 }
 \description{
-The size of EEMs in an eemlist is chcecked and the sample names of samples with more data than the sample with the smallest range are returned.
+The size of EEMs in an eemlist is checked and the sample names of samples with more data than the sample with the smallest range are returned.
 }
 \examples{
 data(eem_list)

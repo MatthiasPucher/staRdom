@@ -23,6 +23,7 @@ Multiply all EEMs with a matrix
 All EEMs must be of the same size. If matrix is of type matrix, it is used right away to multiply the EEMs. It has to be of the same size as the EEMs. If matrix is a vector containing "l", values below 1st order Rayleigh scattering are set to 0. If matrix contains "u", values above 2nd order Raman scattering are set to 0. If you want to remove wavelength ranges, take into consideration to use \code{\link[eemR]{eem_cut}} or \code{\link[staRdom]{eem_range}}.
 }
 \examples{
+\donttest{
 data(eem_list)
 eem <- eem_list[1:9]
 class(eem) <- "eemlist"
@@ -31,4 +32,5 @@ ggeem(eem)
 
 eem_list_cut <- eem_matmult(eem,matrix=c("l"), value= NA)
 ggeem(eem_list_cut)
+}
 }

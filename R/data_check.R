@@ -21,7 +21,7 @@ eem_is.na <- function(eem_list){
 
 #' Check size of EEMs
 #'
-#' @description The size of EEMs in an eemlist is chcecked and the sample names of samples with more data than the sample with the smallest range are returned.
+#' @description The size of EEMs in an eemlist is checked and the sample names of samples with more data than the sample with the smallest range are returned.
 #'
 #' @param eem_list eemlist
 #'
@@ -263,7 +263,7 @@ if(correction){
       cat("The following sample names were duplicate in metadata:",paste0(metadupls,collapse=", "),fill=TRUE)
     }
     if(!is.null(metacolumns)){
-      problem <- lapply(metacolumns,function(col){
+      problem <- (lapply(metacolumns,function(col){
         problem <- FALSE
         if(col %in% colnames(metadata)){
           #col <- metacolumns[1]
@@ -286,8 +286,7 @@ if(correction){
         problem
       }) %>%
         unlist() %>%
-        any() %>%
-        `|`(problem)
+        any()) | problem
     } else cat("No metadata was checked. No columns were supplied.",fill=TRUE)
   } else cat("No metadata was checked. Table was missing.",fill=TRUE)
 

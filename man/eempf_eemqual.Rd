@@ -27,7 +27,7 @@ data(eem_list)
 data(pf_models)
 
 pfmodel <- pf4[[4]]
-eempf_eemqual(eem_list,pfmodel)
+eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 }
 }
 \references{

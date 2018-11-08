@@ -1,16 +1,18 @@
 ##
 #' EEM spectra plotted with ggplot2
 #'
-#' @description \code{ggeem} creates nice plots from EEM spectra of class ggplot. Plots can be modified as any ggplot by adding layers and/or elements with "+".
+#' @description \code{ggeem} creates nice plots from EEM spectra of class \code{ggplot}. Plots can be modified as any ggplot by adding layers and/or elements with "+".
 #'
-#' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'
-#' @param fill_max FALSE
-#' @param ... parameters passed on to \code{ggplot}
+#' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'.
+#' @param fill_max set the maximum fluorescence value to scale different samples/components simmilarly.
+#' @param redneg logical, whether negative values should be coloured discreet.
+#' @param ... parameters passed on to \code{ggplot}.
 #'
 #' @details The data can be of different sources:
 #'     eem: a single EEM pectrum is plotted
 #'     eemlist: all spectra of the samples are plotted in one facet plot
 #'     data.frame: a data.frame containing EEM data. Can be created by e.g. \code{as.data.frame.eem}
+#'     a colour palette can be specified using the argument colpal.
 #'
 #' @return a ggplot object
 #'
@@ -19,9 +21,10 @@
 #' @importFrom grDevices rainbow
 #'
 #' @examples
-#' ## plotting one distinct sample
+#' ## plotting two distinct samples
 #' data(eem_list)
-#' eem <- eem_extract(eem_list,c("^0679sfK$", "^0684sfK$"),keep=TRUE)
+#' eem_names(eem_list)
+#' eem <- eem_extract(eem_list,c("^667sf$", "^1568sfK$"),keep=TRUE)
 #' ggeem(eem)
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
 
@@ -53,18 +56,24 @@ ggeem.eem <- function(data,fill_max=FALSE,...)
 #' @export
 ggeem.parafac <- function(data,fill_max=FALSE,...)
 {
-  table <- data  %>% eempf_comp_mat() #eem_list
+  #data <- pf4[[4]]
+  table <- data %>% eempf_comp_mat() #eem_list
   table <- lapply(table %>% names(),function(name){
     table[[name]] %>% mutate(sample = name)
-  }) %>% bind_rows()
+  }) %>% bind_rows() %>%
+    mutate(sample = factor(sample, levels = colnames(data$A)))
   #filename <- paste0('EEM_PARAFAC_components_',suffix,format(Sys.time(), "%Y%m%d_%H%M%S"))
   ggeem(table,fill_max=fill_max,...)
 }
 
 #' @rdname ggeem
 #' @export
-ggeem.data.frame <- function(data,fill_max=FALSE,...)
+ggeem.data.frame <- function(data,fill_max=FALSE,redneg = TRUE, ...)
 {
+  if(!exists("colpal")){
+    colpal <- rainbow
+    # warning("using rainbow colour palette")
+  }
   table <- data
   breaksx <- table %>% select(ex) %>% unique() %>% filter(as.numeric(ex)%%50 == 0) %>% unlist()
   breaksy <- table %>% select(em) %>% unique() %>% filter(as.numeric(em)%%50 == 0) %>% unlist()
@@ -72,9 +81,8 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
     fill_max <- table$value %>% max(na.rm=TRUE)
   }
   #values_fill <- seq(0,fill_max,length.out = 55)
-  plot <- table %>% ggplot(...)+
+  plot <- table %>% ggplot()+
     geom_raster(aes(x=ex,y=em,fill=value))+ #,interpolate=TRUE
-    scale_fill_gradientn(colours=rainbow(75)[51:1],limits = c(0,fill_max))+
     #scale_fill_gradient2(low="blue",mid="yellow",high="red")
     scale_x_discrete(breaks = breaksx) +
     scale_y_discrete(breaks = breaksy) +
@@ -83,13 +91,17 @@ ggeem.data.frame <- function(data,fill_max=FALSE,...)
   if(table$value %>% min(na.rm=TRUE) < 0){
     vals <- c(table$value %>% min(na.rm=TRUE),seq(from=0,to=fill_max,length.out = 51))
     vals <- (vals - min(vals))/diff(range(vals))
+    if(redneg){
+      plot <- plot +
+        scale_fill_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
+    } else {
+      plot <- plot +
+        scale_fill_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
+    }
+  } else {
     plot <- plot +
-      scale_fill_gradientn(colours=c(rainbow(75)[58],rainbow(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
+      scale_fill_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))
   }
-  #if(contour){
-  #  plot <- plot +
-  #    stat_contour(bins=15,aes(x=ex,y=em,z=value), color="black", size=0.6)
-  #}
   plot
 }
 

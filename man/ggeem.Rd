@@ -19,30 +19,34 @@ ggeem(data, fill_max = FALSE, ...)
 
 \method{ggeem}{parafac}(data, fill_max = FALSE, ...)
 
-\method{ggeem}{data.frame}(data, fill_max = FALSE, ...)
+\method{ggeem}{data.frame}(data, fill_max = FALSE, redneg = TRUE, ...)
 }
 \arguments{
-\item{data}{eem, eemlist, parafac or data.frame. The details are given under 'Details'}
+\item{data}{eem, eemlist, parafac or data.frame. The details are given under 'Details'.}
 
-\item{fill_max}{FALSE}
+\item{fill_max}{set the maximum fluorescence value to scale different samples/components simmilarly.}
 
-\item{...}{parameters passed on to \code{ggplot}}
+\item{...}{parameters passed on to \code{ggplot}.}
+
+\item{redneg}{logical, whether negative values should be coloured discreet.}
 }
 \value{
 a ggplot object
 }
 \description{
-\code{ggeem} creates nice plots from EEM spectra of class ggplot. Plots can be modified as any ggplot by adding layers and/or elements with "+".
+\code{ggeem} creates nice plots from EEM spectra of class \code{ggplot}. Plots can be modified as any ggplot by adding layers and/or elements with "+".
 }
 \details{
 The data can be of different sources:
     eem: a single EEM pectrum is plotted
     eemlist: all spectra of the samples are plotted in one facet plot
     data.frame: a data.frame containing EEM data. Can be created by e.g. \code{as.data.frame.eem}
+    a colour palette can be specified using the argument colpal.
 }
 \examples{
-## plotting one distinct sample
+## plotting two distinct samples
 data(eem_list)
-eem <- eem_extract(eem_list,c("^0679sfK$", "^0684sfK$"),keep=TRUE)
+eem_names(eem_list)
+eem <- eem_extract(eem_list,c("^667sf$", "^1568sfK$"),keep=TRUE)
 ggeem(eem)
 }

@@ -341,9 +341,11 @@ eem_dilution <- function(data,dilution=1){
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' data(eem_list)
 #'
 #' eem_list <- eem_smooth(eem_list,n=4)
+#' }
 eem_smooth <- function(data,n = 4){
   n <- n/2
   data <- lapply(data,function(eem){
@@ -471,6 +473,7 @@ eem_raman_area <- function(eem_list, blanks_only = TRUE, average = FALSE){
 #' @import dplyr
 #'
 #' @examples
+#' \donttest{
 #' data(eem_list)
 #' eem <- eem_list[1:9]
 #' class(eem) <- "eemlist"
@@ -479,6 +482,7 @@ eem_raman_area <- function(eem_list, blanks_only = TRUE, average = FALSE){
 #'
 #' eem_list_cut <- eem_matmult(eem,matrix=c("l"), value= NA)
 #' ggeem(eem_list_cut)
+#' }
 eem_matmult <- function(eem_list,matrix = NULL,value = 0){
   if(is.matrix(matrix)){
     mat <- matrix

@@ -9,7 +9,7 @@
 #' @param verbose logical, provide more information
 #' @param ... additional arguments that are passed on to \code{\link[data.table]{fread}}.
 #'
-#' @details If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is passed on. Tables can either contain data from one sample or from several samples in columns. The column header containig the wavelength must be either "wavelength" or "Wavelength". A multi-sample file must have sample names as column names. A single-sample file can have sample name as column name or sample name as file name and "Abs." as column name. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
+#' @details If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is read. Tables can either contain data from one sample or from several samples in columns. The first column is considered the wavelength column. A multi-sample file must have sample names as column names. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
 #'
 #' @return A data frame containing absorbance data. An attribute "location" contains the filenames where each sample was taken from.
 #'
@@ -339,7 +339,7 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
 abs_blcor <- function(abs_data, wlrange = c(680,700)){
   ad <- abs_data %>%
     .[.$wavelength >= wlrange[1] & .$wavelength <= wlrange[2],] %>%
-    apply(2,mean)
+    apply(2,mean,na.rm=TRUE)
   ad2 <- sweep(data.matrix(abs_data),2,ad) %>%
     as.data.frame() %>%
     .[,2:ncol(.)] %>%
