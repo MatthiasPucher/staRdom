@@ -76,7 +76,9 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 #' Calculating slopes and slope ratios of a data frame of absorbance data.
 #'
 #' @param abs_data data frame containing absorbance data.
-#' @param cuvle length of used cuvette in cm
+#' @param cuvle path length in cm
+#' @param unit unit of absorbance data: if "absorbance", absorbance data is multiplied by log(10) = 2.303 for slope calculations
+#' @param add_as additionally to a254 and a300, absorbance at certain wavelengths can be added to the table
 #' @param limits list with vectors containig upper and lower bounds of wavelengeth ranges to be fitted
 #' @param l_ref list with reference wavelengths, same length as limits
 #' @param S logical, include slope parameter in the table
@@ -126,10 +128,13 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 #' a1 <- abs_parms(abs_data[,1:5],cuvle=5, verbose = TRUE)
 #' a2 <- abs_parms(abs_data[,1:5],cuvle=5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
 #' }
-abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores()/2, verbose = FALSE){
+abs_parms <- function(abs_data,cuvle,unit = "absorbance",add_as = NULL,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(350,350,350),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores()/2, verbose = FALSE){
   #samp <- names(abs_data)[2]
   #cores=2
   #cuvle = cuvl
+  #data(abs_data)
+  #library(doParallel)
+  #cores <- 10
   if(S | lref | p | model){
     cl <- makeCluster(spec = cores, type = "PSOCK")
     doParallel::registerDoParallel(cl)
@@ -143,14 +148,18 @@ abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700
       #opts <- NULL
     }
 
+    ## include pathlength
+    abs_data[,2:ncol(abs_data)] <- abs_data[,2:ncol(abs_data)]/cuvle*100
 
     res <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { #, .options.snow = opts
       #i <- 1
+      #library(tidyr)
       samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
       r <- lapply(seq(1,length(limits)),function(n){
+        #n=1
         wllim <- limits[[n]]
         ref <- l_ref[[n]]
-        do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]/cuvle*100,wllim,ref))
+        do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]*ifelse(unit == "absorbance",log(10),1),wllim,ref))
       }) %>%
         bind_cols(as_tibble(samp),.) %>%
         setNames(c("sample",lapply(limits,paste0,collapse="_") %>% unlist() %>% paste0("model",.)))
@@ -219,7 +228,7 @@ abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700
     resSint <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { # , .options.snow = opts
       #i <- 1
       samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
-      r <- do(abs_data,Sint = cdom::cdom_spectral_curve(.$wavelength,.[[samp]]/cuvle*100,interval = interval, r2threshold = r2threshold)) %>%
+      r <- do(abs_data,Sint = cdom::cdom_spectral_curve(.$wavelength,.[[samp]]*ifelse(unit == "absorbance",log(10),1),interval = interval, r2threshold = r2threshold)) %>%
         bind_cols(as_tibble(samp),.) %>%
         setNames(c("sample","Sint"))
     } %>%
@@ -237,15 +246,21 @@ abs_parms <- function(abs_data,cuvle,limits=list(c(275,295),c(350,400),c(300,700
     res
   }
 
-  res <- abs_data %>%
-    filter(wavelength == 250 | wavelength == 254 | wavelength == 300 | wavelength == 365 | wavelength == 465 | wavelength == 665) %>%
+  as_vec <- c(250,254,300,365,465,665,add_as) %>% unique()
+
+  as <- abs_data[-1] %>%
+    apply(2,function(col) approx(x=abs_data$wavelength,y=col,xout=as_vec)) %>%
+    lapply(`[[`,"y") %>%
+    bind_cols(wavelength=as_vec,.)
+
+  res <- as %>%
     t() %>%
     data.frame() %>%
     setNames(paste0("a",.[1,])) %>%
     tibble::rownames_to_column(var="sample") %>%
     filter(sample != "wavelength") %>%
     mutate(E2_E3 = a250/a365, E4_E6 = a465/a665) %>%
-    select(-a250,-a365,-a465,-a665) %>%
+    select(-one_of(paste0("a",c(250,365,465,665) %>% .[!(. %in% add_as)]))) %>%
     full_join(res,by="sample")
 
   res
@@ -280,10 +295,6 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
       res <- NA
       attr(res, "lref") <- NA
     } else {
-      #abs <- abs_data[[3]]
-      #wl <- abs_data[[1]]
-      #lim <- limits[[1]]
-      abs <- 2.303*abs
       al <- abs[wl > lim[1] & wl < lim[2]]
       l <- wl[wl > lim[1] & wl < lim[2]]
       dal <- diff(abs)/diff(wl)

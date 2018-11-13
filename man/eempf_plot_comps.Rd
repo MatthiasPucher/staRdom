@@ -22,6 +22,5 @@ The components can be plottet in two ways: either as a colour map or as two line
 \examples{
 data(pf_models)
 
-eempf_plot_comps(pf4)
-eempf_plot_comps(pf4,type=2)
+eempf_plot_comps(pf4, type = 1)
 }

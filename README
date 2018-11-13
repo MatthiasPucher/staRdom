@@ -16,6 +16,18 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.10 to 1.0.11
+  absorbance parameters can be interpolated where wavelengths are missing
+  absorbance can be passed on as absorbance coefficient
+
+1.0.9 to 1.0.10
+  corrected bug: functions not exported
+  PARAFAC models and components can have names
+  PARAFAC tutorial revised
+  exmaple data reduced again because of package size
+  eempf_varimp calculates the variable importance of the components
+  eempf_reorder can reorder the components in a PARAFAC model based on different criteria
+
 1.0.8 to 1.0.9
   Re-worked PARAFAC tutorial
   abs_blcor does a baseline correction of absorbance data

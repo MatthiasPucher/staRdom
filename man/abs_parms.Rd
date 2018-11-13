@@ -4,16 +4,20 @@
 \alias{abs_parms}
 \title{Calculating slopes and slope ratios of a data frame of absorbance data.}
 \usage{
-abs_parms(abs_data, cuvle, limits = list(c(275, 295), c(350, 400), c(300,
-  700)), l_ref = list(350, 350, 350), S = TRUE, lref = FALSE,
-  p = FALSE, model = FALSE, Sint = FALSE, interval = 21,
-  r2threshold = 0.8, cores = parallel::detectCores()/2,
-  verbose = FALSE)
+abs_parms(abs_data, cuvle, unit = "absorbance", add_as = NULL,
+  limits = list(c(275, 295), c(350, 400), c(300, 700)),
+  l_ref = list(350, 350, 350), S = TRUE, lref = FALSE, p = FALSE,
+  model = FALSE, Sint = FALSE, interval = 21, r2threshold = 0.8,
+  cores = parallel::detectCores()/2, verbose = FALSE)
 }
 \arguments{
 \item{abs_data}{data frame containing absorbance data.}
 
-\item{cuvle}{length of used cuvette in cm}
+\item{cuvle}{path length in cm}
+
+\item{unit}{unit of absorbance data: if "absorbance", absorbance data is multiplied by log(10) = 2.303 for slope calculations}
+
+\item{add_as}{additionally to a254 and a300, absorbance at certain wavelengths can be added to the table}
 
 \item{limits}{list with vectors containig upper and lower bounds of wavelengeth ranges to be fitted}
 
