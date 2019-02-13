@@ -31,4 +31,6 @@ c("A5","B5","C","D","E","F","G5")
 eempf_comp_names(pf4) <- value
 eempf_comp_names(pf4)
 
+ggeem(pf4[[1]])
+
 }

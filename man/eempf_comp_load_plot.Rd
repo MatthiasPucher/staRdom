@@ -18,7 +18,7 @@ Additionally a bar plot with the amounts of each component in each sample is pro
 \examples{
 data(pf_models)
 
-eempf_comp_load_plot(pf4[[4]])
+eempf_comp_load_plot(pf4[[1]])
 }
 \seealso{
 \code{\link[staRdom]{ggeem}}, \code{\link[staRdom]{eempf_load_plot}}

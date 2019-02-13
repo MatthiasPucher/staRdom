@@ -19,5 +19,5 @@ openfluor.org offers the possibility to compare your results to others, that wer
 }
 \examples{
   data(pf_models)
-  eempf_openfluor(pf4[[4]],file.path(tempdir(),"openfluor_example.txt"))
+  eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"))
 }

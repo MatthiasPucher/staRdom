@@ -38,7 +38,7 @@ staRdom is a package for R `r citep(citation())` to analyse fluorescence (excita
 
 staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
 
-staRdom comes with an Rmd template where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through this template while reading this vignette to get an overview of what is possible.
+staRdom comes with an Rmd template where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through this template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
 As an advanced user, you can just include the functions in whatever calculations you want to do. The vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` of pressing F1 while the cursor is on the function name in the code.
 
 Later in the vignette there is also a chapter about troubleshooting. If you experience problems you may find a useful solution there.
@@ -155,6 +155,26 @@ col_cuv_len = "cuv_len"
 col_raman_area = "raman"
 ```
 
+### Spectral correction
+
+Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. Correction vectors have to be provided in the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range. Please provide paths to csv tables containing wavelengths in the first column and correction values in the second.
+
+```{r eval=FALSE}
+#### Spectral correction of EEMs ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Some instruments, but not all need a spectral correction to compensate
+# for specific deviations in the measurements. A vector for emission and
+# excitation is used each. EEMs are cut to match the wavelength range of
+# the vectors if used. Please provide paths to csv tables containing
+# wavelengths in the first column and correction values in the second. If
+# you do not want spectral correction to be done, setting these two input
+# files it not necessary. 
+# Emission correction vector
+Emcor <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv",package="staRdom") # e.g. "C:\folder\emcor.csv", FALSE
+# Excitation correction vector
+Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
+```
+
 ## Write out results and plots
 
 ### Results table
@@ -267,6 +287,17 @@ The reason of diluting a sample can be inner-filter effects that cannot be corre
 # Please check this table and see, if the output is what you
 # wanted it to be!
 dil_sample_name_correction = FALSE
+```
+
+### Spectral correction
+The spectral correction is described above. Here you can just set, whether a spectral correction should be applied.
+```{r eval=FALSE}
+#### Spectral correction of EEMs ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Some instruments, but not all need a spectral correction to compensate
+# for specific deviations in the measurements. Please sepecify, if you want
+# spectral correection to be done.
+spectral_cor = TRUE # e.g. TRUE, set to FALSE, if your instrument already provided EEMs with spectral correction
 ```
 
 ### EEM range reduction

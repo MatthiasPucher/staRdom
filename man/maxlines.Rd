@@ -2,7 +2,7 @@
 % Please edit documentation in R/parafac_functions.R
 \name{maxlines}
 \alias{maxlines}
-\title{Extract data from emission and excitation wavelengths of the components of a PARAFAC model}
+\title{Extract data from emission and excitation wavelengths of the components of a PARAFAC model (scaled B- and C-modes)}
 \usage{
 maxlines(pfmodel)
 }
@@ -13,10 +13,10 @@ maxlines(pfmodel)
 data frame
 }
 \description{
-Data of wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
+Data for each wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
 }
 \examples{
 data(pf_models)
 
-ml <- maxlines(pf4[[4]])
+ml <- maxlines(pf4[[1]])
 }

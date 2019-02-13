@@ -16,6 +16,18 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.12
+  The PARAFAC tutorial was improved and extended again.
+  all examples are taken from drEEM now
+  eem_read_csv function to read EEM data from plain csv files
+  absorbance_read probably recognises csv separators more precisely now
+  eem_extend2largest adds NAs at wavelengths where data is present in any other sample in a set
+  eem_spectral_cor can do spectral corrections using one vector for emission and excitation each
+  eem_load_dreem loads the data from drEEM directly from the website into R
+  A_missing can be used to calculate A-modes from each combination of components now
+  eempf_excomp extract components from PARAFAC models to variables
+  eempf_bindxc bind extracted components into one set of components
+
 1.0.10 to 1.0.11
   absorbance parameters can be interpolated where wavelengths are missing
   absorbance can be passed on as absorbance coefficient

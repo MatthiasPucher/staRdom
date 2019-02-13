@@ -18,8 +18,9 @@ data frame
 You can use this table as an overview of your files and/or as a template for creating a metadata table.
 }
 \examples{
-data(eem_list)
-data(abs_data)
+folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
+eem_list <- eem_read_csv(folder)
+data(absorbance)
 
-eem_metatemplate(eem_list,abs_data)
+eem_metatemplate(eem_list,absorbance)
 }

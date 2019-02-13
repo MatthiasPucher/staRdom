@@ -5,8 +5,8 @@
 \title{Remove Raman and Rayleigh scattering in fluorescence data}
 \usage{
 eem_rem_scat(data, remove_scatter, remove_scatter_width = 10,
-  interpolation = FALSE, cores = parallel::detectCores()/2,
-  verbose = FALSE)
+  interpolation = FALSE, cores = parallel::detectCores(logical =
+  FALSE), verbose = FALSE)
 }
 \arguments{
 \item{data}{object of class eemlist}

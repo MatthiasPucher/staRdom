@@ -29,11 +29,12 @@ A data frame containing absorbance data. An attribute "location" contains the fi
 Reading absorbance data from txt and csv files.
 }
 \details{
-If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path goes to a file, this file is read. Tables can either contain data from one sample or from several samples in columns. The first column is considered the wavelength column. A multi-sample file must have sample names as column names. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
+If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path is a file, this file is read. Tables can either contain data from one sample or from several samples in columns. The first column is considered the wavelength column. A multi-sample file must have sample names as column names. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
+    Column and decimal separators are guessed from the supplied data. In some cases, this can lead to strange results. Plaese set `sep` and `dec` manually if you encounter any problems.
 }
 \examples{
-absorbance_path <- system.file("extdata", "absorbance_eemR", package = "staRdom")
-absorbance_read(absorbance_path)
+absorbance_path <- system.file("extdata", "absorbance", package = "staRdom")
+absorbance <- absorbance_read(absorbance_path, verbose = TRUE)
 }
 \seealso{
 \code{\link[data.table]{fread}}

@@ -18,6 +18,6 @@ data.frame
 Baseline correction for absorbance data
 }
 \examples{
-data(abs_data)
-abs_data_cor <- abs_blcor(abs_data)
+data(absorbance)
+abs_data_cor <- abs_blcor(absorbance)
 }

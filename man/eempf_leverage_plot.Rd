@@ -20,7 +20,7 @@ The labels to be shown can be selected by adding the quatile of samples with hig
 \examples{
 data(pf_models)
 
-leverage <- eempf_leverage(pf4[[4]])
+leverage <- eempf_leverage(pf4[[1]])
 eempf_leverage_plot(leverage)
 }
 \seealso{

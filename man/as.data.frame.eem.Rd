@@ -4,8 +4,8 @@
 \alias{as.data.frame.eem}
 \title{Converting EEM data from class eem to data.frame.}
 \usage{
-\method{as.data.frame}{eem}(x, row.names = NULL, optional = FALSE, ...,
-  gather = TRUE)
+\method{as.data.frame}{eem}(x, row.names = NULL, optional = FALSE,
+  gather = TRUE, ...)
 }
 \arguments{
 \item{x}{blabla}
@@ -14,9 +14,9 @@
 
 \item{optional}{ignored}
 
-\item{...}{ignored}
-
 \item{gather}{logical, says whether data.frame is returned with excitation wavelength as column names or as values of a column. If the data is gathered, the sample name is added as value in a calumn}
+
+\item{...}{ignored}
 }
 \value{
 A data frame containing the EEM data.
@@ -26,6 +26,7 @@ Converting EEM data from class eem to data.frame.
 }
 \examples{
 data(eem_list)
+
 as.data.frame(eem_list[[1]])
 as.data.frame(eem_list[[1]],gather=FALSE)
 }

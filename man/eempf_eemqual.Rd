@@ -26,7 +26,7 @@ Calculating EEMqual which is an indicator of a PARAFAC model's quality
 data(eem_list)
 data(pf_models)
 
-pfmodel <- pf4[[4]]
+pfmodel <- pf4[[1]]
 eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 }
 }

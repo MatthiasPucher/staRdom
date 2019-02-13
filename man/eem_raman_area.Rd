@@ -23,6 +23,9 @@ Calculate raman area of EEM samples
 Code based on \code{\link[eemR]{eem_raman_normalisation}}.
 }
 \examples{
-data(blank)
+folder <- system.file("extdata/EEMs",package="staRdom")
+eem_list <- eem_read_csv(folder)
+blank <- eem_extract(eem_list,sample ="blank", keep = TRUE)
+
 eem_raman_area(blank)
 }

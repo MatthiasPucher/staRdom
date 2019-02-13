@@ -5,12 +5,12 @@
 #'
 #' @param data object of class eemlist with spectra containing missing values
 #' @param cores specify number of cores for parallel computation
-#' @param type numeric 0 to 4 or TRUE which resambles type 2
+#' @param type numeric 0 to 4 or TRUE which resembles type 1
 #' @param nonneg logical, whether negative values should be replaced by 0
 #' @param verbose logical, whether more information on calculation should be provided
 #' @param ... arguments passed on to other functions (pchip, na.approx, mba.points)
 #'
-#' @details The types of interpolation are (0) setting all NAs to 0, (1) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) spline interpolation with \code{\link[MBA]{mba.points}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible.
+#' @details The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 3, extrapolation can be suppressed by adding the argument extend = FALSE.
 #'
 #' @return object of class eemlist with interpoleted spectra.
 #'
@@ -29,6 +29,8 @@
 #' @examples
 #' \donttest{
 #' data(eem_list)
+#' eem_list <- eem_list[1:6]
+#' class(eem_list) <- "eemlist"
 #'
 #' remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
 #'
@@ -37,27 +39,38 @@
 #' eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
 #'
 #' eem_list <- eem_interp(eem_list)
+#'
+#' ggeem(eem_list)
+#'
+#' eem_list2 <- eem_setNA(eem_list,ex=200:280,interpolate=FALSE)
+#'
+#' ggeem(eem_list2)
+#'
+#' eem_list3 <- eem_interp(eem_list2,type=1,extend = TRUE)
+#'
+#' ggeem(eem_list3)
+#'
+#' eem_list3 <- eem_interp(eem_list2,type=1,extend = FALSE)
+#'
+#' ggeem(eem_list3)
+#'
+#'
 #' }
-eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE)/2, type = TRUE,verbose = FALSE, nonneg=TRUE,...){
+eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type = TRUE,verbose = FALSE, nonneg=TRUE,...){
   cl <- makeCluster(spec = cores, type = "PSOCK")
   doParallel::registerDoParallel(cl)
-  #data <- eem_list3
   if(verbose){
     cat("interpolating missing data in",length(data),"EEMs", fill=TRUE)
-    #pb <- txtProgressBar(max = length(data), style = 3)
-    #progress <- function(n) setTxtProgressBar(pb, n)
-    #opts <- list(progress = progress)
-  } else {
-    #opts <- NULL
   }
-  eem_list <- foreach(i = 1:length(data)) %dopar% { #, .options.snow = opts
-    #i <- 1
+  eem_list <- foreach(i = 1:length(data)) %dopar% {
+    #data <- eem_list
+    #i <- 4
     eem <- data[[i]]
     if(type == 4){
-      eem$x <- cbind(zoo::na.approx(eem$x,...),t(zoo::na.approx(t(eem$x,...)))) %>% array(c(nrow(eem$x),ncol(eem$x),2)) %>%
+      eem$x <- cbind(zoo::na.approx(eem$x,...),t(zoo::na.approx(t(eem$x),...))) %>% array(c(nrow(eem$x),ncol(eem$x),2)) %>%
         apply(1:2, mean, na.rm = TRUE)
             }
-    if(type == 3 | type == TRUE){
+    if(type == 1 | type == TRUE){
       x <- eem$x %>%
         data.frame() %>%
         `colnames<-`(eem$ex) %>%
@@ -67,9 +80,8 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE)/2, ty
         mutate_all(as.numeric)
       x2 <- x %>%
         filter(!is.na(z))
-      x3 <- MBA::mba.points(xyz = x2 %>% select(em,ex,z), xy.est = expand.grid(em = eem$em, ex = eem$ex), extend = TRUE, verbose = verbose,...)
+      x3 <- MBA::mba.points(xyz = x2 %>% select(em,ex,z), xy.est = expand.grid(em = eem$em, ex = eem$ex), verbose = verbose, ...)
       eem$x[is.na(eem$x)] <- x3$xyz.est[,3] %>% matrix(nrow = nrow(eem$x), ncol = ncol(eem$x)) %>% .[is.na(eem$x)] #%>% pmin(max(eem$x,na.rm=TRUE)) %>% pmax(min(eem$x,na.rm=TRUE))#matrix(x3,nrow=length(eem$em), ncol = length(eem$ex))
-      #list(eem) %>% `class<-`("eemlist") %>% ggeem()
       }
     if(type == 2){
     x1 <- try(eem$x %>% apply(1,function(row) pracma::pchip(xi=eem$ex[!is.na(row)],yi=row %>% na.omit(),x=eem$ex),...) %>% t(),silent=TRUE)
@@ -81,8 +93,8 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE)/2, ty
     eem$x <- cbind(x1,x2) %>% array(c(nrow(x1),ncol(x2),2)) %>%
       apply(1:2, mean, na.rm = TRUE)
     }
-    if(type == 1){
-      eem$x <- eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em),...)
+    if(type == 3){
+      eem$x <- eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em,...))
     }
     if(type == 0){
       eem$x[is.na(eem$x)] <- 0
@@ -91,7 +103,6 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE)/2, ty
     eem
   }
   stopCluster(cl)
-  #if(verbose) close(pb)
 
   class(eem_list) <- "eemlist"
   eem_list
@@ -123,9 +134,6 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE)/2, ty
 #' eem_list2 <- eem_setNA(eem,ex=200:280,em=500:600, interpolate=FALSE)
 #' ggeem(eem_list2)
 eem_setNA <- function(eem_list,sample=NULL,em=NULL,ex=NULL,interpolate = TRUE,...){
-  #eem_list <- eem_list3
-  #eem <- eem_list[[1]]
-  #sample <- 1
   if(is.null(sample)){
     sample <- eem_names(eem_list)
   }
@@ -179,7 +187,6 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
     eem_list <- eem_extract(eem_list,sample_exclude,verbose=verbose)
   }
   eem_list <- lapply(eem_list,function(eem){
-    #eem <- eem_list[[1]]
     eem$x <- eem$x[!eem$em %in% em_exclude,!eem$ex %in% ex_exclude]
     eem$ex <- eem$ex[!eem$ex %in% ex_exclude] #%>% length()
     eem$em <- eem$em[!eem$em %in% em_exclude] #%>% length()
@@ -220,20 +227,15 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 #' # correction by value
 #' eems_num <- eem_raman_normalisation2(eem_list,blank=168)
 eem_raman_normalisation2 <- function(data,blank="blank"){
-  #norm <- ram_data
   if(blank == "blank"){
     res_list <- try(data %>% eem_raman_normalisation(),silent=TRUE)
     if (class(res_list) == "try-error") {
       stop("There was a problem with raman normalisation, please check the presence of a blank sample and the parameter blank!")
     }
   } else if(is.data.frame(blank) & class(data) == "eemlist"){
-    #data <- eem_list
-    #rownames(blank) <- rownames(blank) %>% make.names()
+
     res_list <- lapply(data,function(eem){
-      #eem <- data[[3]]
-      #blank <- ram_data
       rar <- blank[eem$sample %>% make.names(),]
-      #cat("Raman area:", rar, "\n")
       if(!is.na(rar)){
         eem$x <- eem$x/rar
         attr(eem, "is_raman_normalized") <- TRUE
@@ -246,7 +248,6 @@ eem_raman_normalisation2 <- function(data,blank="blank"){
     class(res_list) <- class(data)
   } else if(is.numeric(blank) & length(blank)==1 & class(data) == "eemlist"){
     res_list <- lapply(1:length(data),function(i){
-      #cat("Raman area:", blank, "\n")
       data[[i]]$x <- data[[i]]$x/blank
       attr(data[[i]], "is_raman_normalized") <- TRUE
       return(data[[i]])
@@ -271,17 +272,15 @@ eem_raman_normalisation2 <- function(data,blank="blank"){
 #' @export
 #'
 #' @examples
-#' data(eem_list)
-#' data(abs_data)
+#' folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
+#' eem_list <- eem_read(folder)
+#' data(absorbance)
 #'
-#' eem_ife_correction(eem_list,abs_data,5)
+#' eem_ife_correction(eem_list,absorbance,5)
 eem_ife_correction <- function(data,abs_data,cuvl){
   eem_list <- data %>% lapply(function(eem1){
     if(is.data.frame(cuvl)) cl <- cuvl[eemnam,] else cl <- cuvl
-    #eem1 <- eem_list %>% .[eem_list %>% eem_names() == eemnam]
-    #eem1 <- eem_list[[48]]
     eem1 <- list(eem1)
-    #class(eem_list) <- "eemlist"
     nam <- eem1[[1]]$sample
     class(eem1) <- "eemlist"
     if(nam %in% colnames(abs_data)){
@@ -383,10 +382,9 @@ eem_smooth <- function(data,n = 4){
 #' remove_scatter_width = c(15,10,16,12)
 #'
 #' eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
-eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpolation = FALSE, cores = parallel::detectCores()/2, verbose = FALSE)
+eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpolation = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE)
 {
   if(data %>% class != "eemlist") stop("first argument has to be a list of eem samples!")
-  #if(!all(remove_scatter %>% names() %in% c("raman1","raman2","rayleigh1","rayleigh2"))) stop("scatter bands you would like to remove are unknown!")
   if(!is.numeric(remove_scatter_width)) stop("removed scatter slot width has to be numeric!")
   if(length(remove_scatter_width) == 1) remove_scatter_width <- rep(remove_scatter_width,4)
   if(remove_scatter[1]) data <- data %>% eem_remove_scattering(type="raman",order=1,width=remove_scatter_width[1])
@@ -417,7 +415,10 @@ eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpol
 #' @importFrom stats setNames
 #'
 #' @examples
-#' data(blank)
+#' folder <- system.file("extdata/EEMs",package="staRdom")
+#' eem_list <- eem_read_csv(folder)
+#' blank <- eem_extract(eem_list,sample ="blank", keep = TRUE)
+#'
 #' eem_raman_area(blank)
 eem_raman_area <- function(eem_list, blanks_only = TRUE, average = FALSE){
   if(blanks_only){
@@ -488,9 +489,6 @@ eem_matmult <- function(eem_list,matrix = NULL,value = 0){
     mat <- matrix
   } else {
     mat <- matrix(data = 1, nrow = nrow(eem_list[[1]]$x), ncol = ncol(eem_list[[1]]$x))
-    #if("a" %in% matrix){
-    #  mat[,eem_list[[1]]$ex < 230] <- 0
-    #}
     if("l" %in% matrix | "u" %in% matrix){
       ex_mat <- matrix(eem_list[[1]]$ex, nrow = nrow(eem_list[[1]]$x), ncol = ncol(eem_list[[1]]$x), byrow=TRUE)
       em_mat <- matrix(eem_list[[1]]$em, nrow = nrow(eem_list[[1]]$x), ncol = ncol(eem_list[[1]]$x), byrow=FALSE)
@@ -509,6 +507,94 @@ eem_matmult <- function(eem_list,matrix = NULL,value = 0){
   lapply(eem_list, function(eem){
     mat[mat == 0] <- value
     eem$x <- eem$x * mat
+    eem
+  }) %>%
+    `class<-`("eemlist")
+}
+
+
+#' EEM sample data is extended to include all wavelengths in all samples
+#'
+#' @description Compared to the whole sample set, wavelengths missing in some samples are added and set NA or interpolated. This can be especially helpful, if you want to combine data measured with different wavelength intervals in a given range.
+#'
+#' @param eem_list eemlist
+#' @param interpolation logical, whether added NAs should be interpolated
+#' @param ... arguments passed to eem_interp
+#'
+#' @import dplyr
+#'
+#' @return eemlist
+#' @export
+#'
+#' @examples
+#' library(dplyr)
+#' data(eem_list)
+#' eem_list <- eem_exclude(eem_list[1:5] %>%
+#' `class<-`("eemlist"), exclude = list(em = c(318,322,326,550,438), ex = c(270,275))) %>%
+#' eem_bind(eem_list[6:15] %>% `class<-`("eemlist"))
+#' ggeem(eem_list)
+#'
+#' eem_extend2largest(eem_list) %>%
+#'   ggeem()
+eem_extend2largest <- function(eem_list, interpolation = FALSE,...){
+  exs <- lapply(eem_list, function(eem) eem$ex) %>%
+    unlist() %>%
+    unique() %>%
+    sort()
+  ems <- lapply(eem_list, function(eem) eem$em) %>%
+    unlist() %>%
+    unique() %>%
+    sort()
+  res <- lapply(eem_list, function(eem){
+    eemx <- matrix(nrow = length(ems), ncol = length(exs))
+    eemx[which(ems %in% eem$em),which(exs %in% eem$ex)] <- eem$x
+    eem$x <- eemx
+    eem$em <- ems
+    eem$ex <- exs
+    eem
+  }) %>%
+    `class<-`("eemlist")
+  if(interpolation != FALSE){
+    res <- eem_interp(res,type = interpolation, ...)
+  }
+  res
+}
+
+
+#' Multiply EEMs with spectral correction vectors (Emission and Excitation)
+#'
+#' @param eem_list eemlist
+#' @param Excor data frame, first column wavelengths, second column excitation correction
+#' @param Emcor data frame, first column wavelengths, second column emission correction
+#'
+#' @return eemlist
+#' @export
+#'
+#' @examples
+#' eems <- system.file("extdata/EEMs",package="staRdom")
+#' eem_list <- eem_read_csv(eems)
+#'
+#' excorfile <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
+#' Excor <- data.table::fread(excorfile)
+#' emcorfile <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv",package="staRdom")
+#' Emcor <- data.table::fread(emcorfile)
+#'
+#' # adjust range of EEMs to cover correction vectors
+#' eem_list <- eem_range(eem_list,ex = range(Excor[,1]), em = range(Emcor[,1]))
+#'
+#' eem_list_sc <- eem_spectral_cor(eem_list,Excor,Emcor)
+eem_spectral_cor <- function(eem_list,Excor,Emcor){
+  x <- eem_getextreme(eem_list)
+  xEx <- range(Excor[,1])
+  xEm <- range(Emcor[,1])
+  if(!all(x$ex %in% seq(xEx[1],xEx[2]))) stop("Excitation correction does not cover EEM excitation spectrum!")
+  if(!all(x$em %in% seq(xEm[1],xEm[2]))) stop("Emission correction does not cover EEM emission spectrum!")
+  eem_list <- lapply(eem_list,function(eem){
+    #eem <- eem_list[[1]]
+    Excor1 <- approx(x=Excor[[1]],y=Excor[[2]],xout=eem$ex)$y
+    Emcor1 <- approx(x=Emcor[[1]],y=Emcor[[2]],xout=eem$em)$y
+    mcor <- Emcor1 %*% t(Excor1)
+    eem$x <- eem$x * mcor
     eem
   }) %>%
     `class<-`("eemlist")

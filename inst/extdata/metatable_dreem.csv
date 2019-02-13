@@ -1,0 +1,9 @@
+sample,eem_location,abs_location,dilution
+dreem_423sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//di25se06,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_457sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//di25se06,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_492sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//di25se06,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_blank_di25se06,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//di25se06,NA,1
+dreem_433sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//mq11my,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_437sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//mq11my,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_441sf,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//mq11my,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/absorbance/dreem_423sf.csv,1
+dreem_blank_mq11my,/home/matthias/R/x86_64-pc-linux-gnu-library/3.5/staRdom/extdata/EEMs//mq11my,NA,1

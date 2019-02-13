@@ -4,12 +4,12 @@
 \alias{eempf_rescaleBC}
 \title{Rescale B and C modes of PARAFAC model}
 \usage{
-eempf_rescaleBC(pfmodel, newscale = 1)
+eempf_rescaleBC(pfmodel, newscale = "Fmax")
 }
 \arguments{
 \item{pfmodel}{object of class parafac}
 
-\item{newscale}{Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If newscale = "Fmax", each component will be scaled so the maximum of each component is 1.}
+\item{newscale}{If (default) newscale = "Fmax", each component will be scaled so the maximum of each component is 1. It is also possible to set a desired root mean-square for each column of the rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.}
 }
 \value{
 object of class parafac
@@ -20,7 +20,7 @@ B and C modes (emission and excitation wavelengths) are rescaled to RMS of value
 \examples{
 data(pf_models)
 
-new_pf <- eempf_rescaleBC(pf4[[4]])
+new_pf <- eempf_rescaleBC(pf4[[1]])
 }
 \seealso{
 \code{\link[multiway]{rescale}}

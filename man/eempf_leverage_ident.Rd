@@ -20,7 +20,7 @@ Plot is interactive where you can select values with your mouse. A list of vecto
 \examples{
 data(pf_models)
 
-leverage <- eempf_leverage(pf4[[4]])
+leverage <- eempf_leverage(pf4[[1]])
 outliers <- eempf_leverage_ident(leverage)
 }
 \seealso{

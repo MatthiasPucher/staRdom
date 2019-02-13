@@ -13,14 +13,20 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
+### BEWARE! ###
+# This Rmd file was created to supply a tutrial for staRdom.
+# Several steps in here are not part of the actual analysis but to create a nice looking and smoothly created
+# tutorial file. Starting your PARAFAC analysis from this Rmd file is therefore not adviced. If you do so, you
+# have to distinguish between the steps necessary for the analysis and those necessary for a nice tutorial.
+# If you encounter troubles or you do not know, what this means please start with a fresh, plain R script, read
+# the turial and use the code provided there!
+
 library(knitcitations)
-library(dplyr)
-library(tidyr)
 cleanbib()
 options("citation_format" = "pandoc")
 bibliography() #style="apalike"
-library(staRdom)
 library(knitr)
 library(kableExtra)
 cores <- 2
@@ -29,116 +35,171 @@ cores <- 2
 ![](staRdom384.png){width=180}
 
 # Introduction
-staRdom is a package for R `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
+staRdom is a package for R version `r R.Version()$major` `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
 
-* separating the components of the EEMs via PARAFAC/CANDECOMP (`r citep(list("10.1039/c3ay41160e",citation(package="multiway")))`).
+* separating the components of the EEMs via PARAFAC/CANDECOMP (`r citep(list("10.1039/c3ay41160e","10.1016/S0169-7439(97)00032-4",citation(package="multiway")))`).
 * correcting excitation-emission-matrices `r citep(list("10.1039/c3ay41160e",citation(package="eemR")))`
 * calculating fluorescence peaks and indices `r citep(citation(package="eemR"))`
-    * biological index (bix; `r citet("10.1016/j.orggeochem.2009.03.002")`)
-    * so-called Coble-peaks (b,	t, a,	m, c; `r citet("10.1016/0304-4203(95)00062-3")`)
-    * fluorescence index (fi; `r citet("10.4319/lo.2001.46.1.0038")`)
-    * humification index (hix; `r citet("10.1021/es0155276")`)
+* autochthonous productivity index / freshness index (BIX; `r citet(list("10.1016/j.orggeochem.2009.03.002","10.4319/lo.2010.55.6.2452"))`)
+* classical peaks based on manual peak picking (B, T, A, M, C; `r citet("10.1016/0304-4203(95)00062-3")`)
+* fluorescence index (fi; `r citet("10.4319/lo.2001.46.1.0038")`)
+* humification index (hix; `r citet("10.1021/es0155276")`)
 * calculating common absorbance (slope) parameters (a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes; `r citet(list("10.4319/lo.2008.53.3.0955","10.1016/j.marchem.2004.02.008",citation(package="cdom"),"10.4319/lo.2009.54.2.0590"))`)
 
 staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
 
 The analysis process was developed and discussed in other papers and tutorials (REF). The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of `r citet("10.1039/c3ay41160e")`. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
 
-For easy data correction and calculations of peaks, indices calculation and slope parameters without using R functions and codes please see [vignette for basic analysis](Basic_analysis_of_DOM_samples.html). For information on eemR and its functions please see the [eemR vignette](https://CRAN.R-project.org/package=eemR). Details on the actual PARAFAC calculation can be found in the [multiway documentation](https://CRAN.R-project.org/package=multiway).
+For easy data correction and calculations of peaks, indices calculation and slope parameters without using R functions and codes please see [vignette for basic analysis](Basic_analysis_of_DOM_samples.html). We use functions from the R package eemR, for information on eemR and its functions please see the [eemR vignette](https://CRAN.R-project.org/package=eemR). Details on the actual PARAFAC calculation can be found in the [multiway documentation](https://CRAN.R-project.org/package=multiway).
+
+This tutorial was created using R version `r R.Version()[c("major","minor")] %>% paste0(collapse=".")` and the packages dplyr `r citep(citation(package="dplyr"))` and tidyr `r citep(citation(package="tidyr"))`.
+```{r message=FALSE, warning=TRUE}
+library(dplyr)
+library(tidyr)
+```
 
 ## Aim of this document
 
 > This file describes a complete fluorescence and absorbance analysis of example data using R functions and offers a variety of options and ways to gain validated results.
 
+## Remark on errors and warnings
+In R, there can be errors and warnings. Errors stop the calculations and no result is returned. There is a severe problem. Warnings are do not stop calculations and are hints, that something strange happened. If you encounter any warnings please think of the reason. In some cases, this reason might be in-line with what you want and does not cause a problem. An examples for a not serious warnings are interpolated values because of missing wavelengths or NAs introduced by coercion. Please have a look at your data to find actual problems.
+
+## Install and load staRdom
+staRdom can be installed directly from a CRAN repository:
+```{r eval=FALSE, include=TRUE}
+install.packages("staRdom")
+```
+You can also install staRdom from GitHub. The version on GitHub is sometimes a more recent one.
+```{r eval=FALSE, include=TRUE}
+install.packages("devtools") # Run this only, if devtools is not installed already.
+devtools::install_github("MatthiasPucher/staRdom")
+```
+staRdom can then be loaded:
+```{r eval=TRUE, include=TRUE}
+library("staRdom")
+```
+
+
 ## Parallel processing
 
-Some of the functions can use several CPU cores parallel to speed up the calculations. You can set the number of parallel processes to be used.
-Here, we use half of the available threads, which should be similar to the number of physical cores.
+Some of the functions can use several CPU cores in parallel to speed up the calculations. You can set the number of parallel processes to be used.
+In tests, best results were achieved setting `cores` to the number of physical cores in your computer. Using virtual cores from Hyper-threading did increase calculation times. `detectCores(logical = FALSE)` will give you the appropriate number. On some computers this function returns the number of virtual cores, which has to be checked and set manually then.
 
 ```{r eval=FALSE, include=TRUE}
-cores <- parallel::detectCores()/2
+cores <- detectCores(logical = FALSE)
 ```
 
 ## Overview of analysis steps
 
-The diagram below shows the most important steps in the analysis of fluorescence and absorbance data to identify DOM parameters. After importing the data and applying the desired correction steps, peaks, indices and absorbance parameters can be calculated. Besides that, after the data correction, compounds can be separated using a PARAFAC model. The PARAFAC model development includes cyclical steps to come to a satifying result. Model validation is very important at that point to get trsutful results. As a last step, the compounds determined in the model can be linked to already published ones and by that interpreted in a biogeochemical context.
+The diagram below shows the most important steps in the analysis of fluorescence and absorbance data to identify DOM parameters. After importing the data and applying the desired correction steps, peaks, indices and absorbance parameters can be calculated. Besides that, after the data correction, compounds can be separated using a PARAFAC model. The PARAFAC model development includes cyclical steps to come to a satisfying result. Model validation is very important at that point to get trustful results. As a last step, the compounds determined in the model can be linked to already published ones or other experimental data and by that interpreted in a biogeochemical context.
 
 ![](analysis_scheme.svg){width=100%}
 
 # Example data coming with the package
 
-You can run a complete data correction and analysis as showen in this example with the data provided by the package.
+You can run a complete data correction and analysis as shown in this example with the data provided by the package and downloaded with in tutorial. However, you can start the tutorial with your own data right away. The function `system.file()` used below returns the folders, where the example data is stored in. In case you use your own, you can just type in the path to your data as a string (e.g. "C:/folder/another folder") without using `system.file`. 
 
 ## Raw EEM data
 
-The example data is saved in a folder and accessible by `system.file("extdata/cary/scans_day_1", package = "eemR")`. Due to package size issues, only a small amount of samples is included and not all examples from this tutorial will deliver the same results. A PARAFAC analysis is more stable when more samples are used but a lot of samples would cause the package to be unneccessarily large.
+The example EEM data is saved in a folder and accessible by `system.file("extdata/EEMs", package = "staRdom")`. Due to package size issues, only a small amount of samples is included and for a complete reproduction of the PARAFAC analysis demonstrated below, the drEEM data has to be downloaded (see below how to accomplish that).
 
 ## Raw absorbance data
 
-The absorbance data is saved in a folder accesible by `system.file("extdata/absorbance_eemR",package = "staRdom")`.
+The absorbance data is saved in a folder accessible by `system.file("extdata/absorbance", package = "staRdom")`.
 
 ## Additional raw data
 
-There is a table with an example of how to deal with diluted samples included.
-The data is saved in a folder accesible by `system.file("extdata/metatable_eemR.csv",package = "staRdom")`.
+There is a table with data on diluted samples included. The table can serve as an example in case you worked with diluted samples. It is saved in a folder accessible by `system.file("extdata/metatable_dreem.csv", package = "staRdom")`.
 
 ## Corrected EEM data
 
-A set of EEM samples was corrected and can be loaded into your R environment by `data(eem_list)`
+The corrected EEM data set is loaded from the drEEM website.
 
 ## PARAFAC model
 
 An already calculated PARAFAC model was added to the package. It can be loaded into the R environment by `data(pf_models)`.
 
-```{r eval=FALSE, include=FALSE}
-data(eem_list) # load example data
-```
 # Import raw data
 
 For a complete analysis in staRdom you need fluorescence and absorbance data. In many cases also a metatable is needed. Reading and linking the data needs some preparations and attention. Below we show how to import these data using the provided example data.
 
 ![](data_import.svg){width=100%}
 
-EEM data import is done with `eem_read` (package eemR). Currently you can use it to import from Cary Eclipse, Aqualog, Fluoromax-4 and Shimadzu instruments.
+EEM data import is done with `eem_read` (package eemR). Currently you can use it to import from Varian Cary Eclipse, Horiba Aqualog, Horiba Fluoromax-4 and Shimadzu instruments.
+If the EEMs are available as plain csv tables, please use the function `eem_read_csv`. Within the function you can specify, whether excitation or emission wavelengths are present in columns (e.g. `col = "ex"`). Additional parameters (e.g. column separators) can be passed on to `fread` from the package `data.table`.
 
 ```{r eval=TRUE, include=TRUE}
-folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
+folder <- system.file("extdata/EEMs/", package = "staRdom") # folder containing example EEMs
+eem_list <- eem_read_csv(folder) # in case you use your own data, just replace folder by a path. e.g. "C:/folder/another folder" and use eem_read if you do not have plain csv tables to import
+```
+
+To load data from Varian Cary Eclipse, Horiba Aqualog, Horiba Fluoromax-4 and Shimadzu instruments please use:
+```{r eval=FALSE, include=TRUE}
 eem_list <- eem_read(folder)
 ```
 
-To have a look at your data, you can plot the samples.
+If your instrument is not amongst the mentioned ones, the development version of eemR, currently available on GitHub might help. It provides a possibility to load data from other some other instruments as well (e.g. Hitachi). It can be installed using the following commands.
+
+```{r eval=FALSE, include=TRUE}
+install.packages("devtools") # Run this only, if devtools is not installed already.
+devtools::install_github("PMassicotte/eemR")
+```
+
+To have a look at your data, you can plot the samples in several plots. `spp` defines the number of samples per plot. Not present data is not shown (light greyish), NAs are dark grey.
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=8)
 ```
 
 Absorbance data is imported with `absorbance_read`. It is read from CSV or TXT files. `absorbance_path` is either a directory and all files in there are read in, or a single file that is read in. Tables can either contain data from one sample or from several samples in columns. The first column is considered the wavelength column. A multi-sample file must have sample names as column names. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
 
 ```{r eval=TRUE, include=TRUE}
-data(absorbance) # load example data
-```
-```{r eval=FALSE, include=TRUE}
-absorbance_read(absorbance_path) # load csv or txt tables in folder absorbance_path
+absorbance_path = system.file("extdata/absorbance", package = "staRdom") # load example data, set a path without using system.file to use your own data e.g. "C:/folder/another folder"
 ```
 
-Dilution data is read using the base R function read.table. Any function providing a variable of class `data.table` can be used. Here, we read in a table containig meta data provided with the package as an example.
+To load the data, please use:
+```{r eval=TRUE, include=TRUE}
+absorbance <- absorbance_read(absorbance_path) # load csv or txt tables in folder
+```
+
+Dilution data is read using the base R function read.table. Please check that the column separator of your file is the same as in read.table (sep, which is defined as blank space here, hence sep = “ “). The same is true for the decimal of your numbers (dec, which is defined as dec = “,” in our case). Here, we import a table containing meta data provided with the package as an example.
 
 ```{r eval=TRUE, include=TRUE}
-meta <- read.table(system.file("extdata/metatable_eemR.csv",package = "staRdom"), header = TRUE, sep = " ", dec = ".", row.names = 1) # load example data
+metatable <- system.file("extdata/metatable_dreem.csv",package = "staRdom") # path to example data, can be replaced by a path to your own data
+meta <- read.table(metatable, header = TRUE, sep = ",", dec = ".", row.names = 1) # load data
+```
 
-meta
+If you have not created a table containing meta data, you can use `eem_metatamplate` to create a new one. It can be written to a file using `write.csv`. Here is an example:
+
+```{r eval=FALSE, include=TRUE}
+eem_metatemplate(eem_list, absorbance) %>%
+  write.csv(file="metatable.csv", row.names = FALSE)
 ```
 
 ## Check data
-The data can be checked for possible incorrect entries, such as NAs ([‘Not Available’ / missing values](https://stat.ethz.ch/R-manual/R-devel/library/base/html/NA.html)) in data, duplicate and invalid sample names, wavelength range mismatches, missing data, inconsistencies in samples names between EEM, absorbance and metadata (e.g. samples missing in one of the three sets) and missing correction methods. In the case of problems, you need to reorganise your data manually and revise the steps mentioned above. The `eem_checkdata` function can be run any time during the process to see if any changes in the dataset caused inconsistencies.
+The `eem_checkdata` function prints out sample names and folders, where possible problems are detected. Additionally a named list with these sample names can be saved (variable `problem` in the example code below).
 
-The data can be checked for possible incorrect entries. The results are to help you to reorganise your data and revise the steps above in case of any problems. No correction of these problems is done automatically!
-Checks are done on NAs in data, duplicate and invalid sample names, wavelength range mismatches, missing data, inconsistencies in samples names between EEM, absorbance and metadata (like samples missing in one of the three sets) and missing correction methods. The `eem_checkdata` function can be run any time during the process to see if any changes in the dataset caused inconsistencies.
+The data can be checked for possible incorrect entries (in brackets names of the according list elements):
+* NAs ([‘Not Available’ / missing values](https://stat.ethz.ch/R-manual/R-devel/library/base/html/NA.html)) in data (`NAs_in_EEMs`)
+* duplicate and invalid sample names (``)
+* wavelength range mismatches (in-between EEMs: `EEMs_more_data_than_smallest`, absorbance spectrum smaller than EEM spectrum: `EEM_absorbance_wavelength_range_mismatch`). Concerning wavelength spectra, only the range is important since values in-between are interpolated automatically for absorbance data and can be interpolated manually for different EEM samples using the function `eem_extend2largest`.
+* missing data (EEM but no absorbance: `EEMs_missing_absorbance`, absorbance but no EEM: `Absorbance_missing_EEMs`, EEM but no metadata: `EEMs_missing_metadata`,metadata but no EEM: `Metadata_missing_EEMs`)
+* inconsistencies in samples names between EEM, absorbance and metadata (e.g. samples missing in one of the three sets), (`Duplicate_EEM_names`, `Duplicate_absorbance_names`, `invalid_EEM_names`, `invalid_absorbance_names`,`Duplicates_metatable_names`)
+* not applied correction methods (`missing_data_correction`).
+
+`Possible_problem_found` is a logic variable in the list, sting whether a possible problem was found or not.
+
+In case of problems, you need to reorganise your data manually and revise the steps mentioned above. The `eem_checkdata` function can be run any time during the process to see if any changes in the dataset caused inconsistencies. No correction of these problems is done automatically!
 
 ```{r eval=TRUE, include=TRUE}
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 ```
 
-The above mentioned absence of absorbance data for the nano sample can be justified, as absorbance of MilliQ is nearly 0 over the complete spectrum.
+NAs in EEM data is no problem for a PARAFAC analysis as long as there is a certain amount of numeric values present.
+
+Right now, different EEM sizes are no problem, because this problem will be addressed below. For a blank subtraction or a PARAFAC analysis, the available data for each sample must be similar.
+
+The above mentioned absence of absorbance data for the blank samples can be justified, as absorbance of MilliQ is theoretically 0 over the complete spectrum. In the further analysis, this is no problem.
 
 # Data preparation and correction
 
@@ -146,7 +207,7 @@ If you have used the template for the peak picking ([vignette for basic analysis
 
 ## Sample names
 
-If you want to change your sample names, you can use `eem_name_replace`. In the example, "(FD3)" is removed as it is not part of the samples names but originates from the conversion of FD3 files to txt files. You can use this function for any replacement in file names. Regular expressions (please see the [help on regular expressions](https://stat.ethz.ch/R-manual/R-devel/library/base/html/regex.html)) can be used in search and replace patterns provided.
+If you want to change your sample names, you can use `eem_name_replace`. In the example, "(FD3)" is removed as it is not part of the samples names but originates from the conversion of Hitachi FD3 files to txt files. You can use this function for any replacement in file names. Regular expressions (please see the [help on regular expressions](https://stat.ethz.ch/R-manual/R-devel/library/base/html/regex.html)) can be used in search and replace patterns provided.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_name_replace(eem_list,c("\\(FD3\\)"),c(""))
@@ -160,56 +221,82 @@ The instrumental baseline drift in absorbance data can be removed by subtracting
 absorbance <- abs_blcor(absorbance,wlrange = c(680,700))
 ```
 
-## Blank correction
-
-Blanks are samples of milliq that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They are used on the samples in the same (sub)folders. If multiple blanks were measured, they are averaged. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors `r citep("10.1039/c3ay41160e")`.
+## Spectral correction
+Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. The example EEMs are corrected using `eem_spectral_cor`. Correction vectors have to be provided in the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range using `eem_range`.
 
 ```{r eval=TRUE, include=TRUE}
+excorfile <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
+Excor <- data.table::fread(excorfile)
+
+emcorfile <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv",package="staRdom")
+Emcor <- data.table::fread(emcorfile)
+
+# adjust range of EEMs to cover correction vectors
+eem_list <- eem_range(eem_list,ex = range(Excor[,1]), em = range(Emcor[,1]))
+
+eem_list <- eem_spectral_cor(eem_list,Excor,Emcor)
+```
+
+## Blank correction
+
+Blanks are samples of milliq that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They are used on the samples in the same (sub)folders. If multiple blanks were measured, they are averaged. The example data consist of only one folder with only one blank. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors `r citep("10.1039/c3ay41160e")`.
+
+To do a blank correction, the blanks must be the same size as the samples they will be subtracted from. As different sample sizes were reported above, all samples will be brought to the same data range before. You can find a description on data and wavelength ranges below.
+
+```{r eval=TRUE, include=TRUE}
+# extending and interpolation data
+eem_list <- eem_extend2largest(eem_list, interpolation = 1, extend = FALSE, cores = cores)
+
+# blank subtraction
 eem_list <- eem_remove_blank(eem_list)
 ```
 
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=8)
 ```
 
 ## Inner-filter effect correction
 
-Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair `r citep("10.4319/lom.2013.11.616")`. In case of a total absorbance greater than 1.5, the sample has to be diluted because otherwise, the linear relationship is not appropriate anymore. The example uses a path length of 5 cm for absorption measurements.
+Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair `r citep("10.4319/lom.2013.11.616")`. In case of a maximum absorbance greater than 1.5 cm⁻¹, the sample needs to be diluted, because the absorbance is to high to be corrected by the applied IFE function (or mathematical IFE in general). The example uses a path length of 5 cm (5 cm long cuvettes) for absorption measurements.
+
+In the example below, there is a warning about no absorbance data for the blank samples. This warning is not a problem because in MilliQ samples there is practically no IFE and the sample is removed in the further analysis.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_ife_correction(eem_list,absorbance, cuvl = 5)
 ```
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=8)
 ```
 
 ## Raman normalisation
 
-Fluorescence is normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a MilliQ sample. It allows for the comparability of data from different fluorometers or different settings on the same fluorometer. Depending on where you get the data from, you can use blanks, numeric values or data frames as source for the values.
+Fluorescence is normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a MilliQ sample. All fluorescence intensities are divided by the area (integral) of the Raman peak (excitation of 350 nm between an emission of 371 nm and 428 nm) `r citep("10.1366/000370209788964548")` . Values are interpolated if the wavelengths are missing.
+
+It allows for the comparability of data from different fluorometers or different settings on the same fluorometer. Depending on where you get the data from, you can use blanks, numeric values or data frames as source for the values. In case you use blank samples, again the blanks in the same sub-folder as the sample are used. Blanks are recognised by having "blank", "miliq", "milliq", "nano" or "mq" in the file name. This means regular samples must not have it.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_raman_normalisation2(eem_list, blank = "blank")
 ```
 
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=8)
 ```
 
 Raman areas can be calculated separately with the function `eem_raman_area`.
 
 ## Remove blanks from sample set
 
-From this step onwards, blanks are not needed anymore. You can remove them from your sample set.
+From this step onwards, blanks are not needed anymore. You can remove them from your sample set. `eem_extract` removes all samples including "nano", "miliq", "milliq", "mq" or "blank" in their sample names. `select`
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_extract(eem_list, c("nano", "miliq", "milliq", "mq", "blank"),ignore_case = TRUE)
 
-absorbance <- select(absorbance, -matches("nano|miliq|milliq|mq|blank", ignore.case = TRUE))
+absorbance <- dplyr::select(absorbance, -matches("nano|miliq|milliq|mq|blank", ignore.case = TRUE))
 ```
 
 ## Remove and interpolate scattering
 
-The function removes scattering from the samples. `remove_scatter` is a logical vector where values are ordered by the meaning of "raman1", "raman2", "rayleigh1" and "rayleigh2". `remove_scatter_width` is either a number or a vector containing 4 different values, one for each scatter type. `r citep(list("10.1039/c3ay41160e","10.1007/978-0-387-46312-4"))`
+The function removes scattering from the samples. `remove_scatter` is a logical vector where values are ordered by the meaning of "raman1", "raman2", "rayleigh1" and "rayleigh2". `remove_scatter_width` is either a number or a vector containing 4 different wavelength width in nm, one for each scatter type. `r citep(list("10.1039/c3ay41160e","10.1007/978-0-387-46312-4"))`
 
 ```{r eval=TRUE, include=TRUE}
 remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
@@ -219,17 +306,17 @@ eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatt
 ```
 
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=6)
 ```
 
-Removed scatter areas can be interpolated `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) excitation wavelength-wise interpolation with pchip, (2) excitation and emission wavelength-wise interpolation with pchip and subsequent mean, (3) spline interpolation with interp and (4) linear interpolation in 2 dimensions with na.approx and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible.
+Removed scatter areas can be interpolated `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) excitation wavelength-wise interpolation with pchip, (2) excitation and emission wavelength-wise interpolation with pchip and subsequent mean, (3) spline interpolation with interp and (4) linear interpolation in 2 dimensions with na.approx and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. `extend = FALSE` prevents the function from extrapolating.
 
 ```{r eval=TRUE, include=TRUE}
-eem_list <- eem_interp(eem_list, cores = cores, type = 3)
+eem_list <- eem_interp(eem_list, cores = cores, type = 1, extend = FALSE)
 ```
 
 ```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+eem_overview_plot(eem_list, spp=6)
 ```
 
 ## Correct for dilution
@@ -244,20 +331,20 @@ dil_data <- meta["dilution"]
 eem_list <- eem_dilution(eem_list,dil_data)
 ```
 
-```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem_list)
+```{r eval=FALSE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+eem_overview_plot(eem_list, spp=6) # plot spared, due to no dilution it looks like the previous plot.
 ```
 
 ## Smooth data
 
-Depending on your instrument smoothing the data could be beneficial for peak picking. For PARAFAC analysis this might not be the case because noise is then just visible in the residuals. The parameter `n` specifies the moving average window size in nm. 
+Depending on your instrument smoothing the data could be beneficial for peak picking. For PARAFAC analysis smoothing is not advised. The parameter `n` specifies the moving average window size in nm. 
 
 ```{r eval=TRUE, include=TRUE}
 eem4peaks <- eem_smooth(eem_list, n = 4)
 ```
 
-```{r eval=TRUE, fig.width=7, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
-ggeem(eem4peaks)
+```{r eval=FALSE, fig.width=7, message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+eem_overview_plot(eem4peaks, spp=6)
 ```
 
 ## Overview of samples
@@ -270,18 +357,18 @@ summary(eem_list)
 
 ```{r eval=FALSE, include=FALSE}
 eem_list %>%
-    summary() %>%
-    kable(format = "latex", booktabs = T) %>%
-    kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
-    #kable_styling(font_size = 5) %>%
-    row_spec(0, angle = -45) #%>%
+  summary() %>%
+  kable(format = "latex", booktabs = T) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  #kable_styling(font_size = 5) %>%
+  row_spec(0, angle = -45) #%>%
 ```
 
 # Peak picking and indices
 
 Peaks and indices known from the literature `r citep(list("10.1016/j.orggeochem.2009.03.002","10.1016/0304-4203(95)00062-3","10.4319/lo.2001.46.1.0038","10.1021/es0155276"))` are calculated.
 
-If wavelength ranges needed for certain indices or peaks an interpolation is done automatically (no extrapolation!). Usually according warnings can be ignored. 
+If wavelength ranges needed for certain indices or peaks (e.g. the humification index (HIX) uses an excitation wavelength of 254 nm, but EEMs usually contain measurements at 250 and 255 nm) an interpolation is done automatically between existing measurements (no extrapolation!). This will be reported with warnings, however, usually such warnings can be ignored.
 
 ```{r eval=TRUE, warning=FALSE, include=TRUE}
 
@@ -297,17 +384,18 @@ indices_peaks <- bix %>%
 
 indices_peaks
 ```
+For the peaks B, T and A the necessary data range was missing, therefore no values are in the table This has to be considered in the lab already!
 
 ```{r eval=FALSE, include=FALSE, echo=FALSE}
-  kable(indices_peaks %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),format = "latex", booktabs = T) %>%
-    kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
-    #kable_styling(font_size = 5) %>%
-    row_spec(0, angle = 45) #%>%
+kable(indices_peaks %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),format = "latex", booktabs = T) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  #kable_styling(font_size = 5) %>%
+  row_spec(0, angle = 45) #%>%
 ```
 
 # Absorbance slope parameters
 
-`abs_parms` can be used to calculate a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes `r citep(list("10.4319/lo.2008.53.3.0955","10.1016/j.marchem.2004.02.008",citation(package="cdom"),"10.4319/lo.2009.54.2.0590"))`.
+`abs_parms` can be used to calculate a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes `r citep(list("10.4319/lo.2008.53.3.0955","10.1016/j.marchem.2004.02.008",citation(package="cdom"),"10.4319/lo.2009.54.2.0590"))`. Missing wavelengths, needed for certain indices or ratios are interpolated automatically.
 
 ```{r eval=TRUE, include=TRUE}
 slope_parms <- abs_parms(absorbance, cuvl = 1, cores = cores)
@@ -315,29 +403,69 @@ slope_parms
 ```
 
 ```{r eval=FALSE, include=FALSE, echo=FALSE}
-  kable(slope_parms %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),format = "latex", booktabs = T) %>%
-    #kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
-    #kable_styling(font_size = 5) %>%
-    row_spec(0, angle = 45) #%>%
+kable(slope_parms %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),format = "latex", booktabs = T) %>%
+  #kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  #kable_styling(font_size = 5) %>%
+  row_spec(0, angle = 45) #%>%
 ```
 
 # Creating a PARAFAC model
 
-Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, the same dataset and way of analysis were used as in the drEEM tutorial which is an appendix to `r citet("10.1039/c3ay41160e")`.
+Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, we used the same dataset and analysis procedure as in the drEEM tutorial which is an appendix to `r citet("10.1039/c3ay41160e")`.
 
 ## Loading data
 
-The package comes with some example data but to keep the package size low, all data below 250 nm excitation and above 580 nm emission were removed and only 15 samples of the original set are part of the package. The complete sample set is available in the drEEM toolbox for MATLAB (http://models.life.ku.dk/drEEM). The example PARAFAC models are calculated based on the complete sample set. Because of that limitation, some calculations are described but cannot be repeated with the provided example data.
+### Load drEEM example dataset
+For this tutorial the drEEM example data is used. The complete and corrected data is downloaded from http://models.life.ku.dk/drEEM and converted into an eemlist in R. The example PARAFAC models are calculated based on this complete sample set. You can also adapt that code to import any Matlab EEM data to staRdom.
 
-```{r include=TRUE}
-data(eem_list) # load example data
+```{r eval=FALSE, include=TRUE}
+dreem_raw <- tempfile()
+download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
+dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
+  R.matlab::readMat()
+unlink(dreem_raw)
+
+eem_list <- lapply(dreem_data$filelist.eem, function(file){
+  #file <- dreem_data$filelist.eem[1]
+  n <- which(dreem_data$filelist.eem == file)
+  file <- file %>%
+    gsub("^\\s+|\\s+$", "", .) %>% # trim white spaces in filenames
+    sub(pattern = "(.*)\\..*$", replacement = "\\1", .) # remove file extension from sample name
+  eem <- list(sample = file,x = dreem_data$XcRU[n,,] %>% as.matrix(),ex = dreem_data$Ex %>% as.vector(), em = dreem_data$Em.in %>% as.vector(),location = "drEEM/dataset/")
+  class(eem) <- "eem"
+  attr(eem, "is_blank_corrected") <- TRUE
+  attr(eem, "is_scatter_corrected") <- FALSE
+  attr(eem, "is_ife_corrected") <- TRUE
+  attr(eem, "is_raman_normalized") <- TRUE
+  attr(eem, "manufacturer") <- "unknown"
+  eem
+}) %>%
+  `class<-`("eemlist")
+
+# add sample name suffix, R has sometimes troubles, when sample names start with a number.
+eem_names(eem_list) <- paste0("dreem_",eem_names(eem_list))
+```
+
+In the drEEM tutorial, all samples containing "bl" or "0A" are removed from the set.
+
+```{r eval=FALSE, include=TRUE}
+ol <- function(x){x==("bl") | x == "0A"}
+extract <- dreem_data$sites %>% unlist() %>% ol() %>% which()
+eem_list <- eem_list %>% eem_extract(extract)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data(eem_list) # load example from staRdom package, this is just necessary for the actual tutorial creation. Remove this line, if you downloaded the drEEM dataset right above and want to use that.
+eem_ex <- eem_extract(eem_list,sample ="^dreem_667sf$",keep=TRUE)
 ```
 
 Scattering has still to be removed and is done as described above.
-```{r include=TRUE}
+```{r include = TRUE, eval = FALSE}
 eem_list <- eem_rem_scat(eem_list, remove_scatter = c(TRUE, TRUE, TRUE, TRUE), remove_scatter_width = c(15,15,18,19), interpolation = FALSE, cores = cores)
 ```
-
+```{r include = FALSE, eval = TRUE}
+eem_ex <- eem_rem_scat(eem_ex, remove_scatter = c(TRUE, TRUE, TRUE, TRUE), remove_scatter_width = c(15,15,18,19), interpolation = FALSE, cores = cores)
+```
 If you have worked with the [basic analysis template](Basic_analysis_of_DOM_samples.html), you can use the resulting data right away. In the case you did the corrections with different sample sets separately and want to combine them, you can use `eem_import_dir` to combine EEM samples from several RData files. Put all files in one folder and run the following:
 
 ```{r include=TRUE,eval=FALSE}
@@ -346,72 +474,97 @@ eem_list <- eem_import_dir(dir)
 
 Due to package size issues, no example data is included for this function.
 
-We recommend to use `eem_checkdata` again before continuing the further analysis!
+We recommend using `eem_checkdata` again before continuing the further analysis!
+
+## Sample set wavelength ranges
+For a PARAFAC analysis, all samples of the set need to be similar in terms of provided wavelength pairs. In case you have deviating samples there are ways to solve this:
+
+* `eem_extend2largest` adds NAs if values present in another sample are missing (e.g. different wavelength slits or spectra ranges were used). These values can be interpolated.
+
+* `eem_red2smallest` removes the data range, that is not present in all samples.
 
 ## Find and remove noise in EEM data
 
 An important way of finding noise in EEM data is viewing the samples. You can use the function `eem_overview_plot` to view all your samples in a convenient way. 
-Data can be removed or set to NA in different ways depending on what you would like to do:
+With the following functions, data can be removed or set to NA (NAs are no problem for the PATRAFAC algorithm) in different ways, or be interpolated, depending on what you would like to do:
+
 * `eem_extract` removes whole samples either by name or by number.
+
 * `eem_range` removes data outside the given wavelength ranges in all samples.
-* `eem_red2smallest` removes data in EEMs that is not present in all samples. This is important for a PARAFAC analysis because the algorithm needs matrices of similar size and "shape".
-* `eem_exclude` removes data from the sample set, provided by a list of outliers. This list can be created manually or by `eem_leverage_ident`.
-* `eem_rem_scat` and `eem_remove_scattering` are used to set data in Raman and Rayleigh scattering of 1st and 2nd order to NA. They differ in syntax.
+
+* `eem_exclude` removes data from the sample set, provided by a list.
+
+* `eem_rem_scat` and `eem_remove_scattering` are used to set data in Raman and Rayleigh scattering of 1st and 2nd order to NA. While the later on removes one scattering at a time, the first one wraps it up to remove several scatterings in one step.
+
 * `eem_setNA` replaces data by NA in rectangular shape and in specific samples.
+
 * `eem_matmult` multiplies each EEM matrix by a certain matrix. This matrix can be used to set parts of the data to 0 or NA (e.g. the area where emission wavelength is shorter than excitation wavelength).
+
 * `eem_interp` is used to interpolate data previously set to NA.
 
-Sample "667sf" will be used to show this process graphically. To extract the sample the [regular expression](https://stat.ethz.ch/R-manual/R-devel/library/base/html/regex.html) "^667sf$" is used. ^ stands for the beginning of the string and \$ for the end.
+Sample "dreem_667sf" will be used to show this process graphically. To extract the sample the [regular expression](https://stat.ethz.ch/R-manual/R-devel/library/base/html/regex.html) "^dreem_667sf$" is used. ^ stands for the beginning of the string and \$ for the end. If you skip those characters, all samples matching the string somewhere in their name are extracted.
 
 This is where we start from:
 
-```{r include=TRUE}
+```{r include=TRUE, eval = FALSE}
 eem_list %>% 
-  eem_extract(sample = "^667sf$", keep = TRUE) %>%
+  eem_extract(sample = "^dreem_667sf$", keep = TRUE) %>%
+  ggeem()
+```
+
+```{r include=TRUE, eval = FALSE}
+eem_ex %>% 
   ggeem()
 ```
 
 The noisy range below 250 nm excitation and 580 nm emission can be removed from the samples with the following command. As mentioned above, this was already done with the example data.
 
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
-eem_list <- eem_range(eem_list, ex = c(250,Inf), em = c(0,580))
-```
-```{r message=FALSE, warning=FALSE, include=FALSE}
-eem_example <- eem_list %>% 
-  eem_extract(sample = "^667sf$", keep = TRUE) %>%
-  `eem_names<-`("667sf_2_cut") %>%
-  eem_bind(eem_example,.)
-```
-
-Visually found irregularities in patterns are replaced by NA and interpolated. In paticular, from sample 1 ("667sf") a band covering excitation wavelengths 245 to 350 is removed and a rectangle covering emission wavelengths 560 to 576 and excitation wavelengths 280 to 295 is removed in all samples. For demonstration reasons, the interpolation is done in an extra step but can also be included in the removing function right away.
-
 ```{r}
+eem_list <- eem_list %>% eem_range(ex = c(250,Inf), em = c(0,580))
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+eem_ex <- eem_ex %>% 
+  eem_extract(sample = "^dreem_667sf$", keep = TRUE) %>%
+  eem_range(ex = c(250,Inf), em = c(0,580)) %>%
+  `eem_names<-`("dreem_667sf_2_cut") %>%
+  eem_bind(eem_ex,.)
+```
+
+Visually found irregularities in patterns are replaced by NA and interpolated. From sample 1 ("667sf") a band covering excitation wavelengths 245 to 350 is removed and a rectangle covering emission wavelengths 560 to 576 and excitation wavelengths 280 to 295 is removed in all samples. For demonstration reasons, the interpolation is done in an extra step but can also be included in the removing function right away.
+
+```{r eval = TRUE, message = FALSE, warning = FALSE, include = FALSE}
+eem_ex <- eem_ex %>%
+  eem_extract(sample = "^dreem_667sf_2_cut$", keep = TRUE) %>%
+  eem_setNA(sample = 1, ex = 345:350, interpolate = FALSE) %>% # sample 1 in staRdom data is sample 176 in drEEM data!
+  eem_setNA(em = 560:576, ex = 280:295, interpolate = FALSE) %>%
+  `eem_names<-`("dreem_667sf_3_rem_noise") %>%
+  eem_bind(eem_ex,.) 
+```
+
+```{r include=TRUE, eval=FALSE}
 eem_list <- eem_list %>%
-  eem_setNA(sample = 1, ex = 345:350, interpolate = FALSE) %>%
+  eem_setNA(sample = 176, ex = 345:350, interpolate = FALSE) %>%
   eem_setNA(em = 560:576, ex = 280:295, interpolate = FALSE)
 ```
-```{r message=FALSE, warning=FALSE, include=FALSE}
-eem_example <- eem_list %>% 
-  eem_extract(sample = "^667sf$", keep = TRUE) %>%
-  `eem_names<-`("667sf_3_rem_noise") %>%
-  eem_bind(eem_example,.)
-```
-```{r}
-eem_list <- eem_interp(eem_list, type = 3, cores = cores)
+
+```{r eval = FALSE, include = TRUE}
+eem_list <- eem_interp(eem_list, type = 1, extend = FALSE, cores = cores)
 ```
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-eem_example <- eem_list %>% 
-  eem_extract(sample = "^667sf$", keep = TRUE) %>%
-  `eem_names<-`("667sf_4_interp") %>%
-  eem_bind(eem_example,.)
+eem_ex <- eem_ex %>% 
+  eem_extract(sample = "^dreem_667sf_3_rem_noise$", keep = TRUE) %>%
+  eem_interp(type = 1, extend = FALSE, cores = cores) %>%
+  `eem_names<-`("dreem_667sf_4_interp") %>%
+  eem_bind(eem_ex,.)
 ```
 
+Here, we show the changes, made to sample dreem_667sf by the demonstrated steps above:
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7}
-ggeem(eem_example)
+ggeem(eem_ex)
 ```
 
 ## Explore dataset
-From this point on, `eem_list` is used. It contains already corrected data processed in the same way as above.
 
 It is crucial to find an appropriate number of components in the analysis. If the number of components is too large, it may be the case that one component was split into two; if it is too low, relevant components may get lost `r citep("10.1039/c3ay41160e")`. To help you find the appropriate number, a series of PARAFAC models can be calculated and compared. In this example 5 models with 3 to 7 components are calculated.
 
@@ -419,13 +572,16 @@ The alternating-least-squares algorithm used to calculate the PARAFAC model opti
 
 You can speed up the calculations by using multiple `cores`. Beware, that calculating a PARAFAC model can take some time!
 
-Higher `maxit` and lower `ctol` increase the accuracy of the model but need more computation time.
+Higher `maxit` (maximum number of iteration steps in PARAFAC) and lower `ctol` (tolerance to return result of PARAFAC, should not be larger than 10⁻⁴) increase the accuracy of the model but need more computation time.
 
-In this first model creation step, the constraints are tested. While `pf1` is calculated without any constraints, `pf1n` uses the assumption that modes are non-negative only. Possible constraints are none ("uncons"), non-negative ("nonneg") and unimodal, non-negative ("uninon"). Besides these common ones, other possible constraints can be seen using the command `CMLS::const()`.
+In this first model creation step, the constraints are tested. While `pf1` is calculated without any constraints, `pf1n` uses the assumption that modes are non-negative only. This is a very common assumption, because fluorescence cannot be negative. Possible constraints are none ("uncons"), non-negative ("nonneg") and unimodal, non-negative ("uninon"). Besides these common ones, other possible constraints can be seen using the command `CMLS::const()`. Additional information from the running process can be shown setting `verbose = TRUE` in the `eem_parafac` function. If more than one core is used, no information can be provided.
 
-PARAFAC modes can be rescaled so that their maximum is 1 and effects are more visible in the plots. The rescaling is corrected in the A mode (sample mode).
+PARAFAC modes can be rescaled so that their maximum is 1 and effects are more visible in the plots. The rescaling is corrected in the A mode (sample mode). In case of uneven peak heights, `eempf_rescaleBC` can help to improve the visibility of your graphs. The parameter `newscale` specifies the root mean-squared error of each column in matrices B and C. This is compensated in the A-mode (sample loadings). Alternatively `newscale` can be set `"Fmax"`, each peak has a height of 1 then.
 
-In case of uneven peak heights, `eempf_rescaleBC` can help to improve the visibility of your graphs. The parameter `newscale` specifies the root mean-squared error of each column in matrices B and C. This is compensated in the A-mode (sample loadings). Alternatively `newscale` can be set `"Fmax"`, each peak has a height of 1 then.
+The PARAFAC models created below can be loaded from the staRdom package's example data instead of calculating it:
+```{r include=TRUE, eval = TRUE}
+data(pf_models)
+```
 
 ```{r include=TRUE}
 # minimum and maximum of numbers of components
@@ -434,28 +590,24 @@ dim_max <- 7
 ```
 
 ```{r eval=FALSE,include=TRUE}
-nstart <- 16 # number of similar models from which best is chosen
-maxit = 1000 # maximum number of iterations in PARAFAC analysis
+nstart <- 20 # number of similar models from which best is chosen
+maxit = 5000 # maximum number of iterations in PARAFAC analysis
 ctol <- 10^-5 # tolerance in PARAFAC analysis
 
 # calculating PARAFAC models, one for each number of components
 pf1 <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = FALSE, const = c("uncons", "uncons", "uncons"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 
+# same model but using non-negative constraints
 pf1n <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = FALSE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 
-# rescale B and C modes
+# rescale B and C modes to a maximum fluorescence of 1 for each component
 pf1 <- lapply(pf1, eempf_rescaleBC, newscale = "Fmax")
 pf1n <- lapply(pf1n, eempf_rescaleBC, newscale = "Fmax")
 ```
 
-To see the results of the model created from the whole sample set, you can use the generated PARAFAC model included in the package.
-```{r include=TRUE}
-data(pf_models)
-```
-
 Use `eempf_compare` to plot the created models' components. You can see the models fits and components (rows) for models with different numbers of components (columns) in 2 different views. The single plots can be created using `eempf_fits` and `eempf_plot_comps`.
 
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=FALSE, include=FALSE, fig.width=7, fig.height=6}
 eempf_compare(pf1)
 ```
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
@@ -466,7 +618,7 @@ Comparing the two different approaches concerning constraints, the models with n
 
 ## Check the correlation between different components
 
-The PARAFAC algorithm assumes no correlation between the components. If samples are of different DOC concentrations, a correlation of the components is likely. To avoid that, the samples can be normalised to reduce the effects of different concentrations. The model with 6 components (4th model in the list) is used for now.
+The PARAFAC algorithm assumes no correlation between the components. If samples are of different DOC concentrations, a correlation of the components is likely. To avoid that, the samples can be normalised to reduce the effects of different concentrations. The model with 6 components (4th model in the list, therefore `[[4]]`) is used for now.
 
 ```{r eval=TRUE, include=TRUE, fig.width=7}
 # check for correlation between components table
@@ -490,25 +642,28 @@ eempf_compare(pf2)
 
 ## Find and exclude outliers leverage
 
-The leverage is calculated by `eempf_leverage` and can be plotted with `eempf_leverage_plot`. Using `eempf_leverage_ident` to plot the leverage shows an interactive plot where you can klick on certain values to save them in a variable. `qlabel` defines the size of the upper percentile that is labeled in the plots. `eempf_mleverage` can be used to compare the leverages of samples in different models.
+The leverage is calculated by `eempf_leverage` and can be plotted with `eempf_leverage_plot`. Using `eempf_leverage_ident` to plot the leverage shows an interactive plot where you can click on certain values to save them in a variable. Three plots (samples, excitation, emission) show up one after the other. You can select wavelengths or samples by clicking on the certain point in the plot and click Finish when you are done. The variable `exclude` in the example contains all selected values. The returned list can directly be used to include outliers using `eem_exclude` (see above).
+`qlabel` defines the size of the upper percentile that is labelled in the plots. `eempf_mleverage` can be used to compare the leverages of samples in different models.
 
 ```{r fig.width=7}
 # calculate leverage
 cpl <- eempf_leverage(pf2[[4]])
+
 # plot leverage (nice plot)
 eempf_leverage_plot(cpl,qlabel=0.1)
+
 # plot leverage, not so nice plot but interactive to select what to exclude
 # saved in exclude, can be used to start over again with eem_list_ex <- eem_list %>% eem_exclude(exclude) above
 exclude <- eempf_leverage_ident(cpl,qlabel=0.1)
 ```
 
-In order to save the decisions of the graphical outlier determination with `eempf_leverage_ident`, we advise to generate the exclude list manually. See example below.
+In order to save the decisions of the graphical outlier determination not only as a variable but also in a script, we advise to generate the exclude list manually. This can help you following your way later. See example below.
 
-```{r eval=TRUE, include=TRUE}
+```{r eval=FALSE, include=TRUE}
 # samples, excitation and emission wavelengths to exclude, makes sense after calculation of leverage
 exclude <- list("ex" = c(),
                 "em" = c(),
-                "sample" = c("sfb676psp","sgb447wt")
+                "sample" = c("dreem_sfb676psp","dreem_sgb447wt")
 )
 
 # exclude outliers if neccessary. if so, restart analysis
@@ -529,40 +684,68 @@ eempf_leverage_plot(eempf_leverage(pf3[[4]]),qlabel=0.1)
 
 ## Examine residuals
 
-The outliers determined above are included to show the difference in residuals. Analysing these residuals can show deficits in model creation, problems with sample handling and lab equipment or it can already be helpful in answering scientific questins.
+The outliers determined above are included to show the difference in residuals. Analysing these residuals can show deficits in model creation, problems with sample handling and lab equipment or it can already be helpful in answering scientific questions.
 
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
-eempf_residuals_plot(pf3[[4]], eem_list, residuals_only = TRUE, select = eem_list %>% eem_names() %>% .[c(1:16,205,208)], spp = 9, cores = cores)
+eempf_residuals_plot(pf3[[4]], eem_list, residuals_only = TRUE, select = eem_list %>% eem_names() %>% .[c(1:4,205,208)], spp = 6, cores = cores)
 ```
 
 ## Recalculating the model with increased accuracy
 
-Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step.
+Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step. Just the model with 6 components is recalculated.
 
 ```{r eval=FALSE, include=TRUE}
-ctol <- 10^-8 # tolerance in PARAFAC analysis
+ctol <- 10^-8 # decrease tolerance in PARAFAC analysis
+nstart = 40 # increase number of random starts
+maxit = 10000 # increase number of maximum interations
 
-pf4 <- eem_parafac(eem_list_ex, comps = seq(dim_min,dim_max), normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 
 pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 ```
+
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+# just one model, not really a need to compare
 eempf_compare(pf4)
 
-eempf_leverage_plot(eempf_leverage(pf4[[4]]))
+eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[4]] means the 4th model in the list, 6 component model in that case
 
-eempf_corplot(pf4[[4]], progress = FALSE)
+eempf_corplot(pf4[[1]], progress = FALSE)
 ```
 
-Please redo these steps unless you are satisfied with the results.
+It is possible to use the results from a previous model as starting conditions (`Astart`, `Bstart` and `Cstart`). Supplying start matrices is only possible if one model with the same number of components is calculated. If samples differ (e.g. outlier removal or inclusion) simply remove the `Astart`. In the example, we set up a very rough model using only 10% of the samples and a reduced tolerance but a lot of random starts. This step does the same as above but pushes your model towards global maxima without taking too much time.
+
+```{r eval=FALSE, include=TRUE}
+# choosing 10% of the samples, but 10 minimum
+eems_rand <- eem_names(eem_list_ex)[sample(1:length(eem_list_ex),max(10,ceiling(length(eem_list_ex)*0.1)))]
+# extracting those from the whole list
+eem_list_short <- eem_extract(eem_list_ex, sample = eems_rand, keep = TRUE)
+
+# calculating a rough model, nstart is high (100) but ctol is 2 magnitudes larger or at least 0.01
+pf5 <- eem_parafac(eem_list_short, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = 100, ctol = min(ctol*100,0.01), cores = cores)
+
+# plot is not shown
+ggeem(pf5[[1]])
+
+nstart <- 5
+pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, Bstart = pf5[[1]]$B, Cstart = pf5[[1]]$C)
+
+pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
+
+# plot is not shown
+ggeem(pf4[[1]])
+```
+
+Please redo these steps until you are satisfied with the results.
 
 ## Plot the resulting components and loadings
 
 The following plot shows the shape of the determined components and the loadings in the different samples. The components' shapes are important for an interpretation from a chemical point of view. The loadings show the fluorescence differences of different components in different samples.
 
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
-eempf_comp_load_plot(pf4[[4]])
-#eempf_plot_comps(pf4[4], type = 2)
+eempf_comp_load_plot(pf4[[1]])
+
+# eempf_plot_comps(pf4[4], type = 2) # this function can be used to view the B- and C-modes
 ```
 
 Separate plots can be generated by using `ggeem` for components and `eempf_load_plot` for the loadings.
@@ -575,13 +758,12 @@ The plots show samples in columns and the rows show the components (6 in that ca
 
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=8}
 # plot components in each sample, residual and whole sample
-eempf_residuals_plot(pf4[[4]], eem_list, select = eem_names(eem_list)[10:14], cores = cores)
-
+eempf_residuals_plot(pf4[[1]], eem_list, select = eem_names(eem_list)[10:14], cores = cores)
 ```
 
 ## Split-half analysis
 
-The split-half analysis is intended to show the stability of your model. The data is recombined in 6 different ways and results from each subsample should be similar.
+The split-half analysis is intended to show the stability of your model. The data is recombined in 6 different ways and results from each sub-sample should be similar `r citep("10.1039/c3ay41160e")`.
 
 ```{r eval=FALSE, include=TRUE}
 #calculate split_half analysis
@@ -598,33 +780,42 @@ Plot the results from the split-half analysis. Your model is stable, if the grap
 
 ```{r eval=TRUE, include=TRUE, fig.width=7}
 splithalf_plot(sh)
+
+# you can also use the already known plots from eempf_compare
+# sh %>% unlist(recursive = FALSE) %>% eempf_compare()
 ```
 
-If some splits look similar (or see below, have a Tucker's congruency coefficient close to 1) and others do not, this is a strong hint that the particular splits might be responsible for unstable conditions. In the example, the periodical splits (`rand = FALSE`) show one split, where no stable model could be found. Changing these manually (using the parameter `splits = ...`) or randomly (`rand = TRUE`, see below) can give more reliable results.
+If some splits look similar (or see below, have a Tucker's congruency coefficient close to 1) and others do not, this is a strong hint that the particular splits might be responsible for unstable conditions or the values for `maxit` and `nstart`. Problems can be caused by splitting the data according to natural differences (e.g. sampling date A and sampling date B) which will then lead to different PARAFAC models. Changing these manually (using the parameter `splits = ...`) or randomly (`rand = TRUE`, used in the example below) can help in that case.
 
 ```{r eval=FALSE, include=TRUE}
 sh_r <- splithalf(eem_list_ex, 6, normalise = TRUE, rand = TRUE, cores = cores, nstart = nstart, maxit = maxit, ctol = ctol)
-```
-```{r eval=TRUE, include=TRUE, fig.width=7}
-splithalf_plot(sh_r)
 ```
 
 Tucker's Congruency Coefficients is a value for the similarity of the splits (and different loadings in general) and `splithalf_tcc` returns a table showing the values. 1 would be perfect similarity.
 
 ```{r eval=TRUE, include=TRUE, fig.width=7}
-tcc_sh_table <- splithalf_tcc(sh_r)
+tcc_sh_table <- splithalf_tcc(sh)
 
 tcc_sh_table
 ```
+
+## Loadings of outliers
+
+A-modes (loadings) of previously excluded outliers can be calculated using `A_missing`. This should be used carefully, but enables you to get values, that can be further investigated. Please supply an eemlist containing all samples you are interested in. B- and C-modes of the original model are kept and A-modes are calculated.
+
+```{r include = TRUE, eval = TRUE}
+pf4_wOutliers <- A_missing(eem_list, pfmodel = pf4[[1]], cores = cores)
+```
+
 
 ## Further model validation
 
 ### Core consistency
 
-As a way of model validation the core consistency can be calculated. Please see `r citet("10.1039/c3ay41160e")` for the suitability of the core consistency for model validation.
+As a way of model validation, the core consistency can be calculated. Please see `r citet("10.1039/c3ay41160e")` for the limited usability of core consistency for model validation from natural EEMs.
 
 ```{r eval=FALSE, include=TRUE, fig.width=7}
-corcondia <- eempf_corcondia(pf4[[4]], eem_list_ex) # calculation this example is not possible with the limited example data available with the package
+corcondia <- eempf_corcondia(pf4[[1]], eem_list_ex)
 ```
 
 ### EEMqual
@@ -632,8 +823,44 @@ corcondia <- eempf_corcondia(pf4[[4]], eem_list_ex) # calculation this example i
 EEMqual is a quality parameter integrating the model fit, the core consistency and the split-half analysis according to `r citet("10.1016/j.chemolab.2010.06.005")` can be calculated. Due to the fact that the core consistency is included, the limitations are similar (see above).
 
 ```{r eval=FALSE, include=TRUE, fig.width=7}
-eemqual <- eempf_eemqual(pf4[[4]], eem_list_ex, sh_r, cores = cores) # calculation this example is not possible with the limited example data available with the package
+eemqual <- eempf_eemqual(pf4[[1]], eem_list_ex, sh, cores = cores)
 ```
+
+### Importance of components
+Currently, there is not one way to determine the importance of each component of a model. Still, answering this question is interesting from an ecological point of view. Here, we propose one way, that is commonly used in different modelling processes. You can calculate the component importance using `eempf_varimp`. Starting from the model you created, each component is removed at a time and a new model is created using the exact previous components. The difference between the original R-squared and the one from the new model with one component reduced.
+```{r eval=FALSE, include=TRUE, fig.width=7}
+varimp <- eempf_varimp(pf4[[1]], eem_list_ex, cores = cores)
+```
+# Formatting a model
+## Naming models and components
+Models and components can be named. These names can be important for you to organise your models and interpretations of the components. They are also shown in the plots. Here are some examples:
+```{r fig.width=7}
+# get current model names
+names(pf3)
+# set new model names, number of models must be equal to number of names
+names(pf3) <- c("3 components", "4 components xy","5 components no outliers","6 components","7 components")
+names(pf3)
+
+# get current component names
+eempf_comp_names(pf4)
+# set new model names, number of models must be equal to number of names
+eempf_comp_names(pf4) <- c("A4","B4","C4","D4","E4","F4")
+
+# in case of more than one model(e.g. pf3):
+eempf_comp_names(pf3) <- list(c("A1","B1","C1"), # names for 1st model
+                                       c("humic","T2","whatever","peak"),
+                                       c("rose","peter","frank","dwight","susan"),
+                                       c("A4","B4","C4","D4","E4","F4"),
+                                       c("A5","B5","C5","D5","E5","F5","G5") # names for 5th model
+)
+
+pf4[[1]] %>%
+  ggeem()
+```
+
+## Sorting components
+
+Components within a PARAFAC model can be reordered using `eempf_reorder`.
 
 # Model export and interpretation
 
@@ -642,14 +869,14 @@ eemqual <- eempf_eemqual(pf4[[4]], eem_list_ex, sh_r, cores = cores) # calculati
 You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org `r citet("10.1039/c3ay41935e")`. Please check the file header manually after export as some values cannot be determined automatically. Openfluor offers ways to compare your components with those found in other publications. This is a very important step in interpreting the results and coming to ecological sound conclusions.
 
 ```{r eval=FALSE, include = TRUE}
-eempf_openfluor(pf4[[4]], file = "my_model_openfluor.txt")
+eempf_openfluor(pf4[[1]], file = "my_model_openfluor.txt")
 ```
 
 ## Creating a report on your analysis
 The report created by `eempf_report` contains important settings and results of your analysis and is exported as an html file. You can specify the information you want to include.
 
 ```{r eval=FALSE, include = TRUE}
-eempf_report(pf4[[4]], export = "my_model_openfluor.txt", eem_list = eem_list, shmodel = sh, performanec = TRUE)
+eempf_report(pf4[[1]], export = "my_model_openfluor.txt", eem_list = eem_list, shmodel = sh, performanec = TRUE)
 ```
 
 ## Exporting the model
@@ -665,10 +892,12 @@ Using `eempf_export` you can export your model matrices to a csv file.
 
 `eem_eemdil` takes information from the table generated by `eem_dilcorr` and renames EEM samples to match undiluted absorbance samples.
 
+# Exchanging components (EXPERIMENTAL!)
+Composing the components of a PARAFAC model is generally not advised. It should be an opportunity for advanced users to work through their data, test hypothesis and find new approaches. The results from such a model have to be investigated in detail and differ significantly from models created in the traditional way. Please beware of using these functions!
+
+Components can be extracted from models using `eempf_excomp`. The extracted components can then be used to create new models using `A_missing` and the `components` argument.
+
 # References
-```{r, message=FALSE, warning=FALSE, include=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 write.bibtex(file="references2.bib")
 ```
-
-  
-

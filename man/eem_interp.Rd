@@ -4,7 +4,7 @@
 \alias{eem_interp}
 \title{Missing values are interpolated within EEM data}
 \usage{
-eem_interp(data, cores = parallel::detectCores(logical = FALSE)/2,
+eem_interp(data, cores = parallel::detectCores(logical = FALSE),
   type = TRUE, verbose = FALSE, nonneg = TRUE, ...)
 }
 \arguments{
@@ -12,7 +12,7 @@ eem_interp(data, cores = parallel::detectCores(logical = FALSE)/2,
 
 \item{cores}{specify number of cores for parallel computation}
 
-\item{type}{numeric 0 to 4 or TRUE which resambles type 2}
+\item{type}{numeric 0 to 4 or TRUE which resembles type 1}
 
 \item{verbose}{logical, whether more information on calculation should be provided}
 
@@ -27,11 +27,13 @@ object of class eemlist with interpoleted spectra.
 Missing EEM data can be interpolated. Usually it is the result of removing scatter or other parts where noise is presumed. Different interpolation algorithms can be used (see details).
 }
 \details{
-The types of interpolation are (0) setting all NAs to 0, (1) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) spline interpolation with \code{\link[MBA]{mba.points}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible.
+The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 3, extrapolation can be suppressed by adding the argument extend = FALSE.
 }
 \examples{
 \donttest{
 data(eem_list)
+eem_list <- eem_list[1:6]
+class(eem_list) <- "eemlist"
 
 remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
 
@@ -40,6 +42,22 @@ remove_scatter_width = c(15,10,16,12)
 eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
 
 eem_list <- eem_interp(eem_list)
+
+ggeem(eem_list)
+
+eem_list2 <- eem_setNA(eem_list,ex=200:280,interpolate=FALSE)
+
+ggeem(eem_list2)
+
+eem_list3 <- eem_interp(eem_list2,type=1,extend = TRUE)
+
+ggeem(eem_list3)
+
+eem_list3 <- eem_interp(eem_list2,type=1,extend = FALSE)
+
+ggeem(eem_list3)
+
+
 }
 }
 \references{

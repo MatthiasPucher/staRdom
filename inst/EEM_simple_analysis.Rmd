@@ -18,11 +18,19 @@ output:
     toc_float: true
     code_folding: hide
 ---
-This report was created using the R package staRdom version `r packageVersion("staRdom")`, (`r packageDescription("staRdom")$Author`, `r unlist(strsplit(packageDescription("staRdom")$Date,"-"))[1]`)
+This report was created using the R package staRdom version `r packageVersion("staRdom")`, (`r packageDescription("staRdom")$Author`, `r unlist(strsplit(packageDescription("staRdom")$Date,"-"))[1]`). The used template EEM_simple_analysis.Rmd was taken from staRdom 0.1.12.
 
 # Parameter specification
 ## Input parameters
 ```{r, include=FALSE}
+###################################################
+#### Version 1.0.12 of EEM_simple_analysis.Rmd ####
+###################################################
+# Please use the same versions of staRdom and EEM_simple_analysis.Rmd
+# In general, there was no problem so far mixing the versions, but some
+# changes and maybe future changes might cause problems if you use
+# different versions!
+#
 ####################################
 #### Documentation of this file ####
 ####################################
@@ -59,7 +67,9 @@ output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output
 # Import is done with eem.read() (package eemR), please see details there.
 # The template refers to data coming with the package. Please use your data
 # by setting the path to your files!
-sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
+sample_dir = system.file("extdata/EEMs", package = "staRdom") # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
+# Are your samples generic csv files? Set FALSE, if you use files from Varian Cary Eclipse, Horiba Aqualog, Horiba Fluoromax-4 or Shimadzu instruments
+generic_csv = TRUE
 
 #### Absorbance data ####
 #~~~~~~~~~~~~~~~~~~~~~~~#
@@ -69,11 +79,11 @@ sample_dir = system.file("extdata/cary/scans_day_1", package = "eemR") # e.g. sa
 # Those steps can be skipped but keep in mind it is important for a profound analysis!
 #
 # path of adsorbance data as directory or single file, sub folders are not read:
-absorbance_dir = system.file("extdata/absorbance_eemR",package = "staRdom") # e.g. absorbance_dir = "C:/some_folder/input/absorbance/", system.file() accesses the exmaple data coming with the package!
+absorbance_dir = system.file("extdata/absorbance",package = "staRdom") # e.g. absorbance_dir = "C:/some_folder/input/absorbance/", system.file() accesses the exmaple data coming with the package!
 
 # Path length of absorbance measurement in cm that was used in absorbance measurement.
 # If it is set to "meta" data from the metadata table is used (details see below).
-absorbance_path = 5 # e.g. absorbance_path = 5
+absorbance_path = 1 # e.g. absorbance_path = 5
 
 #### Meta data ####
 #~~~~~~~~~~~~~~~~~#
@@ -85,7 +95,7 @@ absorbance_path = 5 # e.g. absorbance_path = 5
 
 # read table with metadata as *.TXT or *.CSV
 # either a path or FALSE if no metadata file is used.
-metadata = system.file("extdata/metatable_eemR.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv", system.file() accesses the exmaple data coming with the package!
+metadata = system.file("extdata/metatable_dreem.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv", system.file() accesses the exmaple data coming with the package!
 
 #### Meta data: names of columns ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -103,6 +113,20 @@ col_cuv_len = "cuv_len"
 # if you want to use the raman area (under the curve) data from the meta data table, state the name 
 # of the column containing the raman areas and set raman_normalisation = "meta" (below)
 col_raman_area = "raman"
+
+#### Spectral correction of EEMs ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Some instruments, but not all need a spectral correction to compensate
+# for specific deviations in the measurements. A vector for emission and
+# excitation is used each. EEMs are cut to match the wavelength range of
+# the vectors if used. Please provide paths to csv tables containing
+# wavelengths in the first column and correction values in the second. If
+# you do not want spectral correction to be done, setting these two input
+# files it not necessary. 
+# Emission correction vector
+Emcor <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv",package="staRdom") # e.g. "C:\folder\emcor.csv", FALSE
+# Excitation correction vector
+Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
 ```
 ## Output parameters
 ```{r}
@@ -191,6 +215,13 @@ dilution = "meta" # e.g. 1
 # wanted it to be!
 dil_sample_name_correction = FALSE
 
+#### Spectral correction of EEMs ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Some instruments, but not all need a spectral correction to compensate
+# for specific deviations in the measurements. Please sepecify, if you want
+# spectral correection to be done.
+spectral_cor = TRUE # e.g. TRUE, set to FALSE, if your instrument already provided EEMs with spectral correction
+  
 #### Cut data to certain range ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Set a vector with range of wavelengths to be plotted and saved.
@@ -228,7 +259,7 @@ remove_scatter <- c(TRUE, TRUE, TRUE, TRUE) # logical values, ordered by raman1,
 # If you can still see traces of scattering after interpolation,
 # this value should be increased. You can specify a vector containing
 # separate widths for each scatter c(15,16,16,14), ordered by raman1,raman2,rayleigh1,rayleigh2.
-remove_scatter_width = c(15,15,15,15) # e.g. 15 or c(15,15,15,15)
+remove_scatter_width = c(15,20,15,18) # e.g. 15 or c(15,15,15,15)
 
 # state whether removed scattering should be interpolated
 interpolation <- TRUE # e.g. TRUE
@@ -288,7 +319,11 @@ library(staRdom)
 #### Read EEM data ####
 #~~~~~~~~~~~~~~~~~~~~~#
 # recursive = TRUE means, that subdirectories are included in reading
-eem_list <- eem_read(sample_dir,recursive=TRUE)
+if(generic_csv){
+      eem_list <- eem_read_csv(sample_dir,recursive=TRUE)
+  } else {
+    eem_list <- eem_read(sample_dir,recursive=TRUE)
+  }
 
 #### Alter names of EEM samples ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -324,7 +359,7 @@ if(absorbance_dir != FALSE){
 ####################
 # the data is checked for several often occuring problems. Most of them are related to how you organised your data.
 # if the script stops here please have a look at the error messages and correct your data.
-eem_checkdata(eem_list,abs_data,meta,metacolumns = c(col_dilution, col_cuv_len, col_raman_area), error = FALSE)
+eem_checkdata(eem_list,abs_data,metadata = meta,metacolumns = c(col_dilution, col_cuv_len, col_raman_area), error = FALSE)
 ```
 
 ```{r message=FALSE, warning=TRUE, include=FALSE}
@@ -332,8 +367,19 @@ eem_checkdata(eem_list,abs_data,meta,metacolumns = c(col_dilution, col_cuv_len, 
 #### Data correction ####
 #########################
 #
+#### Spectral correction ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+if(spectral_cor){
+  Excor <- data.table::fread(Excor)
+  Emcor <- data.table::fread(Emcor)
+# adjust range of EEMs to cover correction vectors
+  eem_list <- eem_range(eem_list,ex = range(Excor[,1]), em = range(Emcor[,1]))
+
+  eem_list <- eem_spectral_cor(eem_list,Excor,Emcor)
+}
+
 #### Blank substraction ####
-#~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # substract blank, blank needed for that, can remove scattering and other noise partly
 if(blank_correction) eem_list <- eem_list %>% eem_remove_blank()
 
@@ -368,7 +414,7 @@ eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
 #### Interpolate scattering ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Removing scattering left NAs. They will be interpolated.
-if(interpolation) eem_list <- eem_list %>% eem_interp()
+if(interpolation) eem_list <- eem_list %>% eem_interp(type = TRUE, extend = FALSE)
 
 #### Correct dilution ####
 #~~~~~~~~~~~~~~~~~~~~~~#
@@ -421,6 +467,9 @@ eem_list <- eem_list %>% eem_range(ex=ex_range,em=em_range)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 if(cut_range_to_smallest) eem_list <- eem_list %>% eem_red2smallest()
 
+```
+
+```{r, message=FALSE, warning=TRUE, include=FALSE}
 ##################################
 #### Write out data and results ####
 ##################################
@@ -455,9 +504,9 @@ if(data_file != FALSE){
 # Sample overview
 
 ```{r, echo=FALSE, message=FALSE, warning=TRUE}
-###################################################
+#####################################################
 #### Summary of your EEM data as table in report ####
-###################################################
+#####################################################
 
 if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(library(knitr),silent=TRUE)) != "try-error") {
   eem_list %>%
@@ -472,10 +521,9 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
     summary()
 }
 if (exists("dc")){
-```
-# Dilution correction
+
+asis_output("# Dilution correction")
   
-```{r, echo=FALSE, message=FALSE, warning=TRUE}
 ###################################################################
 #### Summary of corrections that were done for dilution issues ####
 ###################################################################
@@ -564,8 +612,10 @@ if(output_overview_png){
 }
 
 if(output_single_png){
-  lapply(sing_plots, function(pl){
-    png(paste0(output_dir,"/EEM_single_",format(Sys.time(), "%Y%m%d_%H%M%S"),'.png',sep=""),width=1000,height=1000,units = "px", pointsize = 25)
+  lapply(1:length(sing_plots), function(n){
+    pl <- sing_plots[[n]]
+    name <- eem_names(eem_list)[n]
+    png(paste0(output_dir,"/EEM_single_",name,"_",format(Sys.time(), "%Y%m%d_%H%M%S"),'.png',sep=""),width=1000,height=1000,units = "px", pointsize = 25)
     plotp <- pl + theme(text = element_text(size=35))
     print(plotp)
     dev.off()

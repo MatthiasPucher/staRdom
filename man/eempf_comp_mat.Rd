@@ -20,5 +20,5 @@ The components of a PARAFAC analysis are extracted as a data frame
 \examples{
 data(pf_models)
 
-eempf_comp_mat(pf4[[4]])
+eempf_comp_mat(pf4[[1]])
 }

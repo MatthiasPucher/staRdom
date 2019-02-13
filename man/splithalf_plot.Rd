@@ -18,7 +18,7 @@ Graphs of all components of all models are plotted to be compared.
 \examples{
 data(sh)
 
-splithalf_plot(sh_r)
+splithalf_plot(sh)
 }
 \seealso{
 \code{\link[staRdom]{splithalf}}

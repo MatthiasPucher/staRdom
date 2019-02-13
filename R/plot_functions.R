@@ -1,18 +1,24 @@
 ##
 #' EEM spectra plotted with ggplot2
 #'
-#' @description \code{ggeem} creates nice plots from EEM spectra of class \code{ggplot}. Plots can be modified as any ggplot by adding layers and/or elements with "+".
+#' @description Plots from EEM spectra of class \code{ggplot}. In case you work with a larger number of EEMs and want to show then in several plots, you can use \code{\link{eem_overview_plot}}.
 #'
 #' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'.
-#' @param fill_max set the maximum fluorescence value to scale different samples/components simmilarly.
+#' @param fill_max sets the maximum fluorescence value for the colour scale. This is mainly used by other functions, and makes different plots visually comparable.
 #' @param redneg logical, whether negative values should be coloured discreet.
 #' @param ... parameters passed on to \code{ggplot}.
 #'
 #' @details The data can be of different sources:
-#'     eem: a single EEM pectrum is plotted
-#'     eemlist: all spectra of the samples are plotted in one facet plot
+#'     eem: a single EEM spectrum is plotted
+#'     eemlist: all spectra of the samples are plotted, arranged in a grid
 #'     data.frame: a data.frame containing EEM data. Can be created by e.g. \code{as.data.frame.eem}
-#'     a colour palette can be specified using the argument colpal.
+#'     parafac: a PARAFAC model, the components are plotted then.
+#'
+#'     Using redneg you can give negative values a reddish colour. This can help identifying these parts in samples or components. Negative values are physically not possible and can only be the result of measuring errors, model deviations and problems with interpolated values.
+#'
+#'     A colour palette can be specified using the argument colpal.
+#'
+#'     Plotting distinct samples can be done using \code{\link{eem_extract}}. Please see example.
 #'
 #' @return a ggplot object
 #'
@@ -24,7 +30,7 @@
 #' ## plotting two distinct samples
 #' data(eem_list)
 #' eem_names(eem_list)
-#' eem <- eem_extract(eem_list,c("^667sf$", "^1568sfK$"),keep=TRUE)
+#' eem <- eem_extract(eem_list,c("^dreem_667sf$", "^dreem_661sf$"),keep=TRUE)
 #' ggeem(eem)
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
 
@@ -56,7 +62,6 @@ ggeem.eem <- function(data,fill_max=FALSE,...)
 #' @export
 ggeem.parafac <- function(data,fill_max=FALSE,...)
 {
-  #data <- pf4[[4]]
   table <- data %>% eempf_comp_mat() #eem_list
   table <- lapply(table %>% names(),function(name){
     table[[name]] %>% mutate(sample = name)
@@ -68,7 +73,7 @@ ggeem.parafac <- function(data,fill_max=FALSE,...)
 
 #' @rdname ggeem
 #' @export
-ggeem.data.frame <- function(data,fill_max=FALSE,redneg = TRUE, ...)
+ggeem.data.frame <- function(data,fill_max=FALSE,redneg = FALSE, ...)
 {
   if(!exists("colpal")){
     colpal <- rainbow
@@ -126,10 +131,10 @@ eem_overview_plot <- function(data,spp = 8,...){
   fill_max <- data %>% eem_scale_ext() %>% .[2]
   #print(fill_max)
   ov_plot <- lapply(1:ceiling(ppp),function(pos){
-    #pos <- 2
+    #pos <- 1
     data[(spp*(pos-1)+1):(spp*pos)] %>%
       `attr<-`("class", "eemlist") %>%
-      ggeem(fill_max=fill_max,...)
+      ggeem(fill_max=fill_max,...)#,...
   })
   ov_plot
 }

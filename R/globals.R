@@ -46,5 +46,7 @@ globalVariables(c(
   "meta",
   "i",
   "z",
-  "mod_name"
+  "mod_name",
+  "control",
+  "modname"
 ), package = "staRdom")

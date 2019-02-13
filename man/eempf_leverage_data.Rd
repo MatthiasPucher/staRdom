@@ -20,6 +20,6 @@ Combine leverages into one data frame and add optional labels.
 \examples{
 data(pf_models)
 
-leverage <- eempf_leverage(pf4[[4]])
+leverage <- eempf_leverage(pf4[[1]])
 lev_data <- eempf_leverage_data(leverage)
 }

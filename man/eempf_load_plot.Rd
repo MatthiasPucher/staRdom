@@ -18,5 +18,5 @@ Plot amount of each component in each sample as bar plot
 \examples{
 data(pf_models)
 
-eempf_load_plot(pf4[[4]])
+eempf_load_plot(pf4[[1]])
 }

@@ -125,23 +125,33 @@ eem_duplicates.data.frame <- function(data){
 #' @importFrom eemR eem_names eem_extract
 #'
 #' @examples
-#' data(eem_list)
-#' data(abs_data)
+#' folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
+#' eem_list <- eem_read_csv(folder)
 #'
-#' eem_checkdata(eem_list, abs_data, error = FALSE)
+#' abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
+#' absorbance <- absorbance_read(abs_folder)
+#'
+#' metatable <- system.file("extdata/metatable_dreem.csv",package = "staRdom")
+#' meta <- read.table(metatable, header = TRUE, sep = ",", dec = ".", row.names = 1)
+#'
+#' checked <- eem_checkdata(eem_list, absorbance, metadata = meta,
+#' metacolumns = "dilution", error = FALSE)
+#' # This example returns a message, that absorbance data for the
+#' # blank samples are missing. As absorbance is supposed to be 0 over
+#' # the whole spectrum when you measure blanks, there is no need
+#' # to supply the data and do an inner-filter effect correction.
 eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NULL, correction = FALSE, error = TRUE){
   problem = FALSE
 
-
   nas <- which(eem_is.na(eem_list))
   if(length(nas) > 0){
-    cat("NAs were found in the following samples: ",paste0(names(nas),collapse = ", ", sep=", "),fill=TRUE)
+    cat("NAs were found in the following samples: ",paste0(names(nas),collapse = "", sep=", "),fill=TRUE)
     problem = TRUE
   }
 
   size_prob <- eem_checksize(eem_list)
   if(length(size_prob) > 0){
-    cat("The following samples contain more EEM data than the smallest in the sample set:",paste0(size_prob,collapse = ", ", sep=", "),fill=TRUE)
+    cat("The following samples contain more EEM data than the smallest in the sample set:",paste0(size_prob,collapse = "", sep=", "),fill=TRUE)
     problem = TRUE
   }
 
@@ -244,7 +254,8 @@ if(correction){
         return(eem$sample)
       }
     }
-  }) %>% invisible()
+  }) %>% unlist(recursive = FALSE) %>%
+    invisible()
 
   #metadata <- meta
   #metacolumns <- c("dilution")
@@ -272,7 +283,7 @@ if(correction){
           #metadata[col] >= 0
           valid <- rownames(metadata)[metadata[col] >= 0]# %>%
           metamissing <- eem_names(eem_list)[!eem_names(eem_list) %in% valid]
-          if(length(meta) > 0){
+          if(length(metamissing) > 0){
             cat(fill=TRUE)
             cat("Metadata column",col,"misses data for samples:",paste0(metamissing,collapse=", "),fill=TRUE)
             problem <- TRUE
@@ -291,7 +302,9 @@ if(correction){
   } else cat("No metadata was checked. Table was missing.",fill=TRUE)
 
   if(problem & error) stop("Please read the messages above carefully and correct the problems before continuing the analysis!")
-  invisible(list(problem,nas,missing_correction,eem_no_abs,abs_no_eem,duplse,duplsa,invalid_eem,invalid_abs,range_mismatch,metadupls,metamissing,metaadd))
+  invisible(list(problem,nas,size_prob,missing_correction,eem_no_abs,abs_no_eem,duplse,duplsa,invalid_eem,invalid_abs,range_mismatch,metadupls,metamissing,metaadd) %>%
+              setNames(c("Possible_problem_found","NAs_in_EEMs","EEMs_more_data_than_smallest","missing_data_correction","EEMs_missing_absorbance","Absorbance_missing_EEMs","Duplicate_EEM_names",
+                         "Duplicate_absorbance_names","invalid_EEM_names","invalid_absorbance_names","EEM_absorbance_wavelength_range_mismatch","Duplicates_metatable_names","EEMs_missing_metadata","Metadata_missing_EEMs")))
 }
 
 #' Create table that contains sample names and locations of files.
@@ -308,10 +321,11 @@ if(correction){
 #' @import tidyr
 #'
 #' @examples
-#' data(eem_list)
-#' data(abs_data)
+#' folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
+#' eem_list <- eem_read_csv(folder)
+#' data(absorbance)
 #'
-#' eem_metatemplate(eem_list,abs_data)
+#' eem_metatemplate(eem_list,absorbance)
 eem_metatemplate <- function(eem_list = NULL, absorbance = NULL){
   if(!is.null(eem_list)){
     t1 <- data.frame(sample = eem_names(eem_list), eem_location = lapply(eem_list,function(eem) eem$location) %>% unlist(),stringsAsFactors = FALSE)

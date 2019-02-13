@@ -1,4 +1,4 @@
-#' Fluorescence data used in drEEM.
+#' 15 fluorescence samples from drEEM used for examples.
 #'
 #' @format eemlist
 "eem_list"
@@ -6,12 +6,7 @@
 #' Fluorescence data of 1 sample of the original data set. Used for comparison in the vignette.
 #'
 #' @format eemlist
-"eem_example"
-
-#' blank samples
-#'
-#' @format eemlist
-"blank"
+"eem_list_667sf"
 
 #' PARAFAC model, see vignette, unconstrained
 #'
@@ -42,13 +37,3 @@
 #'
 #' @format list of parafacs
 "sh"
-
-#' result from PARAFAC split-half analysis, random data split
-#'
-#' @format list of parafacs
-"sh_r"
-
-#' raw data from absorbance measurements, 5cm pathlength
-#'
-#' @format list of parafacs
-"abs_data"

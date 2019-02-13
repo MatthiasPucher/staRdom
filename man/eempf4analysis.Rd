@@ -32,10 +32,9 @@ Please refer to \code{\link[eemR]{eem_biological_index}}, \code{\link[eemR]{eem_
 \donttest{
 data(eem_list)
 data(pf_models)
-data(abs_data)
 
-results <- eempf4analysis(pfmodel = pf4[[4]],
-                          eem_list = eem_list, absorbance = abs_data,
+results <- eempf4analysis(pfmodel = pf4[[1]],
+                          eem_list = eem_list,
                           cuvl = 5, n = 4)
                           }
 }

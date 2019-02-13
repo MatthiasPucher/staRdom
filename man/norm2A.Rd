@@ -18,5 +18,5 @@ Factors used for normalisation are saved separately in the PARAFAC models. With 
 \examples{
 data(pf_models)
 
-pf4[[4]][[3]] <- norm2A(pf4[[4]][[3]])
+pf4[[1]] <- norm2A(pf4[[1]])
 }

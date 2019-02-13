@@ -43,9 +43,11 @@ list_join <- function(df_list,by){
 #'
 #' @examples
 #' data(eem_list)
+#'
 #' as.data.frame(eem_list[[1]])
 #' as.data.frame(eem_list[[1]],gather=FALSE)
-as.data.frame.eem <- function(x, row.names = NULL, optional = FALSE, ..., gather = TRUE){
+as.data.frame.eem <- function(x, row.names = NULL, optional = FALSE, gather = TRUE, ...){
+  #x <- eem_list[[1]]
   eem_d <- x$x %>% data.frame()
   colnames(eem_d) <- x$ex
   row.names(eem_d) <- x$em
@@ -204,7 +206,7 @@ eem_red2smallest <- function(data,verbose=FALSE){
 #' @examples
 #' \dontrun{
 #' # due to package size issues no example data is provided for this function
-#' eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
+#' # eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
 #' }
 eem_import_dir <- function(dir){
   eem_files <- dir(dir, pattern=".RData") %>%
@@ -213,7 +215,7 @@ eem_import_dir <- function(dir){
   for(file in eem_files){
     file <- load(file)
     if(get(file) %>% class() == "eemlist"){
-    if(exists("eem_list")) eem_list <- eem_bind(eem_list,get(file)) else eem_list <- get(file)
+      if(exists("eem_list")) eem_list <- eem_bind(eem_list,get(file)) else eem_list <- get(file)
     } else {
       warning(paste0(file," is no object of class eemlist!"))
     }
@@ -245,3 +247,100 @@ eem_import_dir <- function(dir){
 eem_easy <- function(){
   file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))
 }
+
+#' Load original data from the drEEM tutorial and return it as eemlist
+#'
+#' @return eemlist
+#' @export
+#'
+#' @import dplyr tidyr
+#' @importFrom R.matlab readMat
+#'
+#' @examples
+#' \donttest{
+#' eem_list <- eem_load_dreem()
+#' }
+eem_load_dreem <- function(){
+  dreem_raw <- tempfile()
+  download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
+  dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
+    R.matlab::readMat()
+  unlink(dreem_raw)
+
+  eem_list <- lapply(dreem_data$filelist.eem, function(file){
+    #file <- dreem_data$filelist.eem[1]
+    n <- which(dreem_data$filelist.eem == file)
+    file <- file %>% gsub("^\\s+|\\s+$", "", .) %>% # trim white spaces in filenames
+      sub(pattern = "(.*)\\..*$", replacement = "\\1", .) # remove file extension from sample name
+    eem <- list(sample = file,x = dreem_data$XcRU[n,,] %>% as.matrix(),ex = dreem_data$Ex %>% as.vector(), em = dreem_data$Em.in %>% as.vector(),location = "drEEM/dataset/")
+    class(eem) <- "eem"
+    attr(eem, "is_blank_corrected") <- TRUE
+    attr(eem, "is_scatter_corrected") <- FALSE
+    attr(eem, "is_ife_corrected") <- TRUE
+    attr(eem, "is_raman_normalized") <- TRUE
+    attr(eem, "manufacturer") <- "unknown"
+    eem
+  }) %>%
+    `class<-`("eemlist")
+}
+
+#' Import EEMs from generic csv tables
+#'
+#' @description EEM data is loaded from generic files. First column and first row contains wavelength values. The other values are to be plain numbers. \code{\link[data.table]{fread}} is used to read the table. It offers a lot of helpful functions (e.g. skipping any number n of header lines by adding `skip = n`)
+#'
+#' @param path path to file(s), either a filename or a folder
+#' @param col either "ex" or "em", what wavelengths are in the columns
+#' @param recursive logical, whether directories are loaded recursively
+#' @param is_blank_corrected logical, whether blank correction was done
+#' @param is_scatter_corrected logical, wether scatters were corrected
+#' @param is_ife_corrected logical, wether inner-filter effect correction was done
+#' @param is_raman_normalized logical, wether raman normalisation applied
+#' @param manufacturer string specifying manufacturer of instrument
+#' @param verbose logical, whether additional information is provided
+#' @param ... parameters passed on to \code{\link[data.table]{fread}}
+#'
+#' @export
+#'
+#' @import dplyr tidyr
+#'
+#' @examples
+#' eems <- system.file("extdata/EEMs",package="staRdom")
+#' eem_list <- eem_read_csv(eems)
+#'
+eem_read_csv <- function(path, col = "ex", recursive = TRUE, is_blank_corrected = FALSE, is_scatter_corrected = FALSE, is_ife_corrected = FALSE, is_raman_normalized = FALSE, manufacturer = "unknown", verbose = FALSE,...){
+  #path <- "./inst/extdata/EEMs/"
+  stopifnot(file.exists(path))
+  if(file.info(path)$isdir) {
+    path <- dir(path,recursive = recursive) %>%
+      paste0(path,"/",.)
+  }
+  eem_list <- lapply(path, function(file){
+    #file <- path[7]
+    if(verbose) cat("loading",file,"...", fill=TRUE)
+    x <- data.table::fread(file, header = TRUE, ...)
+    if(col == "ex"){
+      ex <- colnames(x)[-1] %>% as.numeric()
+      em <- x[[1]]
+    } else if(col == "em"){
+      em <- colnames(x)[-1] %>% as.numeric()
+      ex <- x[[1]]
+    }
+    x <- x[,-1] %>% as.matrix() %>% unname()
+    x <- x[!is.na(em),!is.na(ex)]
+    ex <- ex[!is.na(ex)]
+    em <- em[!is.na(em)]
+    if(col == "em") x <- t(x)
+    sample <- sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(file))
+    eem <- list(sample = sample, x = x, ex = ex, em = em, location = dirname(file))
+    class(eem) <- "eem"
+    attr(eem, "is_blank_corrected") <- is_blank_corrected
+    attr(eem, "is_scatter_corrected") <- is_scatter_corrected
+    attr(eem, "is_ife_corrected") <- is_ife_corrected
+    attr(eem, "is_raman_normalized") <- is_raman_normalized
+    attr(eem, "manufacturer") <- manufacturer
+    eem
+  }) %>%
+    `class<-`("eemlist")
+}
+
+

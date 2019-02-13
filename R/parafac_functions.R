@@ -30,14 +30,14 @@
 #' dim_min <- 3 # minimum number of components
 #' dim_max <- 7 # maximum number of components
 #' nstart <- 10 # random starts for PARAFAC analysis, models built simulanuously, best selected
-#' cores <- parallel::detectCores()/2 # use all cores but do not use all threads
-#' maxit = 500
-#' ctol <- 10^-4 # tolerance for parafac
+#' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' maxit = 1000
+#' ctol <- 10^-5 # tolerance for parafac
 #'
 #' pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
 #'     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
 #' }
-eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c("nonneg","nonneg","nonneg"),nstart = 10,ctol=10^-4,cores = parallel::detectCores()/2, verbose = FALSE, ...){
+eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
   #eem_list <- eem_list %>% eem_red2smallest()
   eem_array <- eem2array(eem_list)
   if(normalise){
@@ -55,7 +55,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c("nonneg"
     clusterExport(cl, c("eem_array","comp","maxit","nstart","const","ctol","cores"), envir=environment())
     clusterEvalQ(cl, library(multiway))
     }
-    cpresult <- parafac(eem_array,nfac=comp,const = const,maxit = maxit,parallel = (cores > 1), cl=cl, ctol=ctol, nstart = nstart,...)
+    cpresult <- parafac(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, ...)
     if(cores > 1){
     stopCluster(cl)
     }
@@ -78,7 +78,7 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c("nonneg"
 #' @description B and C modes (emission and excitation wavelengths) are rescaled to RMS of value newscale. This is compensated in A mode (sample loadings).
 #'
 #' @param pfmodel object of class parafac
-#' @param newscale Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If newscale = "Fmax", each component will be scaled so the maximum of each component is 1.
+#' @param newscale If (default) newscale = "Fmax", each component will be scaled so the maximum of each component is 1. It is also possible to set a desired root mean-square for each column of the rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.
 #'
 #' @return object of class parafac
 #' @export
@@ -88,8 +88,8 @@ eem_parafac <- function(eem_list,comps,maxit=500,normalise=TRUE,const=c("nonneg"
 #' @examples
 #' data(pf_models)
 #'
-#' new_pf <- eempf_rescaleBC(pf4[[4]])
-eempf_rescaleBC <- function(pfmodel,newscale = 1){
+#' new_pf <- eempf_rescaleBC(pf4[[1]])
+eempf_rescaleBC <- function(pfmodel,newscale = "Fmax"){
   nf <- attr(pfmodel,"norm_factors")
   comp <- ncol(pfmodel$A)
   if(newscale == "Fmax"){
@@ -136,6 +136,8 @@ eempf_rescaleBC <- function(pfmodel,newscale = 1){
 #' eempf_comp_names(pf4) <- value
 #' eempf_comp_names(pf4)
 #'
+#' ggeem(pf4[[1]])
+#'
 eempf_comp_names <- function(pfmodel){
   if(class(pfmodel) == "parafac") {
     colnames(pfmodel$A)
@@ -168,7 +170,6 @@ eempf_comp_names <- function(pfmodel){
     colnames(pfmodel$C) <- value
     pfmodel %>% `class<-`("parafac")
   }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
-
     if(!is.list(value) | (length(value) == 1 & length(pfmodel) > 1)) value <- lapply(1:length(pfmodel), function(x) value)
     lapply(1:length(pfmodel), function(pfn){
       colnames(pfmodel[[pfn]]$A) <- value[[pfn]][1:ncol(pfmodel[[pfn]]$A)]
@@ -197,20 +198,16 @@ eempf_comp_names <- function(pfmodel){
 eem2array <- function(eem_list){
   eem_matrices <- eem_list %>%
     sapply("[", "x")
-
   dv <- lapply(eem_matrices,dim) %>% bind_cols()
   if(all(dv[1,1] %>% unlist() == dv[1,]) & all(dv[2,1] %>% unlist() == dv[2,])) dim_eem <- c(dv[,1] %>% unlist(), eem_matrices %>% length()) else dim_eem <- NA
   if(is.na(dim_eem[1])) stop("dimensions mismatch!")
 
   eem_array <- array(eem_matrices %>% unlist, dim=dim_eem)
-  ## set NA to 0
-  #eem_array[is.na(eem_array) | is.nan(eem_array)] <- 0
   eem_array <- eem_array %>% aperm(perm = c(3,1,2), resize = TRUE)
   attr(eem_array,"em") <- eem_list[[1]]$em
   attr(eem_array,"ex") <- eem_list[[1]]$ex
   attr(eem_array,"samples") <- eem_list %>% sapply("[","sample") %>% unlist()
   attr(eem_array,"mdim") <- dim(eem_array)
-  #attr(eem_array,"norm_factors") <- NULL
   eem_array
 }
 
@@ -235,10 +232,6 @@ norm_array <- function(eem_array){
     sd(eem_array[s,,], na.rm=TRUE)
   }) %>% unlist()
   eem_array <- eem_array / norm_factors
-  #eem_array <- lapply(1:(dim(eem_array)[1]),function(s) {
-  #  eem_array[s,,]/norm_factors[s]
-  #}) %>% unlist() %>%
-  #  array(dim=dim(eem_array))
   attr(eem_array,"norm_factors") <- norm_factors
   eem_array
 }
@@ -261,11 +254,8 @@ norm_array <- function(eem_array){
 #' @examples
 #' data(pf_models)
 #'
-#' eempf_comp_mat(pf4[[4]])
+#' eempf_comp_mat(pf4[[1]])
 eempf_comp_mat <- function(pfmodel,gather=TRUE){
-  #mod6 -> pfmodel
-  #mod6 -> pfmodel
-  #comp <- 1
   mat <- lapply(seq(1:ncol(pfmodel$A)), function(comp){
     m <- matrix(pfmodel$B[,comp]) %*% t(matrix(pfmodel$C[,comp])) %>%
       data.frame()
@@ -292,7 +282,7 @@ eempf_comp_mat <- function(pfmodel,gather=TRUE){
 #' @examples
 #' data(pf_models)
 #'
-#' eempf_leverage(pf4[[4]])
+#' eempf_leverage(pf4[[1]])
 eempf_leverage <- function(pfmodel){
   cpl <- lapply(pfmodel[c("A","B","C")], function(M) diag(M %*% pinv(t(M) %*% M) %*% t(M)))
   names <- list(rownames(pfmodel$A),rownames(pfmodel$B),rownames(pfmodel$C))
@@ -316,12 +306,11 @@ eempf_leverage <- function(pfmodel){
 #' @examples
 #' data(pf_models)
 #'
-#' eempf_mleverage(pf4)
+#' eempf_mleverage(pf3)
 eempf_mleverage <- function(pfres_comps,ecdf = FALSE, stats = FALSE){
   cpls <- lapply(pfres_comps,eempf_leverage) %>%
     lapply(unlist) %>%
     lapply(function(ll) data.frame(parameter=names(ll),value=ll)) %>%
-    #    lapply(tibble::rownames_to_column,var="parameter") %>%
     list_join(by = "parameter") %>%
     `colnames<-`(c("parameter",paste0("comps",lapply(pfres_comps,function(cpout){ncol(cpout$A)}) %>% unlist())))
   if(ecdf){
@@ -352,7 +341,7 @@ eempf_mleverage <- function(pfres_comps,ecdf = FALSE, stats = FALSE){
 #' @examples
 #' data(pf_models)
 #'
-#' leverage <- eempf_leverage(pf4[[4]])
+#' leverage <- eempf_leverage(pf4[[1]])
 #' lev_data <- eempf_leverage_data(leverage)
 eempf_leverage_data <- function(cpl,qlabel=0.1){
   cpl <- cpl %>%
@@ -381,7 +370,7 @@ eempf_leverage_data <- function(cpl,qlabel=0.1){
 #' @examples
 #' data(pf_models)
 #'
-#' pf4[[4]][[3]] <- norm2A(pf4[[4]][[3]])
+#' pf4[[1]] <- norm2A(pf4[[1]])
 norm2A <- function(pfmodel){
   if(!is.null(attr(pfmodel,"norm"))){
     pfmodel$A <- pfmodel$A * attr(pfmodel,"norm_factors")
@@ -405,7 +394,7 @@ norm2A <- function(pfmodel){
 #'
 #' @examples
 #' data(pf_models)
-#' eempf_cortable(pf4[[4]])
+#' eempf_cortable(pf4[[1]])
 eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
   if(normalisation) pfmodel <- norm2A(pfmodel)
   pfmodel %>%
@@ -413,9 +402,9 @@ eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
     cor(method=method,...)
 }
 
-#' Extract data from emission and excitation wavelengths of the components of a PARAFAC model
+#' Extract data from emission and excitation wavelengths of the components of a PARAFAC model (scaled B- and C-modes)
 #'
-#' @description Data of wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
+#' @description Data for each wavelengths is returned. For each component the lines intersecting at the component maxima are returned.
 #'
 #' @param pfmodel object of class parafac
 #'
@@ -428,10 +417,9 @@ eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
 #' @examples
 #' data(pf_models)
 #'
-#' ml <- maxlines(pf4[[4]])
+#' ml <- maxlines(pf4[[1]])
 maxlines <- function(pfmodel){
   maxl <- lapply(colnames(pfmodel$C),function(comp){
-    #comp <- colnames(pfmodel$C)[1]
     em = (pfmodel$B[,comp]*max(pfmodel$C[,comp])) %>%
       data.frame(e="em", wavelength = as.numeric(names(.)),value=.)
     ex = (pfmodel$C[,comp]*max(pfmodel$B[,comp])) %>%
@@ -441,7 +429,6 @@ maxlines <- function(pfmodel){
   }) %>%
     list_join(by=c("e","wavelength"))
 }
-
 
 #' Calculate residuals of EEM data according to a certain model
 #'
@@ -463,17 +450,12 @@ maxlines <- function(pfmodel){
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' eempf_residuals(pf4[[4]],eem_list)
+#' eempf_residuals(pf4[[1]],eem_list)
 #' }
 eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::detectCores(logical = FALSE)/2){
-  # pfmodel <- pfres_comps2[[which(comps==seq(dim_min,dim_max))]]
   pfmodel <- norm2A(pfmodel)
   if(!is.null(select)){
     eem_list <- eem_extract(eem_list,sample = select ,keep=TRUE,verbose = FALSE)
-      #lapply(select,function(s) which(s == eem_list %>% eem_names())) %>%
-      #unlist() %>%
-      #unique() %>%
-      #setdiff(seq(1,length(eem_list)),.)  %>% eem_extract(eem_list,.,verbose = FALSE)
   }
   if(!all(eem_names(eem_list) %in% rownames(pfmodel$A)) | length(eem_list) == 0){
     pfmodel <- A_missing(eem_list,pfmodel,cores=cores)
@@ -511,12 +493,17 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
 
 #' Calculate the amount of each component for samples not involved in model building
 #'
-#' Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm.
+#' @description Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm. B and C modes can be provided via a previously calculated model or as matrices manually.
 #'
 #' @param eem_list object of class eemlist with sample data
 #' @param pfmodel object of class parafac
 #' @param cores number of cores to use for parallel processing
+#' @param components optionally supply components to use manually, either as a variable of class parafac_components or as a list of variables of class parafac_components, if you do so,
+#' @param const optional constraints for model, just used, when components are supplied
+#' @param control optional constraint control parameters for model, just used, when components are supplied
 #' @param ... additional arguments passed to eem_parafac
+#'
+#' @details This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
 #'
 #' @return object of class parafac
 #' @export
@@ -531,21 +518,38 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' A_missing(eem_list,pf4[[4]])
+#' A_missing(eem_list,pf4[[1]])
 #' }
-A_missing <- function(eem_list,pfmodel,cores = parallel::detectCores(logical = FALSE)/2,...){
+A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logical = FALSE),components = NULL, const = NULL, control = NULL, ...){
   eem_list <- eem_red2smallest(eem_list)
+  if(is.null(pfmodel) & is.null(components)) stop("You must either specify a model or components as a base for the newly generated model!")
 
   exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
                   "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
                   "sample" = c()
   )
-
   x <- eem_list %>%
     eem_exclude(exclude)
-
-  missingAs <- eem_parafac(x,comps = pfmodel$A %>% ncol(),normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B, Cfixed = pfmodel$C,cores = cores,control = pfmodel$control, const = pfmodel$const,...)
-
+  if(!is.null(components)){
+    if(!is.null(pfmodel)) warning("The base model is ignored since you provided components manually!")
+    if(class(components[[1]]) == "parafac_components") components <- eempf_bindxc(components)
+    if(class(components) == "parafac_components"){
+      Bfixed <- components$B
+      Cfixed <- components$C
+      comps <- ncol(components$B)
+      if(is.null(const)) const <- c("nonneg", "nonneg", "nonneg")
+    } else {
+      stop("The list of components you supplied is invalid!")
+    }
+  } else {
+    Bfixed <- pfmodel$B
+    Cfixed <- pfmodel$C
+    comps <- pfmodel$A %>% ncol()
+    normalise = (!is.null(attr(pfmodel,"norm_factors")))
+    control = pfmodel$control
+    const = pfmodel$const
+  }
+  missingAs <- eem_parafac(x,comps = comps,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = Bfixed, Cfixed = Cfixed,cores = cores,const = const, control = control, ...)
   missingAs[[1]]
 }
 
@@ -562,6 +566,7 @@ A_missing <- function(eem_list,pfmodel,cores = parallel::detectCores(logical = F
 #' @param cores number of parallel calculations (e.g. number of physical cores in CPU)
 #' @param maxit maximum iterations for PARAFAC algorithm
 #' @param ctol Convergence tolerance (R^2 change)
+#' @param rescale rescale splithalf models to Fmax, see \code{\link[staRdom]{eempf_rescaleBC}}
 #' @param verbose states whether you want additional information during calculation
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
 #'
@@ -580,9 +585,10 @@ A_missing <- function(eem_list,pfmodel,cores = parallel::detectCores(logical = F
 #' \donttest{
 #' data(eem_list)
 #'
-#' splithalf(eem_list,6,nstart=2)
+#' splithalf <- splithalf(eem_list,6,nstart=20)
+#' splithalf_plot(splithalf)
 #' }
-splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=10,cores=parallel::detectCores()/2,maxit=500,ctol = 10^(-5),verbose = FALSE,...){
+splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 10, cores = parallel::detectCores(logical = FALSE), maxit = 1000, ctol = 10^(-5), rescale = TRUE, verbose = FALSE, ...){
   a <- seq(1,eem_list %>% length())
   if(rand){
     a <- a %>% sample()
@@ -603,13 +609,12 @@ splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=
   }
   fits <- lapply(1:length(spl_eems),function(i){
     mod <- eem_parafac(spl_eems[[i]],comps=comps,normalise = normalise,maxit=maxit,nstart = nstart, cores = cores,ctol = ctol,verbose=FALSE,...)
+    if(rescale) mod <- lapply(mod,eempf_rescaleBC,newscale="Fmax")
     if(verbose) setTxtProgressBar(pb, i)
     mod
     }) #
   if(verbose) close(pb)
   reallign <- tcc_find_pairs(fits)
-
-  #sel <- 4
 
   C_sort <- lapply(2:6,function(sel){
     fit <- fits[[sel]]
@@ -658,11 +663,9 @@ splithalf <- function(eem_list,comps,splits=NA,rand=FALSE,normalise=TRUE,nstart=
 #' splithalf(eem_list,6,nstart=2)
 #' }
 tcc_find_pairs <- function(fits){
-  #fits <- fits2
   sel <- 0
   problem <- FALSE
   table <- lapply(fits,function(fit){
-    #fit <- mod6
     sel <<- sel + 1
     c <- fit %>% lapply(eempf_comp_mat)
     tab <- lapply(c,function(c1){
@@ -797,7 +800,7 @@ splithalf_splits <- function(fits){
 
 #' Caluclate Tucker's Congruence Coefficient of PARAFAC components
 #'
-#' @description Componets must be passed as peak lines \code{\link[staRdom]{maxlines}}
+#' @description Componets must be passed as modes, see \code{\link[staRdom]{maxlines}}
 #'
 #' @param maxl_table data frame containing the peak lines of components
 #' @param na.action if "na.omit" NA are deleted from prior the test
@@ -814,14 +817,13 @@ splithalf_splits <- function(fits){
 #' @examples
 #' data(pf_models)
 #'
-#' ml <- maxlines(pf4[[4]])
+#' ml <- maxlines(pf4[[1]])
 #'
 #' tcc(ml)
 tcc <- function(maxl_table,na.action="na.omit"){
   c <- lapply(c("em","ex"), function(E) {
     c2 <- maxl_table %>% filter(e == E) %>% select(-e) %>% arrange(wavelength)
     if(na.action == "na.omit") c2 <- c2 %>% na.omit()
-    #if(na.action == "approx") c2 <- c2 %>% zoo::na.approx(xout = .$wavelength, na.rm = FALSE) %>% data.frame() %>% na.omit()
     c2 <- c2 %>%
       select(-wavelength) %>%
       congru()
@@ -849,7 +851,7 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'
 #' @examples
 #'   data(pf_models)
-#'   eempf_openfluor(pf4[[4]],file.path(tempdir(),"openfluor_example.txt"))
+#'   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"))
 eempf_openfluor <- function(pfmodel,file){
   if(!dir.exists(dirname(file.path(file)))){
     stop("The path to your file does not contain an existing directory. Please enter a correct path!")
@@ -892,10 +894,9 @@ eempf_openfluor <- function(pfmodel,file){
 #' \donttest{
 #' data(eem_list)
 #' data(pf_models)
-#' data(abs_data)
 #'
-#' results <- eempf4analysis(pfmodel = pf4[[4]],
-#'                           eem_list = eem_list, absorbance = abs_data,
+#' results <- eempf4analysis(pfmodel = pf4[[1]],
+#'                           eem_list = eem_list,
 #'                           cuvl = 5, n = 4)
 #'                           }
 eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NULL, n = 4, export = NULL,...){
@@ -944,7 +945,7 @@ eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NU
 #' @examples
 #' data(pf_models)
 #'
-#' factor_table <- eempf_export(pf4[[4]])
+#' factor_table <- eempf_export(pf4[[1]])
 eempf_export<- function(pfmodel,export = NULL,...){
   tabs <- list(pfmodel$A %>%
                  as.data.frame() %>%
@@ -990,7 +991,7 @@ eempf_export<- function(pfmodel,export = NULL,...){
 #' \dontrun{
 #' # due to data limitation in package, example does not work with that data!
 #'
-#' eempf_corecondia(pfmodel,eem_list)
+#' # eempf_corcondia(pfmodel,eem_list)
 #'
 #' }
 eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
@@ -1020,7 +1021,7 @@ eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' pfmodel <- pf4[[4]]
+#' pfmodel <- pf4[[1]]
 #' eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 #' }
 eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
@@ -1057,19 +1058,17 @@ eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
 #' data(pfmodel)
 #' data(eem_list)
 #'
-#' eempf_varimp(pf4[[4]],eem_list)
+#' eempf_varimp(pf4[[1]],eem_list)
 #' }
-eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores()/2,...){
+eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores(logical=FALSE),...){
 
   exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
                   "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
                   "sample" = c()
   )
-
   x <- eem_list %>%
     eem_red2smallest() %>%
     eem_exclude(exclude)
-
   mods <- lapply(1:(pfmodel$A %>% ncol()), function(c){
     eem_parafac(x,comps = ncol(pfmodel$A)-1,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B[,-c], Cfixed = pfmodel$C[,-c],cores = cores,control = pfmodel$control, const = pfmodel$const)
   })
@@ -1092,9 +1091,9 @@ eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores()/2,...
 #'
 #' @examples
 #' data(pf_models)
-#' ggeem(pf4[[4]])
+#' ggeem(pf4[[1]])
 #'
-#' pf4r <- eempf_reorder(pf4[[4]],"ex")
+#' pf4r <- eempf_reorder(pf4[[1]],"ex")
 #' ggeem(pf4r)
 eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
   if(!(order == "em" | order == "ex" | is.vector(order))) stop("no valid data suppli ed for order!")
@@ -1106,7 +1105,55 @@ eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
   if(class(mod) =="try-error") stop(mod) else {
     mod
   }
-  #ggeem(pfmodel)
-  #ggeem(mod)
 }
+
+
+#' Extracting components of a PARAFAC model
+#'
+#' @param pfmodel parafac model
+#' @param comps vector with numbers of components to extract
+#'
+#' @return list
+#' @export
+#'
+#' @import dplyr
+#'
+#' @examples
+#' data(pf_models)
+#' pfmodel <- pf4[[1]]
+#' comps <- eempf_excomp(pfmodel,c(1,3))
+eempf_excomp <- function(pfmodel,comps){
+  list(pfmodel$B[,comps], pfmodel$C[,comps]) %>%
+    `names<-`(c("B","C")) %>%
+    `class<-`("parafac_components")
+}
+
+
+#' Combining extracted components of PARAFAC models
+#'
+#' @param components list of parafac_components
+#'
+#' @return parafac_components
+#' @export
+#'
+#' @import dplyr
+#'
+#' @examples
+#'
+#' data(pf_models)
+#' pfmodel <- pf4[[1]]
+#' comps <- eempf_excomp(pfmodel,c(1,3))
+#' comps2 <- eempf_excomp(pfmodel,c(4,6))
+#' comps3 <- eempf_bindxc(list(comps, comps2))
+#'
+eempf_bindxc <- function(components){
+B <- lapply(components, `[[`, "B") %>%
+  do.call(cbind,.)
+C <- lapply(components, `[[`, "C") %>%
+  do.call(cbind,.)
+  list(B,C) %>%
+  `names<-`(c("B","C")) %>%
+  `class<-`("parafac_components")
+}
+
 

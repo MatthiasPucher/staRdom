@@ -4,8 +4,9 @@
 \alias{A_missing}
 \title{Calculate the amount of each component for samples not involved in model building}
 \usage{
-A_missing(eem_list, pfmodel, cores = parallel::detectCores(logical =
-  FALSE)/2, ...)
+A_missing(eem_list, pfmodel = NULL,
+  cores = parallel::detectCores(logical = FALSE), components = NULL,
+  const = NULL, control = NULL, ...)
 }
 \arguments{
 \item{eem_list}{object of class eemlist with sample data}
@@ -14,19 +15,28 @@ A_missing(eem_list, pfmodel, cores = parallel::detectCores(logical =
 
 \item{cores}{number of cores to use for parallel processing}
 
+\item{components}{optionally supply components to use manually, either as a variable of class parafac_components or as a list of variables of class parafac_components, if you do so,}
+
+\item{const}{optional constraints for model, just used, when components are supplied}
+
+\item{control}{optional constraint control parameters for model, just used, when components are supplied}
+
 \item{...}{additional arguments passed to eem_parafac}
 }
 \value{
 object of class parafac
 }
 \description{
-Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm.
+Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm. B and C modes can be provided via a previously calculated model or as matrices manually.
+}
+\details{
+This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
 }
 \examples{
 \donttest{
 data(eem_list)
 data(pf_models)
 
-A_missing(eem_list,pf4[[4]])
+A_missing(eem_list,pf4[[1]])
 }
 }

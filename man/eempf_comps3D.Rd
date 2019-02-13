@@ -21,6 +21,6 @@ Interactive 3D plots are created using plotly.
 \dontrun{
 data(pf_models)
 
-eempf_comps3D(pf4[[4]])
+eempf_comps3D(pf4[[1]])
 }
 }

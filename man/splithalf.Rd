@@ -5,8 +5,9 @@
 \title{Running a Split-Half analysis on a PARAFAC model}
 \usage{
 splithalf(eem_list, comps, splits = NA, rand = FALSE,
-  normalise = TRUE, nstart = 10, cores = parallel::detectCores()/2,
-  maxit = 500, ctol = 10^(-5), verbose = FALSE, ...)
+  normalise = TRUE, nstart = 10,
+  cores = parallel::detectCores(logical = FALSE), maxit = 1000,
+  ctol = 10^(-5), rescale = TRUE, verbose = FALSE, ...)
 }
 \arguments{
 \item{eem_list}{eemlist containing sample data}
@@ -27,6 +28,8 @@ splithalf(eem_list, comps, splits = NA, rand = FALSE,
 
 \item{ctol}{Convergence tolerance (R^2 change)}
 
+\item{rescale}{rescale splithalf models to Fmax, see \code{\link[staRdom]{eempf_rescaleBC}}}
+
 \item{verbose}{states whether you want additional information during calculation}
 
 \item{...}{additional parameters that are passed on to \code{\link[multiway]{parafac}}}
@@ -44,7 +47,8 @@ Split data sets can be split suboptimal and cause low TCCs. Therefore, subsample
 \donttest{
 data(eem_list)
 
-splithalf(eem_list,6,nstart=2)
+splithalf <- splithalf(eem_list,6,nstart=20)
+splithalf_plot(splithalf)
 }
 }
 \seealso{

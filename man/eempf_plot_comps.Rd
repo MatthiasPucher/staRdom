@@ -17,10 +17,12 @@ eempf_plot_comps(pfres, type = 1, names = TRUE)
 object of class ggplot
 }
 \description{
-The components can be plottet in two ways: either as a colour map or as two lines (emission, excitation wavelengths) intersecting at the component maximum.
+The components can be plottet in two ways: either as a colour map or as two lines (emission, excitation wavelengths) intersecting at the component maximum. If the list of provided models is named, these names are shown in the plot. Otherwise, the models are automatically named by "model#".
 }
 \examples{
 data(pf_models)
 
 eempf_plot_comps(pf4, type = 1)
+eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
+
 }

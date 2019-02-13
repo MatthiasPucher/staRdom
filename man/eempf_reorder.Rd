@@ -21,8 +21,8 @@ Reorder PARAFAC components
 }
 \examples{
 data(pf_models)
-ggeem(pf4[[4]])
+ggeem(pf4[[1]])
 
-pf4r <- eempf_reorder(pf4[[4]],"ex")
+pf4r <- eempf_reorder(pf4[[1]],"ex")
 ggeem(pf4r)
 }

@@ -23,7 +23,7 @@ This is basically a wrapper for \code{\link[multiway]{corcondia}} that deals wit
 \dontrun{
 # due to data limitation in package, example does not work with that data!
 
-eempf_corecondia(pfmodel,eem_list)
+# eempf_corcondia(pfmodel,eem_list)
 
 }
 }

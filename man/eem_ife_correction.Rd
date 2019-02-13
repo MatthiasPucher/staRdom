@@ -20,8 +20,9 @@ fluorescence data of class eemlist
 Calls \code{\link[eemR]{eem_inner_filter_effect}} for each sample to use different cuvette lengths.
 }
 \examples{
-data(eem_list)
-data(abs_data)
+folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
+eem_list <- eem_read(folder)
+data(absorbance)
 
-eem_ife_correction(eem_list,abs_data,5)
+eem_ife_correction(eem_list,absorbance,5)
 }

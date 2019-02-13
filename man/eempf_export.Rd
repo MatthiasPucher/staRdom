@@ -22,5 +22,5 @@ Create one table containing the PARAFAC models factors and optionally exporting 
 \examples{
 data(pf_models)
 
-factor_table <- eempf_export(pf4[[4]])
+factor_table <- eempf_export(pf4[[1]])
 }

@@ -18,5 +18,5 @@ Calculate the leverage of each emission and excitation wavelength and each sampl
 \examples{
 data(pf_models)
 
-eempf_leverage(pf4[[4]])
+eempf_leverage(pf4[[1]])
 }

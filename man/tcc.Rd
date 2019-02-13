@@ -15,12 +15,12 @@ tcc(maxl_table, na.action = "na.omit")
 data.frame containing the TCCs
 }
 \description{
-Componets must be passed as peak lines \code{\link[staRdom]{maxlines}}
+Componets must be passed as modes, see \code{\link[staRdom]{maxlines}}
 }
 \examples{
 data(pf_models)
 
-ml <- maxlines(pf4[[4]])
+ml <- maxlines(pf4[[1]])
 
 tcc(ml)
 }
