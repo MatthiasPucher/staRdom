@@ -5,7 +5,7 @@
 \title{Missing values are interpolated within EEM data}
 \usage{
 eem_interp(data, cores = parallel::detectCores(logical = FALSE),
-  type = TRUE, verbose = FALSE, nonneg = TRUE, ...)
+  type = TRUE, verbose = FALSE, nonneg = TRUE, extend = FALSE, ...)
 }
 \arguments{
 \item{data}{object of class eemlist with spectra containing missing values}
@@ -18,6 +18,8 @@ eem_interp(data, cores = parallel::detectCores(logical = FALSE),
 
 \item{nonneg}{logical, whether negative values should be replaced by 0}
 
+\item{extend}{logical, whether data is extrapolated using type 1}
+
 \item{...}{arguments passed on to other functions (pchip, na.approx, mba.points)}
 }
 \value{
@@ -27,7 +29,7 @@ object of class eemlist with interpoleted spectra.
 Missing EEM data can be interpolated. Usually it is the result of removing scatter or other parts where noise is presumed. Different interpolation algorithms can be used (see details).
 }
 \details{
-The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 3, extrapolation can be suppressed by adding the argument extend = FALSE.
+The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 1, extrapolation can be suppressed by adding the argument extend = FALSE.
 }
 \examples{
 \donttest{

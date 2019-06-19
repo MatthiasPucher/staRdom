@@ -1,5 +1,5 @@
 ---
-title: "Correcting raw data, Calculating peaks and indices in EEMS and absorbance (slope) parameters"
+title: "Correcting raw data, calculating peaks and indices in EEMS and absorbance (slope) parameters"
 subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
 author: "`r packageDescription('staRdom')$Maintainer`"
 date: "`r format(Sys.time(), '%B %e %Y')`"
@@ -25,21 +25,29 @@ bibliography() #style="apalike"
 ![](staRdom384.png){width=180}
 
 # Introduction
-staRdom is a package for R `r citep(citation())` to analyse fluorescence (excitation-emission matrices, EEMs) and absorbance data of dissolved organic matter (DOM). The important features are:
+staRdom is a package for R version `r R.Version()$major` `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
 
-* separating the components of the EEMs via PARAFAC/CANDECOMP (`r citep(list("10.1039/c3ay41160e",citation(package="multiway")))`).
+* separating the components of the EEMs via PARAFAC/CANDECOMP `r citep(list("10.1039/c3ay41160e","10.1016/S0169-7439(97)00032-4",citation(package="multiway")))`.
+* validating the model using a split-half analysis, the core consistency, the model fit or visually examining the residuals
 * correcting excitation-emission-matrices `r citep(list("10.1039/c3ay41160e",citation(package="eemR")))`
 * calculating fluorescence peaks and indices `r citep(citation(package="eemR"))`
-    * biological index (bix; `r citet("10.1016/j.orggeochem.2009.03.002")`)
-    * so-called Coble-peaks (b,	t, a,	m, c; `r citet("10.1016/0304-4203(95)00062-3")`)
-    * fluorescence index (fi; `r citet("10.4319/lo.2001.46.1.0038")`)
-    * humification index (hix; `r citet("10.1021/es0155276")`)
-* calculating common absorbance (slope) parameters (a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes; `r citet(list("10.4319/lo.2008.53.3.0955","10.1016/j.marchem.2004.02.008",citation(package="cdom"),"10.4319/lo.2009.54.2.0590"))`)
+* autochthonous productivity index / freshness index (BIX; `r citet(list("10.1016/j.orggeochem.2009.03.002","10.4319/lo.2010.55.6.2452"))`)
+* classical peaks based on manual peak picking (B, T, A, M, C; `r citet("10.1016/0304-4203(95)00062-3")`)
+* fluorescence index (FI; `r citet("10.4319/lo.2001.46.1.0038")`)
+* humification index (HIX; `r citet("10.1021/es0155276")`)
+* calculating common absorbance (slope) parameters:
+    * absorbance at 254 nm (a254; `r citet("10.1016/0043-1354(72)90017-6")`),
+    * absorbance at 300 nm (a300),
+    * ratio of absorbance at 250 to 365 nm (E2:E3; `r citet("10.1016/0043-1354(87)90086-8")`),
+    * ratio of absorbance at 465 to 665 nm (E4:E6; `r citet("10.1016/0048-9697(87)90478-5")`),
+    * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) `r citep("10.4319/lo.2008.53.3.0955")`,
+    * the wavelength distribution of absorption spectral slopes `r citep("10.4319/lo.2009.54.2.0590")` and
+    * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
 
-staRdom comes with an Rmd template where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through this template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
-As an advanced user, you can just include the functions in whatever calculations you want to do. The vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` of pressing F1 while the cursor is on the function name in the code.
+staRdom comes with an Rmd template ([infos on Rmd](https://rmarkdown.rstudio.com/)) where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through the template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
+As an advanced user, you can just include the functions in whatever calculations you want to do (please see details in the [advanced vignetts](PARAFAC_analysis_of_EEM.html)). The vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` or in RStudio pressing F1 while the cursor is on the function name in the code.
 
 Later in the vignette there is also a chapter about troubleshooting. If you experience problems you may find a useful solution there.
 
@@ -47,7 +55,7 @@ Later in the vignette there is also a chapter about troubleshooting. If you expe
 > This file aims for beginners in R and describes an easy way of calculating EEM peaks and absorbance (slope) parameters by just setting variables (no use of functions) in an Rmd file. The options are limited and a PARAFAC analysis cannot be done this way. This way of more or less automatic analysis bears the risks of missing informations in the data and overlooking problems like outliers and noise in the data. For more possibilities, options and a PARAFAC analysis please refer to the vignette for the [PARAFAC analysis](PARAFAC_analysis_of_EEM.html). 
 
 ## Hint for beginners in R
-If you are a beginner in R you may find some help at the R-Studio online-learning (https://www.rstudio.com/online-learning/#r-programming), The Beginner's Guide to R (https://www.computerworld.com/article/2497143/business-intelligence/business-intelligence-beginner-s-guide-to-r-introduction.html) by Computerworld Magazine or below.
+If you are a beginner in R you may find some help at the R-Studio online-learning (https://www.rstudio.com/online-learning/#r-programming), or Tidyverse for Beginners (https://rladiessydney.org/littlemisstidyverse) by Danielle Navarro.
 
 The package is available on CRAN and can be installed via `install.packages("staRdom")`.
 
@@ -59,9 +67,9 @@ The template is accessible with the command `file.edit(system.file("EEM_simple_a
 
 On top of the template there are the header parameters necessary to create a report with knitr (https://yihui.name/knitr/). Parameters can be changed and just show up in the final report (e.g. author, title) or alter the appearance of the document. It is possible to create reports in other file formats. Please find details at https://rmarkdown.rstudio.com/lesson-9.html.
 
-The directory your generated files are saved in is set by output_dir at line 7. It is important that you keep the ; at the end of the line. Folders are delimited by "/". In RStudio, pressing the tab key while the cursor is in the path can reveal possible folders on your drive.
+The directory your generated files are saved in is set by output_dir at line 7. It is important that you keep the ";" at the end of the line. Folders are delimited by "/". In RStudio, pressing the tab key while the cursor is in the path can reveal possible folders on your drive.
 
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=TRUE, paged.print=FALSE}
 title: "DOM analysis"
 subtitle: "EEM peak picking, absorbance slope parameters"
 date: "`r format(Sys.time(), '%B %e %Y')`"
@@ -89,20 +97,30 @@ Please be sure to use the same file names for your fluorometer data, photometer 
 
 ### Fluorometer data (EEM)
 
-The parameter sample_dir specifies the directory where your data files from the fluorometer are. They have to be in a text format (Cary Eclipse .csv files, Aqualog .dat files, Shimadzu .TXT files, Fluoromax-4 .dat files) (details at eem_read() (https://www.rdocumentation.org/packages/eemR/versions/0.1.5/topics/eem_read)). Samples can be stored in subfolders as well. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. The command system.file() as used in the template EEM_simple_analysis.Rmd is used to access the example data and is not needed if you want to use your own data.
+The parameter sample_dir specifies the directory where your data files from the fluorometer are. They have to be in a text format (Cary Eclipse .csv files, Aqualog .dat files, Shimadzu .TXT files, Fluoromax-4 .dat files). Samples can be stored in subfolders as well. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. The command system.file() as used in the template EEM_simple_analysis.Rmd is used to access the example data and is not needed if you want to use your own data.
 
 ```{r eval=FALSE}
 # Set the directory with your sample files. Please see eem_read() help for details on file formats.
 # Sub folders are read in and are considered different sample sets.
-# Import is done with eem.read() (package eemR), please see details there.
+# Import is done with eem_read() (package eemR), please see details there.
 # The template refers to data coming with the package. Please use your data
 # by setting the path to your files!
 sample_dir = "C:/some_folder/input/fluor/" # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
+# Set the used instrument:
+# Cary Eclipse: "cary" 
+# Aqualog: "aqualog"
+# Shimadzu: "shimadzu"
+# Fluoromax-4: "fluoromax4"
+# And furthermore, without hyphens:
+# generic csv, excitation column-wise: eem_csv
+# generic csv, emission column-wise: eem_csv2
+# Hitachi F-7000: eem_hitachi
+fluorometer = eem_csv
 ```
 
 ### Photometer data (absorbance)
 
-Absorbance data are needed for inner-filter-effect correction and the calculation of the slope parameters is taken from the folder specified by `absorbance_dir`. The filenames or column designations must be identical to the EEM files to link fluorescence and absorbance results from one distinct sample. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. For the calculations the light path length (in cm) used in the photometric measurement has to be set.
+Absorbance data are needed for inner-filter effect correction and the calculation of the slope parameters, They are taken from the folder specified by `absorbance_dir`. The filenames or column designations must be identical to the EEM file names to link fluorescence and absorbance data distinctly. Please be sure, that your file names are unique. File names must not contain " " (space) or "-" (minus) or start with a number. For the calculations the light path length (in cm) used in the photometric measurement has to be set.
 
 ```{r eval=FALSE}
 ### Absorbance data ###
@@ -122,7 +140,7 @@ absorbance_path = 5 # e.g. absorbance_path = 5
 
 ### Meta data
 
-In case your samples measurements differ and you need to set parameters sample-wise, you can set distinct dilution factors, photometer cuvette lengths and raman areas in a table. You can skip that if dilution factors and cuvette lengths are similar and you used blank samples for calculating the raman area. Distinct numbers can then be set as described below. A dilution factor of e.g. 10 means, there is 1 part sample and 9 parts MilliQ added.
+In case your samples measurements differ and you need to set parameters sample-wise, you can set distinct dilution factors, photometer cuvette lengths and Raman areas in a table. You can skip that if dilution factors and cuvette lengths are similar and you used blank samples for calculating the Raman area. Distinct numbers can then be set as described below. A dilution factor of e.g. 10 means, there is 1 part sample and 9 parts MilliQ added.
 
 ```{r eval=FALSE}
 ### Meta data ###
@@ -157,7 +175,7 @@ col_raman_area = "raman"
 
 ### Spectral correction
 
-Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. Correction vectors have to be provided in the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range. Please provide paths to csv tables containing wavelengths in the first column and correction values in the second.
+Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. Correction vectors should be provided in at least the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range. Please provide paths to csv tables containing wavelengths in the first column and correction values in the second.
 
 ```{r eval=FALSE}
 #### Spectral correction of EEMs ####
@@ -179,7 +197,7 @@ Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
 
 ### Results table
 
-If you want to export your picked peaks and slope parameters as a table, set the parameter output_xls `TRUE`. Exporting XLS files needs a properly configured Java environment. If any problems are encountered, a CSV is written to your output directory instead and can be opened with spreadsheet software. Furthermore, you can specify the cell separator and decimal point of you data files in case a CSV file is written. 
+If you want to export your picked peaks and slope parameters as a table, set the parameter `output_xls = TRUE`. Exporting XLS files needs a properly configured Java environment. If any problems are encountered, a CSV is written to your output directory instead and can be opened with a spreadsheet software. Furthermore, you can specify the cell separator and decimal point of you data files in case a CSV file is written. 
 
 ```{r eval=FALSE}
 ### Table output ###
@@ -194,7 +212,7 @@ out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
 
 ### Plots
 
-The script offers several options for exporting plots. `output_overview_png` states whether overview plots containing a number of samples (`overview_number`) are saved in the output directory and `output_single_png` is the parameter if you want to export single PNGs from each sample. The parameter `scale_col` defines if the colour range of all plots is synchronised. If you want to compare different samples, it is easier if the colour code has the same range. Weak peaks in samples with lower fluorophore presence than other samples can be found easier if the colours are not synchronised.
+The script offers several options for exporting plots. `output_overview_png` states whether overview plots containing a number of samples (`overview_number`) each are saved in the output directory and `output_single_png` is the parameter if you want to export single PNGs from each sample. The parameter `scale_col` defines if the colour range of all plots is synchronised. If you want to compare different samples, it is easier if the colour code has the same range. Weak peaks in samples with lower fluorophore presence than other samples can be found easier if the colours are not synchronised.
 
 With the parameters `overview` and `single_plots` these plots can be included in the report using the same parameters `scale_col` and `overview_number`.
 
@@ -231,7 +249,7 @@ single_plots = FALSE # e.g. TRUE
 The data of the analysis can be stored in an Rdata file to keep track of your work or to deepen the analysis later (e.g. PARAFAC).
 
 ```{r eval=FALSE}
-#### Save data for further (R) analysis ####
+#### Save data for further analysis in R ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # File name where data is stored in RData format in the output directory.
 # Set to FALSE if you dont want your eem data saved.
@@ -244,11 +262,11 @@ eem_name = "eem_list"
 
 ## Data correction
 
-Raw data from fluorometers and photometers bear several shortcomings. `r citet("10.1039/c3ay41160e")` addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be used. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. `r citet("10.1002/cem.773")` offer additional information on correction of EEM data.
+Raw data from fluorometers and photometers bear several shortcomings. `r citet("10.1039/c3ay41160e")` addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be applied. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. `r citet("10.1002/cem.773")` offer additional information on correction of EEM data.
 
 ### Absorbance baseline correction
 
-The instrumental baseline drift in absorbance data can be removed by subtracting the mean of the absorbance at high wavelengths. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
+The instrumental baseline drift in absorbance data can be removed by subtracting the mean of the absorbance at high wavelengths `r citep("10.1080/10643389.2017.1309186")`. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
 
 ```{r eval=FALSE}
 #### Normalising absorbance data to baseline ####
@@ -262,7 +280,7 @@ abs_norm = TRUE # e.g. TRUE, c(700,800)
 
 ### Dilution
 
-If samples were diluted before analysis the dilution factor can be set here and the sample will be accordingly corrected. As an example a dilution factor of 10 means a 1:10 dilution (1 part sample and 9 parts milliq). By setting `dilution = "meta"`, data from the meta table is taken and each sample can be diluted differently.
+If samples were diluted before the spectroscopic measurements, the dilution factor can be set here and the sample will be corrected accordingly. As an example a dilution factor of 10 means a 1:10 dilution (1 part sample and 9 parts MilliQ). By setting `dilution = "meta"`, data from the meta table is used and each sample can be diluted differently.
 
 ```{r eval=FALSE}
 ### Correction of diluted samples ###
@@ -275,7 +293,7 @@ If samples were diluted before analysis the dilution factor can be set here and 
 dilution = "meta" # e.g. 1 for undiluted samples
 ```
 
-The reason of diluting a sample can be inner-filter effects that cannot be corrected conveniently if they are too high `r citet("10.4319/lom.2013.11.616")`. On the contrary, absorbance data might be better analysed undiluted. To combine the results of diluted EEM measurements and undiluted absorbance measurements, the following parameter can be set to do this automatically. Please check the results because depending on your sample names, automatically guessed combinations might not be recognised correctly!
+The reason of diluting a sample can be inner-filter effects that cannot be corrected conveniently if they are too high `r citep("10.4319/lom.2013.11.616")`. On the contrary, absorbance data might be better analysed undiluted. To combine the results of diluted EEM measurements and undiluted absorbance measurements, the following parameter can be set to do this automatically. Please check the results because depending on your sample names, automatically guessed combinations might not be recognised correctly!
 
 ```{r eval=FALSE}
 # In case of diluted samples, two absorbance measurements of the
@@ -290,7 +308,7 @@ dil_sample_name_correction = FALSE
 ```
 
 ### Spectral correction
-The spectral correction is described above. Here you can just set, whether a spectral correction should be applied.
+The spectral correction is described above. Here you can set, whether a spectral correction should be applied. Correction vectors need to bet supplied above.
 ```{r eval=FALSE}
 #### Spectral correction of EEMs ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -321,7 +339,7 @@ cut_range_to_smallest = FALSE # e.g. FALSE
 
 ### Blank correction
 
-Blank samples are data from measuring milli-Q. Systematic biases can be removed by subtracting the blank sample from each sample. The blank samples have to contain nano, miliq, milliq, mq or blank (cases are ignored) in the file name and has to be in the same (sub)folder as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It needs to be measured with each sample set (e.g. once a day) `r citep("10.1039/c3ay41160e")` and kept together in one folder.
+Blank samples are data from measuring MilliQ. Systematic biases can be removed by subtracting the blank sample from each sample. The blank samples have to contain "nano", "miliq", "milliq", "mq" or "blank" (cases are ignored) in the file name. Regular samples must not contain one of these words. Blanks have to be in the same (sub)folder as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It needs to be measured with each sample set (e.g. once a day) `r citep("10.1039/c3ay41160e")` and kept together in one folder.
 
 ```{r eval=FALSE}
 ### Blank correction ###
@@ -336,7 +354,7 @@ blank_correction = FALSE # e.g. FALSE
 
 ### Correct inner filter effects
 
-The inner-filter effect is caused by absorbance that blocks light in the pathway from the source to the sensor during fluorescence measurements. To apply the inner-filter-effects correction described in `r citet("10.4319/lom.2013.11.616")`, absorbance data have to be measured for each sample. By knowing the exact absorbance, this effect can be mathematically corrected. In case of a total absorbance greater than 1.5, the sample has to be diluted because otherwise, the linear relationship is not appropriate anymore. You can do this here.
+The inner-filter effect is caused by absorbance that blocks light in the pathway from the source to the sensor during fluorescence measurements. To apply the inner-filter effects correction described in `r citet("10.4319/lom.2013.11.616")`, absorbance data have to be measured for each sample. By knowing the exact absorbance, this effect can be mathematically corrected. In case of a total absorbance greater than 1.5, the sample has to be diluted because otherwise, the linear relationship is not appropriate anymore.
 
 ```{r eval=FALSE}
 ### Inner filter effect correction ###
@@ -348,9 +366,9 @@ ife_correction = TRUE # e.g. FALSE
 
 ### Remove and interpolate scattering
 
-Diagonal scatter peaks hinder the analysis of EEM data as they usually are much greater than peaks from DOM. They can be partly removed by subtracting the blank sample as described above. Diagonal peaks are called Rayleigh and Raman peaks of first and second order. They can also mak e a PARAFAC analysis impossible. `r citet("10.1016/s0003-2670(00)81226-x")` `r citet("10.1007/978-0-387-46312-4")` and `r citet("10.1038/348432a0")` offer additional information.
+Diagonal scatter peaks hinder the analysis of EEM data as they usually are much greater than peaks from DOM. They can be partly removed by subtracting the blank sample as described above. Diagonal peaks are called Rayleigh and Raman peaks of first and second order. They can also make a PARAFAC analysis impossible. `r citet("10.1016/s0003-2670(00)81226-x")`, `r citet("10.1007/978-0-387-46312-4")` and `r citet("10.1038/348432a0")` offer additional information.
 
-The width of the removed scatter slot can be determined. Make sure not to lose too much data while still removing the whole peak. If you use the interpolation below, a remaining diagonal peak hints at insufficient width. `r citet("10.1002/cem.978")` and `r citet("10.1016/j.marchem.2004.02.006")` suggest an interpolation of the removed scattering prior to a PARAFAC analysis and offer a description.
+The width of the removed scatter slot can be set. Make sure not to lose too much data while still removing the whole peak. If you use the interpolation below, a remaining diagonal peak hints at insufficient width. `r citet("10.1002/cem.978")` and `r citet("10.1016/j.marchem.2004.02.006")` suggest an interpolation of the removed scattering prior to a PARAFAC analysis and offer a description.
 
 ```{r eval=FALSE}
 ### Remove scattering and interpolate missing data ###
@@ -371,7 +389,7 @@ interpolation <- TRUE # e.g. TRUE
 
 ### Raman normalisation
 
-Fluorescence intensities can be different from analyses on different fluorometers or on the same fluorometer with different settings. The so-called Raman normalisation makes samples comparable and normalises fluorescence intensities to Raman units. In staRdom, it can be applied in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation `r citep("10.1366/000370209788964548")` or you give a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
+Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. The so-called Raman normalisation makes samples comparable and normalises fluorescence intensities to Raman units. In staRdom, it can be applied in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation `r citep("10.1366/000370209788964548")` or you give a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
 
 ```{r eval=FALSE}
 ### Raman normailsation ###
@@ -389,7 +407,7 @@ raman_normalisation = "blank" # e.g. "blank", FALSE, 160, "meta"
 
 ### Smoothing
 
-For calculating the peaks, the EEMs can be smoothed. Peaks and indices are calculated from smoothed EEMs but they are not saved. The smoothing parameter specifies the size of a moving average window in nm.
+For calculating the peaks, the EEMs can be smoothed. If so, peaks and indices are calculated from smoothed EEMs but these are not saved. The smoothing parameter specifies the size of a moving average window in nm.
 
 ```{r eval=FALSE}
 ### Smooth data for peak picking ###
@@ -426,7 +444,7 @@ If you reach the box below in the template, all parameters are set and you can f
 #############################################
 ```
 
-You can run the script by clicking on the Knit button in the toolbar in RStudio. At the first run of the script you may be asked if you want to install several packages. Please confirm. This can take some time. Your generated files are placed in your specified output folder. In case you experience problems, consider to start over with a "fresh" template.
+You can run the script by clicking the "Knit" button in the toolbar of RStudio. At the first run of the script you may be asked if you want to install several packages. Please confirm. This can take some time. Your generated files are placed in your specified output folder. In case you experience problems, consider to start over with a "fresh" template.
 
 # Installation
 
@@ -459,15 +477,16 @@ Install RStudio by running the setup.
 
 Optionally(!) you need a [Java runtime environment](https://www.java.com/de/download/) to import data from XLS files and a TeX environment (e.g. [MikTeX](http://miktex.org) for Windows) to export PDF files. You can use the script to the full extend without those.
 
+
 # Troubleshooting
 
 ## Peaks table shows NAs
 
-NA stands for 'Not available' and means the wavelength range of the certain peak is missing. Be sure that you measured the range of the certain peak in the lab.
+NA stands for 'Not available' and means the wavelength range of the certain peak is missing. Be sure that you measured the range of the certain peak on your instrument.
 
 ## Only some sample plots show peaks
 
-If samples differ considerably in the amount of DOM, scaling might be a problem. You can scale each sample plot separately by setting scale_col to FALSE.
+If samples differ considerably in the amount of DOM, scaling might be a problem. You can scale each sample plot separately by setting `scale_col = FALSE`.
 
 ## I cannot read csv files in MS Excel
 
@@ -477,7 +496,7 @@ https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizar
 
 ## I get error messages concerning my output directory
 
-Be sure the specified hardware existis on your system (e.g. C:/) and you have write access.
+Be sure the specified drive and folder existis on your system (e.g. C:/) and you have write access.
 
 # References
 ```{r message=FALSE, warning=FALSE, include=FALSE}

@@ -6,7 +6,10 @@
 #' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'.
 #' @param fill_max sets the maximum fluorescence value for the colour scale. This is mainly used by other functions, and makes different plots visually comparable.
 #' @param redneg logical, whether negative values should be coloured discreet.
-#' @param ... parameters passed on to \code{ggplot}.
+#' @param contour logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}
+#' @param interpolate logical, whether fluorescence should be interpolated, see \code{\link[ggplot2]{geom_raster}}
+#' @param eemlist_order logical, in case of an eemlist, the order of samples in the plot is the same as in the eemlist, alphabetically otherwise
+#' @param ... parameters passed on to \code{\link[ggplot2]{ggplot}}.
 #'
 #' @details The data can be of different sources:
 #'     eem: a single EEM spectrum is plotted
@@ -15,6 +18,10 @@
 #'     parafac: a PARAFAC model, the components are plotted then.
 #'
 #'     Using redneg you can give negative values a reddish colour. This can help identifying these parts in samples or components. Negative values are physically not possible and can only be the result of measuring errors, model deviations and problems with interpolated values.
+#'
+#'      Interpolation (interpolate = TRUE) leeds to smoother plots. The default is FALSE because it might cover small scale inconsistencies.
+#'
+#'      Contours (contour = TRUE)can be added to the EEM plots.
 #'
 #'     A colour palette can be specified using the argument colpal.
 #'
@@ -30,8 +37,10 @@
 #' ## plotting two distinct samples
 #' data(eem_list)
 #' eem_names(eem_list)
-#' eem <- eem_extract(eem_list,c("^dreem_667sf$", "^dreem_661sf$"),keep=TRUE)
+#' eem <- eem_extract(eem_list,c("^d667sf$", "^d661sf$"),keep=TRUE)
 #' ggeem(eem)
+#' ggeem(eem, interpolate = TRUE)
+#' ggeem(eem, contour = TRUE)
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
 
 #' @rdname ggeem
@@ -42,9 +51,10 @@ ggeem.default <- function(data, fill_max=FALSE, ...){
 
 #' @rdname ggeem
 #' @export
-ggeem.eemlist <- function(data,fill_max=FALSE,...)
+ggeem.eemlist <- function(data, fill_max = FALSE, eemlist_order = TRUE, ...)
 {
   table <- data %>% lapply(as.data.frame) %>% bind_rows()
+  if(eemlist_order) table$sample <- table$sample %>% factor(levels = table$sample %>% unique())
   #filename <- paste0('EEM_spectra_',suffix,format(Sys.time(), "%Y%m%d_%H%M%S"))
   ggeem(table,fill_max=fill_max,...)
 }
@@ -62,6 +72,8 @@ ggeem.eem <- function(data,fill_max=FALSE,...)
 #' @export
 ggeem.parafac <- function(data,fill_max=FALSE,...)
 {
+  #data("pf_models")
+  #data <- pf4[[1]]
   table <- data %>% eempf_comp_mat() #eem_list
   table <- lapply(table %>% names(),function(name){
     table[[name]] %>% mutate(sample = name)
@@ -73,26 +85,29 @@ ggeem.parafac <- function(data,fill_max=FALSE,...)
 
 #' @rdname ggeem
 #' @export
-ggeem.data.frame <- function(data,fill_max=FALSE,redneg = FALSE, ...)
+ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALSE, interpolate = FALSE, ...)
 {
+  #data <- table
   if(!exists("colpal")){
     colpal <- rainbow
     # warning("using rainbow colour palette")
   }
-  table <- data
-  breaksx <- table %>% select(ex) %>% unique() %>% filter(as.numeric(ex)%%50 == 0) %>% unlist()
-  breaksy <- table %>% select(em) %>% unique() %>% filter(as.numeric(em)%%50 == 0) %>% unlist()
+  table <- data %>%
+    mutate_at(vars(ex,em,value),as.numeric)
   if(!is.numeric(fill_max)){
     fill_max <- table$value %>% max(na.rm=TRUE)
   }
   #values_fill <- seq(0,fill_max,length.out = 55)
-  plot <- table %>% ggplot()+
-    geom_raster(aes(x=ex,y=em,fill=value))+ #,interpolate=TRUE
+  plot <- table %>%
+    ggplot(aes(x = ex, y = em, z = value))+
+    geom_raster(aes(fill = value), interpolate = interpolate)+
     #scale_fill_gradient2(low="blue",mid="yellow",high="red")
-    scale_x_discrete(breaks = breaksx) +
-    scale_y_discrete(breaks = breaksy) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     facet_wrap(~sample)
+  if(contour){
+    plot <- plot +
+      geom_contour(colour = "black", size = 0.3, ...)
+  }
   if(table$value %>% min(na.rm=TRUE) < 0){
     vals <- c(table$value %>% min(na.rm=TRUE),seq(from=0,to=fill_max,length.out = 51))
     vals <- (vals - min(vals))/diff(range(vals))

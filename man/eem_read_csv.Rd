@@ -2,12 +2,12 @@
 % Please edit documentation in R/data_functions.R
 \name{eem_read_csv}
 \alias{eem_read_csv}
-\title{Import EEMs from generic csv tables}
+\title{Import EEMs from generic csv tables (deprecated)}
 \usage{
 eem_read_csv(path, col = "ex", recursive = TRUE,
   is_blank_corrected = FALSE, is_scatter_corrected = FALSE,
   is_ife_corrected = FALSE, is_raman_normalized = FALSE,
-  manufacturer = "unknown", verbose = FALSE, ...)
+  manufacturer = "unknown", ...)
 }
 \arguments{
 \item{path}{path to file(s), either a filename or a folder}
@@ -26,15 +26,15 @@ eem_read_csv(path, col = "ex", recursive = TRUE,
 
 \item{manufacturer}{string specifying manufacturer of instrument}
 
-\item{verbose}{logical, whether additional information is provided}
-
-\item{...}{parameters passed on to \code{\link[data.table]{fread}}}
+\item{...}{parameters from other functions, currently not used}
 }
 \description{
+This function is deprecate, please use \code{\link[eemR]{eem_read}}(..., import_function = \code{\link{eem_csv}}) or eem_read(..., import_function = \code{\link{eem_csv2}}) instead.
 EEM data is loaded from generic files. First column and first row contains wavelength values. The other values are to be plain numbers. \code{\link[data.table]{fread}} is used to read the table. It offers a lot of helpful functions (e.g. skipping any number n of header lines by adding `skip = n`)
 }
 \examples{
 eems <- system.file("extdata/EEMs",package="staRdom")
 eem_list <- eem_read_csv(eems)
 
+eem_list
 }

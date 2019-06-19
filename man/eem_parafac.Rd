@@ -48,6 +48,7 @@ ctol <- 10^-5 # tolerance for parafac
 
 pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
+
 }
 }
 \seealso{

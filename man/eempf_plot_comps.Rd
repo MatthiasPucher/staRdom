@@ -4,7 +4,7 @@
 \alias{eempf_plot_comps}
 \title{Plot all components of PARAFAC models}
 \usage{
-eempf_plot_comps(pfres, type = 1, names = TRUE)
+eempf_plot_comps(pfres, type = 1, names = TRUE, contour = FALSE, ...)
 }
 \arguments{
 \item{pfres}{list of PARAFAC models}
@@ -12,6 +12,10 @@ eempf_plot_comps(pfres, type = 1, names = TRUE)
 \item{type}{1 for a colour map and 2 for em and ex wavelength loadings}
 
 \item{names}{logical, whether names of components should be written into the plot}
+
+\item{contour}{in case of 3 dimensional component plots, contours are added}
+
+\item{...}{arguments passed on to other functions}
 }
 \value{
 object of class ggplot
@@ -23,6 +27,7 @@ The components can be plottet in two ways: either as a colour map or as two line
 data(pf_models)
 
 eempf_plot_comps(pf4, type = 1)
+eempf_plot_comps(pf4, type = 2)
 eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 
 }

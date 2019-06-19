@@ -169,8 +169,8 @@ eem_scale_ext <- function(data){
   range
 }
 
-## reduce all samples to biggest wavelength range covered by all samples
-#' Reduce wavelength range of EEM spectra to widest available in the whole sample set.
+## Reduce all samples to wavelengths present in all samples.
+#' Remove wavelengths, that are missing in at least one sample form the whole set.
 #'
 #' @param data data of EEM samples as eemlist
 #' @param verbose states whether additional information is given in the command line
@@ -183,17 +183,61 @@ eem_scale_ext <- function(data){
 #' @export
 #'
 #' @examples
+#' require(dplyr)
+#'
 #' data(eem_list)
-#' eem_red2smallest(eem_list)
+#'
+#' eem_list_red <- eem_red2smallest(eem_list)
+#'
+#' # create an eemlist where data is missing
+#' eem_list2 <- eem_exclude(eem_list,
+#'     list("ex" = c(280,290,350),
+#'          "em" = c(402,510),
+#'          "sample" = c()))
+#'
+#' # modify names of samples with missing data
+#' eem_names(eem_list2) <- paste0("x",eem_names(eem_list2))
+#'
+#' # combined the lists with and without missing data
+#' eem_list3 <- eem_bind(eem_list,eem_list2)
+#' #ggeem(eem_list3)
+#'
+#' # reduce the data in the whole sampleset to the smallest wavelengths that are present in all samples
+#' eem_list4 <- eem_red2smallest(eem_list3)
+#' #ggeem(eem_list4)
+#'
 eem_red2smallest <- function(data,verbose=FALSE){
-  extr <- data %>% eem_getextreme()
-  if(verbose) cat(paste0("Samples are cut to ex from ",extr[['ex']][1]," to ",extr[['ex']][2]," and em from ",extr[['em']][1]," to ",extr[['em']][2]," \n"))
-  data %>% eem_range(ex=extr[["ex"]], em=extr[["em"]])
+  ems <- lapply(data,`[[`,"em")
+  ems
+  emspres <- ems %>%
+    unlist() %>%
+    unique()
+  emsTF <- lapply(ems,function(em){
+    emspres %in% em
+  })
+  emspresTF <- emsTF %>%
+    unlist() %>%
+    matrix(nrow = length(emsTF), byrow = TRUE) %>%
+    apply(2,all)
+
+  exs <- lapply(data,`[[`,"ex")
+  exspres <- exs %>%
+    unlist() %>%
+    unique()
+  exsTF <- lapply(exs,function(ex){
+    exspres %in% ex
+  })
+  exspresTF <- exsTF %>%
+    unlist() %>%
+    matrix(nrow = length(exsTF), byrow = TRUE) %>%
+    apply(2,all)
+
+  eem_exclude(data,list(ex = exspres[!exspresTF], em = emspres[!emspresTF]))
 }
 
-#' Load all eemlist obects saved in different Rdata files in folder
+#' Load all eemlist obects saved in different Rdata or RDa files in a folder.
 #'
-#' @description Reads Rdata files with one eemlist each. eemlists are combined into one and returned.
+#' @description Reads Rdata and RDa files with one eemlist each. The eemlists are combined into one and returned.
 #'
 #' @param dir folder where RData files are saved
 #'
@@ -209,7 +253,7 @@ eem_red2smallest <- function(data,verbose=FALSE){
 #' # eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
 #' }
 eem_import_dir <- function(dir){
-  eem_files <- dir(dir, pattern=".RData") %>%
+  eem_files <- dir(dir, pattern=".RData$|.RDa$", ignore.case = TRUE) %>%
     paste0(dir,"/",.)
 
   for(file in eem_files){
@@ -264,7 +308,7 @@ eem_load_dreem <- function(){
   dreem_raw <- tempfile()
   download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
   dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
-    R.matlab::readMat()
+    readMat()
   unlink(dreem_raw)
 
   eem_list <- lapply(dreem_data$filelist.eem, function(file){
@@ -284,9 +328,10 @@ eem_load_dreem <- function(){
     `class<-`("eemlist")
 }
 
-#' Import EEMs from generic csv tables
+#' Import EEMs from generic csv tables (deprecated)
 #'
-#' @description EEM data is loaded from generic files. First column and first row contains wavelength values. The other values are to be plain numbers. \code{\link[data.table]{fread}} is used to read the table. It offers a lot of helpful functions (e.g. skipping any number n of header lines by adding `skip = n`)
+#' @description This function is deprecate, please use \code{\link[eemR]{eem_read}}(..., import_function = \code{\link{eem_csv}}) or eem_read(..., import_function = \code{\link{eem_csv2}}) instead.
+#' EEM data is loaded from generic files. First column and first row contains wavelength values. The other values are to be plain numbers. \code{\link[data.table]{fread}} is used to read the table. It offers a lot of helpful functions (e.g. skipping any number n of header lines by adding `skip = n`)
 #'
 #' @param path path to file(s), either a filename or a folder
 #' @param col either "ex" or "em", what wavelengths are in the columns
@@ -296,8 +341,7 @@ eem_load_dreem <- function(){
 #' @param is_ife_corrected logical, wether inner-filter effect correction was done
 #' @param is_raman_normalized logical, wether raman normalisation applied
 #' @param manufacturer string specifying manufacturer of instrument
-#' @param verbose logical, whether additional information is provided
-#' @param ... parameters passed on to \code{\link[data.table]{fread}}
+#' @param ... parameters from other functions, currently not used
 #'
 #' @export
 #'
@@ -307,31 +351,18 @@ eem_load_dreem <- function(){
 #' eems <- system.file("extdata/EEMs",package="staRdom")
 #' eem_list <- eem_read_csv(eems)
 #'
-eem_read_csv <- function(path, col = "ex", recursive = TRUE, is_blank_corrected = FALSE, is_scatter_corrected = FALSE, is_ife_corrected = FALSE, is_raman_normalized = FALSE, manufacturer = "unknown", verbose = FALSE,...){
-  #path <- "./inst/extdata/EEMs/"
-  stopifnot(file.exists(path))
-  if(file.info(path)$isdir) {
-    path <- dir(path,recursive = recursive) %>%
-      paste0(path,"/",.)
+#' eem_list
+eem_read_csv <- function(path, col = "ex", recursive = TRUE, is_blank_corrected = FALSE, is_scatter_corrected = FALSE, is_ife_corrected = FALSE, is_raman_normalized = FALSE, manufacturer = "unknown", ...){
+  #path <- "./inst/extdata/EEMs"
+  warning("This function is deprecated, please use eem_read(..., import_function = eem_csv) or eem_read(..., import_function = eem_csv2) instead!")
+  if(col == "em"){
+    csv_func <- eem_csv2
+  } else {
+    csv_func <- eem_csv
   }
-  eem_list <- lapply(path, function(file){
-    #file <- path[7]
-    if(verbose) cat("loading",file,"...", fill=TRUE)
-    x <- data.table::fread(file, header = TRUE, ...)
-    if(col == "ex"){
-      ex <- colnames(x)[-1] %>% as.numeric()
-      em <- x[[1]]
-    } else if(col == "em"){
-      em <- colnames(x)[-1] %>% as.numeric()
-      ex <- x[[1]]
-    }
-    x <- x[,-1] %>% as.matrix() %>% unname()
-    x <- x[!is.na(em),!is.na(ex)]
-    ex <- ex[!is.na(ex)]
-    em <- em[!is.na(em)]
-    if(col == "em") x <- t(x)
-    sample <- sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(file))
-    eem <- list(sample = sample, x = x, ex = ex, em = em, location = dirname(file))
+  eems <- eem_read(path, recursive = recursive, import_function = csv_func)
+
+  lapply(eems, function(eem){
     class(eem) <- "eem"
     attr(eem, "is_blank_corrected") <- is_blank_corrected
     attr(eem, "is_scatter_corrected") <- is_scatter_corrected

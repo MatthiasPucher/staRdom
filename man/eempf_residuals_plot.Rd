@@ -6,7 +6,7 @@
 \usage{
 eempf_residuals_plot(pfmodel, eem_list, res_data = NULL, spp = 5,
   select = NULL, residuals_only = FALSE,
-  cores = parallel::detectCores(logical = FALSE))
+  cores = parallel::detectCores(logical = FALSE), contour = FALSE)
 }
 \arguments{
 \item{pfmodel}{object of class parafac containing the generated model}
@@ -22,6 +22,8 @@ eempf_residuals_plot(pfmodel, eem_list, res_data = NULL, spp = 5,
 \item{residuals_only}{plot only residuals}
 
 \item{cores}{number of cores to use for parallel processing}
+
+\item{contour}{logical, states whether contours should be plotted}
 }
 \value{
 several ggplot objects

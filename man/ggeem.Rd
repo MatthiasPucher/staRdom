@@ -13,22 +13,30 @@ ggeem(data, fill_max = FALSE, ...)
 
 \method{ggeem}{default}(data, fill_max = FALSE, ...)
 
-\method{ggeem}{eemlist}(data, fill_max = FALSE, ...)
+\method{ggeem}{eemlist}(data, fill_max = FALSE, eemlist_order = TRUE,
+  ...)
 
 \method{ggeem}{eem}(data, fill_max = FALSE, ...)
 
 \method{ggeem}{parafac}(data, fill_max = FALSE, ...)
 
-\method{ggeem}{data.frame}(data, fill_max = FALSE, redneg = FALSE, ...)
+\method{ggeem}{data.frame}(data, fill_max = FALSE, redneg = FALSE,
+  contour = FALSE, interpolate = FALSE, ...)
 }
 \arguments{
 \item{data}{eem, eemlist, parafac or data.frame. The details are given under 'Details'.}
 
 \item{fill_max}{sets the maximum fluorescence value for the colour scale. This is mainly used by other functions, and makes different plots visually comparable.}
 
-\item{...}{parameters passed on to \code{ggplot}.}
+\item{...}{parameters passed on to \code{\link[ggplot2]{ggplot}}.}
+
+\item{eemlist_order}{logical, in case of an eemlist, the order of samples in the plot is the same as in the eemlist, alphabetically otherwise}
 
 \item{redneg}{logical, whether negative values should be coloured discreet.}
+
+\item{contour}{logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}}
+
+\item{interpolate}{logical, whether fluorescence should be interpolated, see \code{\link[ggplot2]{geom_raster}}}
 }
 \value{
 a ggplot object
@@ -45,6 +53,10 @@ The data can be of different sources:
 
     Using redneg you can give negative values a reddish colour. This can help identifying these parts in samples or components. Negative values are physically not possible and can only be the result of measuring errors, model deviations and problems with interpolated values.
 
+     Interpolation (interpolate = TRUE) leeds to smoother plots. The default is FALSE because it might cover small scale inconsistencies.
+
+     Contours (contour = TRUE)can be added to the EEM plots.
+
     A colour palette can be specified using the argument colpal.
 
     Plotting distinct samples can be done using \code{\link{eem_extract}}. Please see example.
@@ -53,6 +65,8 @@ The data can be of different sources:
 ## plotting two distinct samples
 data(eem_list)
 eem_names(eem_list)
-eem <- eem_extract(eem_list,c("^dreem_667sf$", "^dreem_661sf$"),keep=TRUE)
+eem <- eem_extract(eem_list,c("^d667sf$", "^d661sf$"),keep=TRUE)
 ggeem(eem)
+ggeem(eem, interpolate = TRUE)
+ggeem(eem, contour = TRUE)
 }

@@ -19,7 +19,7 @@ You can use this table as an overview of your files and/or as a template for cre
 }
 \examples{
 folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
-eem_list <- eem_read_csv(folder)
+eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 data(absorbance)
 
 eem_metatemplate(eem_list,absorbance)

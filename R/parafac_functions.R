@@ -36,6 +36,7 @@
 #'
 #' pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
 #'     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
+#'
 #' }
 eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
   #eem_list <- eem_list %>% eem_red2smallest()
@@ -59,6 +60,9 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
     if(cores > 1){
     stopCluster(cl)
     }
+    if(cpresult$cflag != 0){
+      warning("The PARAFAC model with ",comp," component",ifelse(comp > 1, "s", "")," did not converge! Increasing the number of initialisations (nstart) might solve the problem.")
+    }
     attr(cpresult,"norm_factors") <- attr(eem_array,"norm_factors")
     rownames(cpresult$B) <- eem_list[[1]]$em
     rownames(cpresult$C) <- eem_list[[1]]$ex
@@ -67,6 +71,11 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
     colnames(cpresult$A) <- labComp
     colnames(cpresult$B) <- labComp
     colnames(cpresult$C) <- labComp
+    # small issue with multiway: slightly negative values are possible despite using nonnegative constraints
+    non <- grepl("no|unsmpn",const)
+    if(non[1]) cpresult$A[cpresult$A < 0] <- 0
+    if(non[2]) cpresult$B[cpresult$B < 0] <- 0
+    if(non[3]) cpresult$C[cpresult$C < 0] <- 0
     return(cpresult)
   })
   mostattributes(res) <- attributes(eem_array)
@@ -605,7 +614,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
       if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
     }
     cat(paste0("Calculating PARAFAC models with split-half data..."),fill=TRUE)
-    pb <- txtProgressBar(max = 6, style=3)
+    pb <- txtProgressBar(max = length(spl_eems), style=3)
   }
   fits <- lapply(1:length(spl_eems),function(i){
     mod <- eem_parafac(spl_eems[[i]],comps=comps,normalise = normalise,maxit=maxit,nstart = nstart, cores = cores,ctol = ctol,verbose=FALSE,...)
@@ -843,6 +852,7 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'
 #' @param pfmodel PARAFAC model
 #' @param file string, path to outputfile. The directory must exist, the file will be created or overwritten if already present.
+#' @param Fmax rescale modes so the A mode shows the maximum fluorescence. As openfluor does not accept values above 1, this is a way of scaling the B and C modes to a range between 0 and 1.
 #'
 #' @return txt file
 #' @export
@@ -852,7 +862,7 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #' @examples
 #'   data(pf_models)
 #'   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"))
-eempf_openfluor <- function(pfmodel,file){
+eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
   if(!dir.exists(dirname(file.path(file)))){
     stop("The path to your file does not contain an existing directory. Please enter a correct path!")
   }
@@ -932,6 +942,7 @@ eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NU
 #'
 #' @param pfmodel PARAFAC model
 #' @param export file path to export table
+#' @param Fmax rescale modes so the A mode shows the maximum fluorescence
 #' @param ... additional parameters passed to \code{\link[utils]{write.table}}
 #'
 #' @return data frame
@@ -946,7 +957,9 @@ eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NU
 #' data(pf_models)
 #'
 #' factor_table <- eempf_export(pf4[[1]])
-eempf_export<- function(pfmodel,export = NULL,...){
+eempf_export<- function(pfmodel,export = NULL, Fmax = TRUE,...){
+  pfmodel <- norm2A(pfmodel)
+  if(Fmax) pfmodel <- eempf_rescaleBC(pfmodel)
   tabs <- list(pfmodel$A %>%
                  as.data.frame() %>%
                  tibble::rownames_to_column("sample") #%>%
@@ -997,7 +1010,7 @@ eempf_export<- function(pfmodel,export = NULL,...){
 eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
   arr <- eem_list %>% eem2array()
   if(!is.null(attr(eem_list,"norm_factors"))) arr <- arr %>% norm_array()
-  multiway::corcondia(arr,pfmodel,divisor=divisor)
+  corcondia(arr,pfmodel,divisor=divisor)
 }
 
 #' Calculating EEMqual which is an indicator of a PARAFAC model's quality

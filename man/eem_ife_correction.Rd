@@ -21,7 +21,7 @@ Calls \code{\link[eemR]{eem_inner_filter_effect}} for each sample to use differe
 }
 \examples{
 folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
-eem_list <- eem_read(folder)
+eem_list <- eem_read(folder, import_function = "cary")
 data(absorbance)
 
 eem_ife_correction(eem_list,absorbance,5)

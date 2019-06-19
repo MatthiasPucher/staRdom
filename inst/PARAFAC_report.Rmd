@@ -11,7 +11,11 @@ output:
     toc_float: true
     code_folding: hide
 ---
-This report was created using the R package staRdom version `r packageVersion("staRdom")`, (`r packageDescription("staRdom")$Author`, `r unlist(strsplit(packageDescription("staRdom")$Date,"-"))[1]`)
+This report was created using the R package staRdom version `r packageVersion("staRdom")`.
+
+```{r message=TRUE, warning=TRUE, include=FALSE, paged.print=FALSE}
+pfmodel <- norm2A(pfmodel)
+```
 
 # Model summary
 
@@ -87,8 +91,8 @@ eempf_leverage_plot(cpl)
 # Check input data
 
 ```{r}
-if(!is.null(eem_list) & !is.null(abs_data)){
-  eem_checkdata(eem_list,abs_data,meta,metacolumns = metacolumns, error = FALSE)
+if(!is.null(eem_list) & !is.null(absorbance)){
+  eem_checkdata(eem_list,absorbance,meta,metacolumns = metacolumns, error = FALSE)
 } else {
   cat("Due to missing EEM and absorbance data this check was skipped!", fill=TRUE)
 }

@@ -24,7 +24,7 @@ Code based on \code{\link[eemR]{eem_raman_normalisation}}.
 }
 \examples{
 folder <- system.file("extdata/EEMs",package="staRdom")
-eem_list <- eem_read_csv(folder)
+eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 blank <- eem_extract(eem_list,sample ="blank", keep = TRUE)
 
 eem_raman_area(blank)

@@ -31,7 +31,7 @@ The returned list contains character vectors with sample names where possible pr
 }
 \examples{
 folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
-eem_list <- eem_read_csv(folder)
+eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 
 abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
 absorbance <- absorbance_read(abs_folder)

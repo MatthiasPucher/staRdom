@@ -16,7 +16,16 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
-1.0.12
+1.0.12 to 1.0.13
+  adapted to work with eemR 1.0.1
+  added optional contours to plots
+  ensured nonnegative values with nonnegative constraints
+  corrected absorbance problem with the PARAFAC report
+  models and samples are plotted in same order as the list of models or samples
+  spectral correction is not limited to integer values anymore
+  solved issue with axis breaks
+
+1.0.11 to 1.0.12
   The PARAFAC tutorial was improved and extended again.
   all examples are taken from drEEM now
   eem_read_csv function to read EEM data from plain csv files

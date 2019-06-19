@@ -9,6 +9,7 @@
 #' The plots are intended to help with a suitable number of components.
 #'
 #' @param pfres list of several objects of class parafac
+#' @param ... arguments passe don to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}
 #'
 #' @return 3 objects of class ggplot
 #' @export
@@ -21,11 +22,11 @@
 #'
 #' eempf_compare(pf4)
 #' }
-eempf_compare <- function(pfres){
+eempf_compare <- function(pfres,...){
   #pfres <- pf4
-  p1 <- eempf_fits(pfres)
-  p2 <- eempf_plot_comps(pfres,type=1)
-  p3 <- eempf_plot_comps(pfres,type=2)
+  p1 <- eempf_fits(pfres,...)
+  p2 <- eempf_plot_comps(pfres,type=1,...)
+  p3 <- eempf_plot_comps(pfres,type=2,...)
   p1 %>% print()
   p2 %>% print()
   p3 %>% print()
@@ -35,6 +36,7 @@ eempf_compare <- function(pfres){
 #' Fits vs. components of PARAFAC models are plotted
 #'
 #' @param pfres list of objects of class parafac
+#' @param ... arguments passed on to ggplot
 #'
 #' @return object of class ggplot
 #' @export
@@ -45,14 +47,14 @@ eempf_compare <- function(pfres){
 #' data(pf_models)
 #'
 #' eempf_fits(pf4)
-eempf_fits <- function(pfres){
+eempf_fits <- function(pfres,...){
   #pfres <- pf1
   if(is.null(names(pfres))) names <- rep(NA,length(pfres)) else names <- names(pfres) #paste0("model",1:length(pfres))
   pl <- data.frame(comps=lapply(pfres,"[[","A") %>% lapply(ncol) %>% unlist(),
                    fit=lapply(pfres,"[[","Rsq") %>% unlist(), mod_name = names) %>%
     rowwise() %>%
     mutate(comps = ifelse(is.na(mod_name),paste0(comps, " comps"),paste0(mod_name," (",comps, " comps)"))) %>%
-    ggplot(aes(x=comps,y=fit))+
+    ggplot(aes(x=comps,y=fit),...)+
     labs(x="model", y="model fit (Rsq)")+
     geom_point(size=5,shape=4)
   pl
@@ -65,6 +67,8 @@ eempf_fits <- function(pfres){
 #' @param pfres list of PARAFAC models
 #' @param type 1 for a colour map and 2 for em and ex wavelength loadings
 #' @param names logical, whether names of components should be written into the plot
+#' @param contour in case of 3 dimensional component plots, contours are added
+#' @param ... arguments passed on to other functions
 #'
 #' @return object of class ggplot
 #' @export
@@ -77,21 +81,15 @@ eempf_fits <- function(pfres){
 #' data(pf_models)
 #'
 #' eempf_plot_comps(pf4, type = 1)
+#' eempf_plot_comps(pf4, type = 2)
 #' eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 #'
-eempf_plot_comps <- function(pfres,type=1,names=TRUE){
-  #pfres <- pf4
-  #pfres <- list(pf4[[1]],pf4[[1]])
-  #names(pfres) <- c("A","B")
+eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
   c <- pfres %>% lapply(eempf_comp_mat)
   if(is.null(names(c))) names(c) <- paste0("model",seq(1:length(c)))
-  #names(c)
   tab <- lapply(1:length(c),function(n){
-    #n <- 1
-    #print(n)
     c1 <- c[[n]]
     mod_name <- names(c)[n]
-    #print(modname)
     nc1 <- length(c1)
     nc2 <- 0
     lapply(c1,function(c2){
@@ -101,16 +99,13 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE){
     }) %>%
       bind_rows()
   }) %>%
-    bind_rows()
-  #tab$modname %>% unique()
+    bind_rows() %>%
+    mutate(modname = factor(modname,levels = names(c))) %>%
+    mutate_at(vars(ex,em,value),as.numeric)
   fill_max <- tab$value %>% max(na.rm=TRUE)
   vals <- seq(from=0,to=fill_max,length.out = 51)
   vals <- (vals - min(vals))/diff(range(vals))
-  breaksx <- tab %>% select(ex) %>% unique() %>% filter(as.numeric(ex)%%50 == 0) %>% unlist()
-  breaksy <- tab %>% select(em) %>% unique() %>% filter(as.numeric(em)%%50 == 0) %>% unlist()
   if(type==2){
-    breaks <- c(breaksx,breaksy) %>% unique() %>% sort()
-    #options(warn=-1)
     pl <- tab %>%
       group_by(modname,comp) %>%
       mutate(max_pos = which.max(value), max_em = em[max_pos],max_ex = ex[max_pos]) %>%
@@ -122,17 +117,18 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE){
       geom_line(aes(x=emn,y=value),colour="darkblue",group="emission", na.rm=TRUE)+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       facet_grid(comp ~ modname)+
-      scale_x_discrete(breaks = breaks) +
       labs(x="wavelength")
   } else {
     pl <- tab %>%
-      ggplot()+
-      geom_raster(aes(x=ex,y=em,fill=value))+ #,interpolate=TRUE
+      ggplot(aes(x = ex, y = em, z = value))+
+      geom_raster(aes(fill = value))+ #,interpolate=TRUE+
       scale_fill_gradientn(colours=rainbow(75)[51:1],values=vals,limits = c(tab$value %>% min(na.rm=TRUE),fill_max))+
-      scale_x_discrete(breaks = breaksx) +
-      scale_y_discrete(breaks = breaksy) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       facet_grid(comp ~ modname)
+    if(contour){
+      pl <- pl +
+        geom_contour(colour = "black", size = 0.3)
+    }
   }
   #print(pl)
   pl
@@ -159,15 +155,16 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE){
 #'
 #' leverage <- eempf_leverage(pf4[[1]])
 #' eempf_leverage_plot(leverage)
-eempf_leverage_plot <- function(cpl,qlabel=0.1){
-  breaks <- cpl$x[cpl$mode != "sample"] %>% as.numeric() %>% na.omit() %>% unique() %>% .[.%%50 == 0]
-  pl <- eempf_leverage_data(cpl,qlabel=qlabel) %>%
+eempf_leverage_plot <- function(cpl, qlabel = 0.1){
+  cpl <- eempf_leverage_data(cpl,qlabel=qlabel)
+  breaks <- cpl$x[cpl$mode != "sample"] %>% as.numeric() %>% na.omit() %>% round() %>% unique() %>% .[.%%50 == 0]
+  pl <- cpl %>%
     ggplot(aes(x=x,y=leverage))+
     geom_point(alpha = 0.4)+
-    geom_text(aes(label=label),vjust="inward",hjust="inward", na.rm=TRUE)+
+    geom_text(aes(label=label),vjust="inward",hjust="inward", na.rm=TRUE, check_overlap = TRUE)+
     scale_x_discrete(breaks = breaks) +
-    labs(x="mode name") +
-    facet_wrap( ~ mode,scales = "free")
+    labs(x="variable") +
+    facet_wrap( ~ mode, scales = "free")
   pl
 }
 
@@ -199,11 +196,10 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
   pl <- eempf_leverage_data(cpl,qlabel=qlabel) %>%
     mutate(label = ifelse(is.na(label),"",label))
   exclude <- lapply(pl$mode %>% unique(),function(mod){
-    #mod="sample"
     data <- pl %>% filter(mode == mod)
-    plot(data$x %>% factor(),data$leverage,xlab=mod,ylab="leverage")
-    text(data$x %>% factor(),data$leverage,label=data$label)
-    ide <- identify(data$x %>% factor(),data$leverage,label=data$label)
+    plot(data$x %>% factor(), data$leverage, xlab = mod, ylab = "leverage")
+    text(data$x %>% factor(), data$leverage, label = data$label)
+    ide <- identify(data$x %>% factor(), data$leverage) #, labels = data$label
     ide <- data$x %>% factor() %>% .[ide] %>% as.character()
   }) %>%
     setNames(pl$mode %>% unique())
@@ -214,6 +210,7 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
 #' @description Additionally a bar plot with the amounts of each component in each sample is produced.
 #'
 #' @param pfmodel object of class parafac
+#' @param ... attributes passe don to \code{\link[staRdom]{ggeem}}
 #'
 #' @return ggplot
 #' @export
@@ -224,8 +221,8 @@ eempf_leverage_ident <- function(cpl,qlabel=0.1){
 #' data(pf_models)
 #'
 #' eempf_comp_load_plot(pf4[[1]])
-eempf_comp_load_plot <- function(pfmodel){
-  pl1 <- ggeem(pfmodel)
+eempf_comp_load_plot <- function(pfmodel,...){
+  pl1 <- ggeem(pfmodel,...)
   pl2 <- eempf_load_plot(pfmodel)
   #pl1 %>% print()
   #pl2 %>% print()
@@ -348,6 +345,7 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #' @param select optional, character vector of samples you want to plot
 #' @param residuals_only plot only residuals
 #' @param cores number of cores to use for parallel processing
+#' @param contour logical, states whether contours should be plotted
 #'
 #' @details eem_list may contain samples not used for modelling. Calculation is done by \code{\link[staRdom]{A_missing}}. This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
 #'
@@ -368,7 +366,7 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #' eempf_residuals_plot(pf4[[1]],eem_list)
 #' }
 #'
-eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE)){
+eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE), contour = FALSE){
   #pfmodel,eem_list,select=eem_names(eem_list)[10:19]
   if(is.null(res_data)){
     res_data <- eempf_residuals(pfmodel,eem_list,select=select,cores = cores)
@@ -376,8 +374,8 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
   if (!is.null(select)){
     res_data <- res_data %>% filter(Sample %in% select)
   }
-  breaksx <- res_data %>% select(ex) %>% unique() %>% filter(as.numeric(ex)%%50 == 0) %>% unlist()
-  breaksy <- res_data %>% select(em) %>% unique() %>% filter(as.numeric(em)%%50 == 0) %>% unlist()
+  res_data <- res_data %>%
+    mutate_at(vars(ex,em,value),as.numeric)
   #if(!is.numeric(fill_max)){
   if(residuals_only){
     res_data <- res_data %>%
@@ -392,12 +390,14 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
     #pos <- 1
     pl <- res_data %>%
       filter(Sample %in% (res_data$Sample %>% unique() %>% .[(spp*(pos-1)+1):(spp*pos)])) %>%
-      ggplot()+
-      geom_raster(aes(x=ex,y=em,fill=value))+ #,interpolate=TRUE
+      ggplot(aes(x=ex,y=em,z=value))+
+      geom_raster(aes(fill=value))+ #,interpolate=TRUE
       scale_fill_gradientn(colours=c(rainbow(70)[62],rainbow(70)[50:1]),values=vals,limits = c(res_data$value %>% min(na.rm=TRUE),fill_max))+
-      scale_x_discrete(breaks = breaksx) +
-      scale_y_discrete(breaks = breaksy) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    if(contour){
+      pl <- pl +
+        geom_contour(colour = "black", size = 0.3)
+    }
     if(residuals_only){
       pl <- pl +
         facet_wrap(~ Sample)
@@ -448,18 +448,17 @@ splithalf_plot <- function(fits){
       filter(!is.na(emn) | !is.na(exn)) %>%
       mutate(ex=exn,em=emn) %>%
       select(-exn,-emn,-max_pos,-max_em,-max_ex) %>%
-      ungroup()
+      ungroup() %>%
+      mutate_at(vars(em,ex,value),as.numeric)
   }) %>%
     bind_rows()
-  breaks <- table %>% select(ex,em) %>% unlist() %>% na.omit() %>% unique() %>% as.numeric() %>% .[.%%50 == 0]
   pl1 <- table %>%
     mutate(selection = factor(selection,ordered=FALSE)) %>%
     ggplot()+
     geom_line(data = . %>% filter(!is.na(ex)),aes(x=ex,y=value,colour=selection,group=selection),linetype=2)+
     geom_line(data = . %>% filter(!is.na(em)),aes(x=em,y=value,colour=selection,group=selection),linetype=1)+
     facet_grid(. ~ comp)+
-    scale_x_discrete(breaks = breaks) +
-    labs(x="wavelength") +
+    labs(x="wavelength",y="loading") +
     theme(legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1))
   pl1 %>% print()
 }
@@ -485,7 +484,23 @@ splithalf_plot <- function(fits){
 #'
 #' @examples
 #' \donttest{
-#' ## no test yet
+#' folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
+#' eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
+#'
+#' abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
+#' absorbance <- absorbance_read(abs_folder)
+#'
+#' metatable <- system.file("extdata/metatable_dreem.csv",package = "staRdom")
+#' meta <- read.table(metatable, header = TRUE, sep = ",", dec = ".", row.names = 1)
+#'
+#' checked <- eem_checkdata(eem_list, absorbance, metadata = meta,
+#' metacolumns = "dilution", error = FALSE)
+#'
+#' eem_names(eem_list)
+#' pfm <- A_missing(eem_list,pf4[[1]])
+#' eempf_report(pfm, export = "~/pf_report.html", eem_list = eem_list,
+#'              absorbance = absorbance, meta = metatable, metacolumns = "dilution")
+#'
 #' }
 eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, meta = NULL, metacolumns = NULL, splithalf = FALSE, shmodel = NULL, performance = FALSE, residuals = FALSE, spp = 5, ...){
   #shmodel <- sh

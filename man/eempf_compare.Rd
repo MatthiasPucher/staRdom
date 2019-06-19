@@ -4,10 +4,12 @@
 \alias{eempf_compare}
 \title{Plot a set of PARAFAC models to compare the single components}
 \usage{
-eempf_compare(pfres)
+eempf_compare(pfres, ...)
 }
 \arguments{
 \item{pfres}{list of several objects of class parafac}
+
+\item{...}{arguments passe don to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}}
 }
 \value{
 3 objects of class ggplot

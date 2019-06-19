@@ -21,7 +21,7 @@ Multiply EEMs with spectral correction vectors (Emission and Excitation)
 }
 \examples{
 eems <- system.file("extdata/EEMs",package="staRdom")
-eem_list <- eem_read_csv(eems)
+eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv)
 
 excorfile <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
 Excor <- data.table::fread(excorfile)

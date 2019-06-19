@@ -3,10 +3,10 @@
 #' @format eemlist
 "eem_list"
 
-#' Fluorescence data of 1 sample of the original data set. Used for comparison in the vignette.
+#' 2 fluorescence samples from drEEM that were excluded as outliers from the PARAFAC model.
 #'
 #' @format eemlist
-"eem_list_667sf"
+"eem_list_outliers"
 
 #' PARAFAC model, see vignette, unconstrained
 #'

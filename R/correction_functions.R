@@ -8,9 +8,10 @@
 #' @param type numeric 0 to 4 or TRUE which resembles type 1
 #' @param nonneg logical, whether negative values should be replaced by 0
 #' @param verbose logical, whether more information on calculation should be provided
+#' @param extend logical, whether data is extrapolated using type 1
 #' @param ... arguments passed on to other functions (pchip, na.approx, mba.points)
 #'
-#' @details The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 3, extrapolation can be suppressed by adding the argument extend = FALSE.
+#' @details The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with \code{\link[MBA]{mba.points}}, (2) excitation and emission wavelength-wise interpolation with \code{\link[pracma]{pchip}} and subsequent mean, (3) excitation wavelength-wise interpolation with \code{\link[pracma]{pchip}} and (4) linear interpolation in 2 dimensions with \code{\link[zoo]{na.approx}} and again subsequent mean calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. Using type = 1, extrapolation can be suppressed by adding the argument extend = FALSE.
 #'
 #' @return object of class eemlist with interpoleted spectra.
 #'
@@ -56,7 +57,7 @@
 #'
 #'
 #' }
-eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type = TRUE,verbose = FALSE, nonneg=TRUE,...){
+eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type = TRUE, verbose = FALSE, nonneg=TRUE, extend = FALSE,...){
   cl <- makeCluster(spec = cores, type = "PSOCK")
   doParallel::registerDoParallel(cl)
   if(verbose){
@@ -80,7 +81,7 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type
         mutate_all(as.numeric)
       x2 <- x %>%
         filter(!is.na(z))
-      x3 <- MBA::mba.points(xyz = x2 %>% select(em,ex,z), xy.est = expand.grid(em = eem$em, ex = eem$ex), verbose = verbose, ...)
+      x3 <- MBA::mba.points(xyz = x2 %>% select(em,ex,z), xy.est = expand.grid(em = eem$em, ex = eem$ex), verbose = verbose, extend = extend, ...)
       eem$x[is.na(eem$x)] <- x3$xyz.est[,3] %>% matrix(nrow = nrow(eem$x), ncol = ncol(eem$x)) %>% .[is.na(eem$x)] #%>% pmin(max(eem$x,na.rm=TRUE)) %>% pmax(min(eem$x,na.rm=TRUE))#matrix(x3,nrow=length(eem$em), ncol = length(eem$ex))
       }
     if(type == 2){
@@ -226,10 +227,11 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 #'
 #' # correction by value
 #' eems_num <- eem_raman_normalisation2(eem_list,blank=168)
-eem_raman_normalisation2 <- function(data,blank="blank"){
+eem_raman_normalisation2 <- function(data, blank="blank"){
   if(blank == "blank"){
     res_list <- try(data %>% eem_raman_normalisation(),silent=TRUE)
     if (class(res_list) == "try-error") {
+      warning(res_list)
       stop("There was a problem with raman normalisation, please check the presence of a blank sample and the parameter blank!")
     }
   } else if(is.data.frame(blank) & class(data) == "eemlist"){
@@ -273,7 +275,7 @@ eem_raman_normalisation2 <- function(data,blank="blank"){
 #'
 #' @examples
 #' folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load example data
-#' eem_list <- eem_read(folder)
+#' eem_list <- eem_read(folder, import_function = "cary")
 #' data(absorbance)
 #'
 #' eem_ife_correction(eem_list,absorbance,5)
@@ -363,7 +365,7 @@ eem_smooth <- function(data,n = 4){
 #' @description Wrapper function to remove several scatterings in one step using \code{\link[eemR]{eem_remove_scattering}}.
 #'
 #' @param data object of class eemlist
-#' @param remove_scatter named logical vector. The names of the vector must be out of "raman1", "raman2", "rayleigh1" and "rayleigh2". Set \code{TRUE} if certain scattering should be removed.
+#' @param remove_scatter logical vector. The meanings of the vector are "raman1", "raman2", "rayleigh1" and "rayleigh2" scattering. Set \code{TRUE} if certain scattering should be removed.
 #' @param remove_scatter_width numeric vector containing width of scattering to remove. If there is only one element in this vector, each this is the width of each removed scattering. If there are 4 values, differnt widths are used ordered by "raman1", "raman2", "rayleigh1" and "rayleigh2".
 #' @param interpolation logical, optionally states whether interpolation is done right away
 #' @param cores optional, CPU cores to use for interpolation
@@ -416,7 +418,7 @@ eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpol
 #'
 #' @examples
 #' folder <- system.file("extdata/EEMs",package="staRdom")
-#' eem_list <- eem_read_csv(folder)
+#' eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 #' blank <- eem_extract(eem_list,sample ="blank", keep = TRUE)
 #'
 #' eem_raman_area(blank)
@@ -572,7 +574,7 @@ eem_extend2largest <- function(eem_list, interpolation = FALSE,...){
 #'
 #' @examples
 #' eems <- system.file("extdata/EEMs",package="staRdom")
-#' eem_list <- eem_read_csv(eems)
+#' eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv)
 #'
 #' excorfile <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
 #' Excor <- data.table::fread(excorfile)
@@ -587,8 +589,8 @@ eem_spectral_cor <- function(eem_list,Excor,Emcor){
   x <- eem_getextreme(eem_list)
   xEx <- range(Excor[,1])
   xEm <- range(Emcor[,1])
-  if(!all(x$ex %in% seq(xEx[1],xEx[2]))) stop("Excitation correction does not cover EEM excitation spectrum!")
-  if(!all(x$em %in% seq(xEm[1],xEm[2]))) stop("Emission correction does not cover EEM emission spectrum!")
+  if(min(xEx) > min(x$ex) & max(xEx) < max(x$ex)) stop("Excitation correction does not cover EEM excitation spectrum!")
+  if(min(xEm) > min(x$em) & max(xEm) < max(x$em)) stop("Emission correction does not cover EEM emission spectrum!")
   eem_list <- lapply(eem_list,function(eem){
     #eem <- eem_list[[1]]
     Excor1 <- approx(x=Excor[[1]],y=Excor[[2]],xout=eem$ex)$y

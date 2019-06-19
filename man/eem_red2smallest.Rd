@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_functions.R
 \name{eem_red2smallest}
 \alias{eem_red2smallest}
-\title{Reduce wavelength range of EEM spectra to widest available in the whole sample set.}
+\title{Remove wavelengths, that are missing in at least one sample form the whole set.}
 \usage{
 eem_red2smallest(data, verbose = FALSE)
 }
@@ -15,12 +15,33 @@ eem_red2smallest(data, verbose = FALSE)
 eemlist with reduced spectral width
 }
 \description{
-Reduce wavelength range of EEM spectra to widest available in the whole sample set.
+Remove wavelengths, that are missing in at least one sample form the whole set.
 }
 \details{
 This step is neccessary to perform a PARAFAC analysis which can only be calculated with spectra of similar range.
 }
 \examples{
+require(dplyr)
+
 data(eem_list)
-eem_red2smallest(eem_list)
+
+eem_list_red <- eem_red2smallest(eem_list)
+
+# create an eemlist where data is missing
+eem_list2 <- eem_exclude(eem_list,
+    list("ex" = c(280,290,350),
+         "em" = c(402,510),
+         "sample" = c()))
+
+# modify names of samples with missing data
+eem_names(eem_list2) <- paste0("x",eem_names(eem_list2))
+
+# combined the lists with and without missing data
+eem_list3 <- eem_bind(eem_list,eem_list2)
+#ggeem(eem_list3)
+
+# reduce the data in the whole sampleset to the smallest wavelengths that are present in all samples
+eem_list4 <- eem_red2smallest(eem_list3)
+#ggeem(eem_list4)
+
 }

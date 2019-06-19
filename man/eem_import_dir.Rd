@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_functions.R
 \name{eem_import_dir}
 \alias{eem_import_dir}
-\title{Load all eemlist obects saved in different Rdata files in folder}
+\title{Load all eemlist obects saved in different Rdata or RDa files in a folder.}
 \usage{
 eem_import_dir(dir)
 }
@@ -13,7 +13,7 @@ eem_import_dir(dir)
 eemlist
 }
 \description{
-Reads Rdata files with one eemlist each. eemlists are combined into one and returned.
+Reads Rdata and RDa files with one eemlist each. The eemlists are combined into one and returned.
 }
 \examples{
 \dontrun{

@@ -126,7 +126,7 @@ eem_duplicates.data.frame <- function(data){
 #'
 #' @examples
 #' folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
-#' eem_list <- eem_read_csv(folder)
+#' eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 #'
 #' abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
 #' absorbance <- absorbance_read(abs_folder)
@@ -322,7 +322,7 @@ if(correction){
 #'
 #' @examples
 #' folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
-#' eem_list <- eem_read_csv(folder)
+#' eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 #' data(absorbance)
 #'
 #' eem_metatemplate(eem_list,absorbance)

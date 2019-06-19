@@ -4,12 +4,14 @@
 \alias{eempf_export}
 \title{Create one table containing the PARAFAC models factors and optionally exporting it to csv or txt}
 \usage{
-eempf_export(pfmodel, export = NULL, ...)
+eempf_export(pfmodel, export = NULL, Fmax = TRUE, ...)
 }
 \arguments{
 \item{pfmodel}{PARAFAC model}
 
 \item{export}{file path to export table}
+
+\item{Fmax}{rescale modes so the A mode shows the maximum fluorescence}
 
 \item{...}{additional parameters passed to \code{\link[utils]{write.table}}}
 }

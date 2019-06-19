@@ -3,8 +3,8 @@ note <- sprintf("R package version %s", meta$Version)
 
 bibentry(bibtype = "Manual",
          title = "{staRdom}: PARAFAC analysis on DOM EEMs, calculating absorbance slopes",
-         author = c(person("Pucher", "Matthias"),person("Graeber", "Daniel")),
+         author = c(person("Matthias", "Pucher"),person("Daniel", "Graeber")),
          institution = c("Wassercluster Lunz, BOKU Vienna", "UFZ Leipzig"),
          address = "Lunz, Austria",
-         year = "2018",
+         year = "2019",
          url = "https://github.com/MatthiasPucher/staRdom")

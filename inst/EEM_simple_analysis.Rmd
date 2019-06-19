@@ -4,7 +4,7 @@ subtitle: "EEM peak picking, absorbance slope parameters"
 date: "`r format(Sys.time(), '%B %e %Y')`"
 author: "WCL"
 knit: (function(inputFile, encoding) {
-      output_dir = 'C:/some_folder/output/';
+      output_dir = '~/output/';
       rmarkdown::render(inputFile,
                         encoding=encoding, 
                         output_file=file.path(output_dir,paste0('DOM_EEM_analysis_report_',format(Sys.time(), "%Y%m%d_%H%M%S"),'.htm')))
@@ -24,12 +24,20 @@ This report was created using the R package staRdom version `r packageVersion("s
 ## Input parameters
 ```{r, include=FALSE}
 ###################################################
-#### Version 1.0.12 of EEM_simple_analysis.Rmd ####
+#### Version 1.0.13 of EEM_simple_analysis.Rmd ####
 ###################################################
 # Please use the same versions of staRdom and EEM_simple_analysis.Rmd
 # In general, there was no problem so far mixing the versions, but some
 # changes and maybe future changes might cause problems if you use
 # different versions!
+#
+##############################
+#### load staRdom package ####
+##############################
+#
+library(dplyr)
+library(tidyr)
+library(staRdom)
 #
 ####################################
 #### Documentation of this file ####
@@ -50,7 +58,7 @@ This report was created using the R package staRdom version `r packageVersion("s
 # Set the directory where all output files are put in.
 # The directory is automatically created if it does not exist.
 # Folder delimiters can be / or \\. \ , as it is usually used in Windows, will not work!
-output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output/"
+output_dir = "~/output/" # e.g. output_dir = "C:/some_folder/output/"
 
 ```
 
@@ -68,8 +76,16 @@ output_dir = "C:/some_folder/output/" # e.g. output_dir = "C:/some_folder/output
 # The template refers to data coming with the package. Please use your data
 # by setting the path to your files!
 sample_dir = system.file("extdata/EEMs", package = "staRdom") # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
-# Are your samples generic csv files? Set FALSE, if you use files from Varian Cary Eclipse, Horiba Aqualog, Horiba Fluoromax-4 or Shimadzu instruments
-generic_csv = TRUE
+# Set the used instrument:
+# Cary Eclipse: "cary" 
+# Aqualog: "aqualog"
+# Shimadzu: "shimadzu"
+# Fluoromax-4: "fluoromax4"
+# And furthermore, without hyphens:
+# generic csv, excitation column-wise: eem_csv
+# generic csv, emission column-wise: eem_csv2
+# Hitachi F-7000: eem_hitachi
+fluorometer = eem_csv
 
 #### Absorbance data ####
 #~~~~~~~~~~~~~~~~~~~~~~~#
@@ -158,6 +174,9 @@ overview_number = 6 # e.g. 6
 # Either all samples are coloured according to the range of the
 # complete sample set (TRUE) or each plot is scaled separately (FALSE).
 scale_col = FALSE # e.g. TRUE
+
+# Add contours to yout plots?
+contours = FALSE
 
 #### Plot settings report ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -304,11 +323,6 @@ smooth = 4 # e.g. FALSE, 4
 #     column and row names is crucial!      #
 #                                           #
 #############################################
-
-# load staRdom package
-library(dplyr)
-library(tidyr)
-library(staRdom)
 ```
 
 ```{r, message=FALSE, warning=TRUE, include=FALSE}
@@ -319,11 +333,7 @@ library(staRdom)
 #### Read EEM data ####
 #~~~~~~~~~~~~~~~~~~~~~#
 # recursive = TRUE means, that subdirectories are included in reading
-if(generic_csv){
-      eem_list <- eem_read_csv(sample_dir,recursive=TRUE)
-  } else {
-    eem_list <- eem_read(sample_dir,recursive=TRUE)
-  }
+eem_list <- eem_read(sample_dir, recursive = TRUE, import_function = fluorometer)
 
 #### Alter names of EEM samples ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -566,7 +576,7 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
 
 if(overview | output_overview_png) {
   ov_plots <- eem_list %>%
-    eem_overview_plot(spp = overview_number)
+    eem_overview_plot(spp = overview_number, contours = contours)
 }
 
 if(overview){
@@ -586,7 +596,7 @@ if(overview){
 if(scale_col) fill_max <- eem_list %>% eem_scale_ext() %>% .[2] else fill_max <- FALSE
 
 if(output_single_png | single_plots){
-  sing_plots <- lapply(eem_list, ggeem, fill_max = fill_max)
+  sing_plots <- lapply(eem_list, ggeem, fill_max = fill_max, contours = contours)
 }
 
 if(single_plots){

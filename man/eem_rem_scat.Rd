@@ -11,7 +11,7 @@ eem_rem_scat(data, remove_scatter, remove_scatter_width = 10,
 \arguments{
 \item{data}{object of class eemlist}
 
-\item{remove_scatter}{named logical vector. The names of the vector must be out of "raman1", "raman2", "rayleigh1" and "rayleigh2". Set \code{TRUE} if certain scattering should be removed.}
+\item{remove_scatter}{logical vector. The meanings of the vector are "raman1", "raman2", "rayleigh1" and "rayleigh2" scattering. Set \code{TRUE} if certain scattering should be removed.}
 
 \item{remove_scatter_width}{numeric vector containing width of scattering to remove. If there is only one element in this vector, each this is the width of each removed scattering. If there are 4 values, differnt widths are used ordered by "raman1", "raman2", "rayleigh1" and "rayleigh2".}
 

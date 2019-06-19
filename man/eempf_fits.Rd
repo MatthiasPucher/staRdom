@@ -4,10 +4,12 @@
 \alias{eempf_fits}
 \title{Fits vs. components of PARAFAC models are plotted}
 \usage{
-eempf_fits(pfres)
+eempf_fits(pfres, ...)
 }
 \arguments{
 \item{pfres}{list of objects of class parafac}
+
+\item{...}{arguments passed on to ggplot}
 }
 \value{
 object of class ggplot
