@@ -36,10 +36,22 @@
 #'
 #' pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
 #'     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
-#'
 #' }
 eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
   #eem_list <- eem_list %>% eem_red2smallest()
+  # require(staRdom)
+  # require(multiway)
+  # require(tidyverse)
+  # load(file="../eem_list_1.0.12.Rda")
+  # eem_list <- eem_list_ex
+  # maxit = 2500
+  # normalise = TRUE
+  # const = c("nonneg","nonneg","nonneg")
+  # #const = rep("ortnon",3)
+  # nstart = 15
+  # ctol = 10^-7
+  # cores <- 2
+  # verbose = TRUE
   eem_array <- eem2array(eem_list)
   if(normalise){
     if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
@@ -47,18 +59,17 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
   }
   if(verbose) cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
   res <- lapply(comps,function(comp){
+    #comp <- 6
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
-    #comp <- 5
-    #eem_array %>% dim()
     cl <- NULL
     if(cores > 1){
     cl <- makeCluster(cores, type="PSOCK")
-    clusterExport(cl, c("eem_array","comp","maxit","nstart","const","ctol","cores"), envir=environment())
+    clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
     clusterEvalQ(cl, library(multiway))
     }
-    cpresult <- parafac(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, ...)
+    cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "best", verbose = verbose, ...) #, ...
     if(cores > 1){
-    stopCluster(cl)
+      stopCluster(cl)
     }
     if(cpresult$cflag != 0){
       warning("The PARAFAC model with ",comp," component",ifelse(comp > 1, "s", "")," did not converge! Increasing the number of initialisations (nstart) might solve the problem.")
@@ -80,6 +91,59 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
   })
   mostattributes(res) <- attributes(eem_array)
   return(res)
+}
+
+#' Calculate a PARAFAC model similar to and using \code{\link[multiway]{parafac}}.
+#'
+#' @description Please refer to \code{\link[multiway]{parafac}} for input parameters and details. This wrapper function ensures `nstart` converging models are calculated. On the contrary, parafac calculates `nstart` models regardless if they are converging.
+#'
+#' @param X array
+#' @param nstart number of converging models to calculate
+#' @param verbose logical, whether more information is supplied
+#' @param output Output the best solution (default) or output all nstart solutions.
+#' @param cl cluster to be used for parallel processing
+#' @param ... arguments passed on to \code{\link[multiway]{parafac}}
+#'
+#' @return either a parafac model or a list of parafac models
+#'
+#' @seealso \code{\link[multiway]{parafac}}
+#'
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' # sorry, no example provided yet
+#' }
+parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), cl = NULL, ...){
+  nmod <- 0
+  ntot <- 0
+  cpresult_all <- list()
+  while(nmod < nstart & ntot <= 10 * nstart){
+    pred_factor <- ifelse(ntot == 0, 1, ifelse(nmod == 0, 3, ntot/nmod/2))
+    if(verbose) cat("Due to previous model calculations, pred_factor was set", pred_factor, fill = TRUE)
+    nmiss <- ceiling((nstart - nmod) * pred_factor / 8) * 8
+    if(verbose) cat("start run with",nmiss,"models...",fill = TRUE)
+    if(!is.null(cl)){
+      clusterExport(cl, c("nmiss"), envir=environment())
+    }
+    cpresult <- parafac(X, nstart = nmiss, output = "all", cl = cl, ...) #, ...
+    cpresult_conv <- cpresult[lapply(cpresult,`[[`,"cflag") %>% unlist() == 0]
+    cpresult_all <- c(cpresult_all,cpresult_conv)
+    nmod <- length(cpresult_all)
+    ntot <- ntot + nmiss
+    if(verbose) cat(length(cpresult_conv),"models converged successfully in this run!", fill = TRUE)
+    if(verbose) cat(length(cpresult_all),"models calculated!", fill = TRUE)
+  }
+  if(verbose) cat(nmod,"out of",ntot,"models converged!",fill=TRUE)
+  if(output[1] == "best"){
+    sses <- cpresult_all %>% lapply(`[[`,"SSE") %>% unlist()
+    cpresult_all <- cpresult_all[[which.min(sses)]]
+  } else if (output[1] == "all"){
+    sses <- cpresult_all %>% lapply(`[[`,"SSE") %>% unlist()
+    cpresult_all <- cpresult_all[[sses[sort(order(-sses)[1:nstart])]]]
+  }
+  if(ntot >= 10 * nstart) warning("Maximum number of starts reached without generating the desired number of valid models.")
+  cpresult_all
 }
 
 #' Rescale B and C modes of PARAFAC model

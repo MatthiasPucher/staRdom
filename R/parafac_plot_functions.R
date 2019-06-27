@@ -49,7 +49,7 @@ eempf_compare <- function(pfres,...){
 #' eempf_fits(pf4)
 eempf_fits <- function(pfres,...){
   #pfres <- pf1
-  if(is.null(names(pfres))) names <- rep(NA,length(pfres)) else names <- names(pfres) #paste0("model",1:length(pfres))
+  if(is.null(names(pfres))) names <- paste0("model",1:length(pfres)) else names <- names(pfres) #paste0("model",1:length(pfres))
   pl <- data.frame(comps=lapply(pfres,"[[","A") %>% lapply(ncol) %>% unlist(),
                    fit=lapply(pfres,"[[","Rsq") %>% unlist(), mod_name = names) %>%
     rowwise() %>%
