@@ -9,9 +9,12 @@
 #' @param nstart number of random starts
 #' @param cores number of parallel calculations (e.g. number of physical cores in CPU)
 #' @param ctol Convergence tolerance (R^2 change)
+#' @param strictly_converging calculate nstart converging models and take the best. Please see details!
 #' @param const constraints of PARAFAC analysis. Default is non-negative ("nonneg"), alternatively smooth and non-negative ("smonon") might be interesting for an EEM analysis.
 #' @param verbose print infos
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
+#'
+#' @details PARAFAC models are created based on multiple random starts. In some cases, a model does not converge and the resulting model is then based on less than nstart converging models. In case you want to have nstart converging models, set strictly_converging TRUE. This calculates models stepwise until the desired number is reached but it takes more calculation time. Increasing the number of models from the beginning is much more time efficient.
 #'
 #' @return object of class parafac
 #' @export
@@ -29,29 +32,15 @@
 #'
 #' dim_min <- 3 # minimum number of components
 #' dim_max <- 7 # maximum number of components
-#' nstart <- 10 # random starts for PARAFAC analysis, models built simulanuously, best selected
+#' nstart <- 15 # random starts for PARAFAC analysis, models built simulanuously, best selected
 #' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
 #' maxit = 1000
 #' ctol <- 10^-5 # tolerance for parafac
 #'
-#' pfres_comps <- eem_parafac(eem_list,comps=seq(dim_min,dim_max),
-#'     normalise = TRUE,maxit=10000,nstart=nstart,ctol=ctol,cores=cores)
+#' pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 #' }
-eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
-  #eem_list <- eem_list %>% eem_red2smallest()
-  # require(staRdom)
-  # require(multiway)
-  # require(tidyverse)
-  # load(file="../eem_list_1.0.12.Rda")
-  # eem_list <- eem_list_ex
-  # maxit = 2500
-  # normalise = TRUE
-  # const = c("nonneg","nonneg","nonneg")
-  # #const = rep("ortnon",3)
-  # nstart = 15
-  # ctol = 10^-7
-  # cores <- 2
-  # verbose = TRUE
+eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, strictly_converging = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
   eem_array <- eem2array(eem_list)
   if(normalise){
     if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
@@ -67,7 +56,18 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
     clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
     clusterEvalQ(cl, library(multiway))
     }
-    cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "best", verbose = verbose, ...) #, ...
+    if(strictly_converging){
+    cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "best", verbose = verbose, ...)
+    } else {
+      cpresult <- parafac(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "all", ...)#, ...
+      Rsqs <- lapply(cpresult,`[[`,"Rsq") %>% unlist()
+      cflags <- lapply(cpresult,`[[`,"cflag") %>% unlist()
+      converged <- sum(cflags == 0)/nstart
+      if(converged <= 0.5){
+        warning("Calculating the ",comp," component",ifelse(comp > 1, "s","")," model, only ",sum(cflags == 0)," out of ",nstart," models converged! You might want to increase the number of initialisations (nstart).")
+      }
+      cpresult <- cpresult[[which.max(Rsqs)]]
+    }
     if(cores > 1){
       stopCluster(cl)
     }

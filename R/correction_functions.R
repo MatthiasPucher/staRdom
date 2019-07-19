@@ -268,6 +268,7 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
 #' @param data fluorescence data of class eemlist
 #' @param abs_data absorbance data
 #' @param cuvl length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data
+#' @param unit unit of absorbance data. Either "absorbance" or "absorption".
 #'
 #' @return fluorescence data of class eemlist
 #' @import eemR
@@ -278,15 +279,21 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
 #' eem_list <- eem_read(folder, import_function = "cary")
 #' data(absorbance)
 #'
-#' eem_ife_correction(eem_list,absorbance,5)
-eem_ife_correction <- function(data,abs_data,cuvl){
+#' eem_ife_correction(eem_list, absorbance, 5, unit = "absorbance")
+eem_ife_correction <- function(data,abs_data,cuvl, unit = "absorbance"){
+  #abs_data <- absorbance
+  # require(tidyverse)
+  if(unit == "absorption"){
+    abs_data <- abs_data %>%
+      mutate_at(vars(-wavelength),`*`,(1/log(10)))
+  }
   eem_list <- data %>% lapply(function(eem1){
     if(is.data.frame(cuvl)) cl <- cuvl[eemnam,] else cl <- cuvl
     eem1 <- list(eem1)
     nam <- eem1[[1]]$sample
     class(eem1) <- "eemlist"
     if(nam %in% colnames(abs_data)){
-      eem1 <- eem1 %>% eem_inner_filter_effect(absorbance=na.omit(abs_data[c("wavelength",nam)]),pathlength=cl)
+      eem1 <- eem1 %>% eem_inner_filter_effect(absorbance = na.omit(abs_data[c("wavelength",nam)]),pathlength=cl)
       eem1[[1]]$sample <- nam
     } else {
       warning(paste0("No absorbance data was found for sample ",nam,"!"))

@@ -581,6 +581,8 @@ It is crucial to find an appropriate number of components in the analysis. If th
 
 The alternating-least-squares algorithm used to calculate the PARAFAC model optimises the components in order to minimise the residual error. The goal is to find a global minimum of the residual function. Depending on the random start values (random initialisation), different local minima can be found. To get the global minimum, a defined number `nstart` of initialisations is used for separate model calculations. The model with the smallest error is then used for further analyses, assuming it is a global minimum. 8 might by a good start for `nstart` although for a profound analysis higher values (e.g. 20 to 50) are suggested.
 
+Some of these random initialisations might not converge. If there are still enough converging models, the result is reliable and there is no problem. `eem_parafac` returns a warning in case of less than 50 % converging models. Furthermore, it is possible to calculate a specific number of converging models by setting the argument `strictly converging = TRUE`. When using this, due to the iterative restarting of not converging models, this takes more time and using more starts from the beginning is a faster way to get a reasonable number of converging models.
+
 You can speed up the calculations by using multiple `cores`. Beware, that calculating a PARAFAC model can take some time!
 
 Higher `maxit` (maximum number of iteration steps in PARAFAC) and lower `ctol` (tolerance to return result of PARAFAC, should not be larger than 10⁻⁴) increase the accuracy of the model but take more computation time. For a final model, we suggest to use a tolerance of 10⁻⁸ at most.

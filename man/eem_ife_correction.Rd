@@ -4,7 +4,7 @@
 \alias{eem_ife_correction}
 \title{Wrapper function to allow eem_inner_filter_effect (eemR) handling different cuvette lengths.}
 \usage{
-eem_ife_correction(data, abs_data, cuvl)
+eem_ife_correction(data, abs_data, cuvl, unit = "absorbance")
 }
 \arguments{
 \item{data}{fluorescence data of class eemlist}
@@ -12,6 +12,8 @@ eem_ife_correction(data, abs_data, cuvl)
 \item{abs_data}{absorbance data}
 
 \item{cuvl}{length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data}
+
+\item{unit}{unit of absorbance data. Either "absorbance" or "absorption".}
 }
 \value{
 fluorescence data of class eemlist
@@ -24,5 +26,5 @@ folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load examp
 eem_list <- eem_read(folder, import_function = "cary")
 data(absorbance)
 
-eem_ife_correction(eem_list,absorbance,5)
+eem_ife_correction(eem_list, absorbance, 5, unit = "absorbance")
 }
