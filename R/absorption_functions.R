@@ -37,7 +37,8 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 
   abs_data <- lapply(abs_data, function(tab) {
     if(verbose) cat("processing",tab,fill=TRUE)
-    data <- readLines(tab) %>%
+    rawdata <- readLines(tab)
+    data <- rawdata %>%
       sapply(stringr::str_remove,pattern="([^0-9]*$)")
     first_number <- min(which((substr(data,1,1) %>% grepl("[0-9]",.))))
     last_number <- max(which((substr(data,1,1) %>% grepl("[0-9]",.))))
@@ -50,16 +51,15 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
       if(verbose) cat("using",sep,"as field separator and",dec,"as decimal separator.", fill=TRUE)
     }
     data <- stringr::str_split(data,sep)
-    table <- data[(first_number-1):last_number] %>%
+    table <- data[(first_number):last_number] %>%
       unlist() %>%
       matrix(ncol = length(data[[first_number]]), byrow = TRUE) %>%
       data.frame(stringsAsFactors = FALSE) %>%
       mutate_all(gsub,pattern=ifelse(dec != "",dec,"."),replacement=".",fixed=TRUE)
-    if(any(as.numeric(table[1,]) %>% is.na())){
-      table <- table %>%
-      setNames(.[1,]) %>%
-      .[-1,]
-    }
+    # if(any(as.numeric(table[1,]) %>% is.na())){
+    #   table <- table %>%
+    #   setNames(.[1,])
+    # }
     table <- table %>%
       mutate_all(as.numeric)
     attr(table,"location") <- rep(tab,ncol(table) - 1)
@@ -67,7 +67,12 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
       basename() %>%
       stringr::str_replace_all(stringr::regex(".txt$|.csv$", ignore_case = TRUE),"")
     } else {
-      samples <- colnames(table) %>% .[2:ncol(table)]
+      samples <- rawdata[[1]] %>%
+        stringr::str_split(sep) %>%
+        unlist() %>%
+        matrix(ncol = length(.), byrow = TRUE) %>%
+        data.frame(stringsAsFactors = FALSE) %>%
+        .[-1]
     }
     table <- table %>%
       setNames(c("wavelength",samples)
