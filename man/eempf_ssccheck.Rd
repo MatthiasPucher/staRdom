@@ -22,9 +22,11 @@ Check SSCs between different models or initialisations of one model
 \examples{
 data(pf_models)
 
-eempf_ssccheck(pf3[1:3])
+eempf_ssccheck(pf3[1:2])
 
-# SSCs of 3 split-half models, models need to be unlisted
+\donttest{
+# SSCs of split-half models, models need to be unlisted
 data(sh)
-eempf_ssccheck(unlist(sh[1:3], recursive = FALSE))
+eempf_ssccheck(unlist(sh, recursive = FALSE))
+}
 }
