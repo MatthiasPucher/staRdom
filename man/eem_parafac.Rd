@@ -4,10 +4,10 @@
 \alias{eem_parafac}
 \title{Runs a PARAFAC analysis on EEM data}
 \usage{
-eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE,
-  const = c("nonneg", "nonneg", "nonneg"), nstart = 10, ctol = 10^-4,
+eem_parafac(eem_list, comps, maxit = 2500, normalise = TRUE,
+  const = c("nonneg", "nonneg", "nonneg"), nstart = 20, ctol = 10^-8,
   strictly_converging = FALSE, cores = parallel::detectCores(logical =
-  FALSE), verbose = FALSE, ...)
+  FALSE), verbose = FALSE, output = "best", ...)
 }
 \arguments{
 \item{eem_list}{object of class \code{\link[eemR]{eem}}}
@@ -30,6 +30,8 @@ eem_parafac(eem_list, comps, maxit = 500, normalise = TRUE,
 
 \item{verbose}{print infos}
 
+\item{output}{Output the \code{"best"} solution (default) only or additionally add \code{"all"} \code{nstart} solutions to the model as an element named \code{"models"}.}
+
 \item{...}{additional parameters that are passed on to \code{\link[multiway]{parafac}}}
 }
 \value{
@@ -47,13 +49,16 @@ data(eem_list)
 
 dim_min <- 3 # minimum number of components
 dim_max <- 7 # maximum number of components
-nstart <- 15 # random starts for PARAFAC analysis, models built simulanuously, best selected
+nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
 cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
-maxit = 1000
-ctol <- 10^-5 # tolerance for parafac
+maxit = 2500
+ctol <- 10^-7 # tolerance for parafac
 
 pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+
+pfres_comps2 <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+    normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, output = "all")
 }
 }
 \seealso{

@@ -203,7 +203,7 @@ In case of problems, you need to reorganise your data manually and revise the st
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 ```
 
-NAs in EEM data is no problem for a PARAFAC analysis as long as there is a certain amount of numeric values present.
+EEM data can contain NAs to perform a PARAFAC analysis as long as there is a certain amount of numeric values present. Depending on the data set, more than 15 to 20 % might cause not-converging models or models converging in a lokal minimum. We always suggest an interpolation of the data to get good results and a stable PARAFAC modelling process `r citep("10.1016/j.chemolab.2015.01.017")`.
 
 Different EEM sizes are not a problem, because there is a way to address this as shown below. For a blank subtraction or a PARAFAC analysis, the available data for each sample must be similar.
 
@@ -663,7 +663,8 @@ cpl <- eempf_leverage(pf2[[4]])
 
 # plot leverage (nice plot)
 eempf_leverage_plot(cpl,qlabel=0.1)
-
+```
+```{r eval=FALSE, include=TRUE, fig.width=7}
 # plot leverage, not so nice plot but interactive to select what to exclude
 # saved in exclude, can be used to start over again with eem_list_ex <- eem_list %>% eem_exclude(exclude) above
 exclude <- eempf_leverage_ident(cpl,qlabel=0.1)
@@ -716,26 +717,35 @@ eem_list %>%
 
 ## Recalculating the model with increased accuracy
 
-Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step. Just the model with 6 components is recalculated.
+Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step. Just the model with 6 components is recalculated. Check the ratio of converging models to be sure, the best is chosen from a reasonable number.
 
 ```{r eval=FALSE, include=TRUE}
 ctol <- 10^-8 # decrease tolerance in PARAFAC analysis
-nstart = 40 # increase number of random starts
+nstart = 20 # increase number of random starts
 maxit = 10000 # increase number of maximum interations
 
-pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
+
+# check ratio of converging models
+lapply(pf4,`[[`,"converged")
+
+# which models converged?
+conv <- pf4[[1]]$models %>% lapply(`[[`, "cflag") %>% unlist()
+conv
+# what is the SSE in the different models
+sses <- pf4[[1]]$models %>% lapply(`[[`, "SSE") %>% unlist()
+sses
 
 pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 ```
 
-```{r eval=TRUE, include=TRUE, fig.width=4, fig.height=6}
+```{r eval=FALSE, include=TRUE, fig.width=4, fig.height=6}
 # just one model, not really a need to compare
 eempf_compare(pf4, contour = TRUE)
 ```
 
 ```{r eval=TRUE, include=TRUE, fig.width=7}
-eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[4]] means the 4th model in the list, 6 component model in that case
-
+eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[1]] means the 4th model in the list, 6 component model in that case
 ```
 
 ```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
@@ -823,6 +833,8 @@ tcc_sh_table <- splithalf_tcc(sh)
 tcc_sh_table
 ```
 
+The function `eempf_ssc` can be used to compare models, not only from a split-half analysis. It returns the shift- and shape-sensitive congruence (SSC, `r citet("10.1039/c8ay02422g")`). Alternatively, the TCC can be calculated using the attribute `tcc = TRUE`. TCCs and SSCs can be combined over excitation and emission spectra using `m = TRUE` to calculate the modified TCC `r citep("10.4319/lom.2014.12.114")` or modified SSC respectively.
+
 ## Loadings of outliers
 
 A modes (loadings) of previously excluded outliers can be calculated using `A_missing`. This should be used carefully, but enables you to get loadings, that can be further investigated. Please supply an eemlist containing all samples you are interested in. B- and C-modes of the original model are kept and A-modes are calculated.
@@ -896,6 +908,9 @@ You can use `eempf_openfluor` to export a file that can be uploaded to openfluor
 eempf_openfluor(pf4[[1]], file = "my_model_openfluor.txt")
 ```
 
+## Comparing data using SSC
+`r citet("10.1039/C8AY02422G")` showed, that the TCC is sometimes not sensitive enough to separate different components. Therefore, they developed the shift- and shape sensitive congruence coefficient (SSC). It can be calculated using the function `eempf_ssc`.
+
 ## Creating a report on your analysis
 The report created by `eempf_report` contains important settings and results of your analysis and is exported as an html file. You can specify the information you want to include.
 
@@ -916,7 +931,19 @@ Using `eempf_export` you can export your model matrices to a csv file.
 
 `eem_eemdil` takes information from the table generated by `eem_dilcorr` and renames EEM samples to match undiluted absorbance samples.
 
-# Recombining components (EXPERIMENTAL!)
+# Experimental(!) functions
+## SSCs between initialisations
+The shift- and shape sensitive congruence coefficient (SSC, `r citet("10.1039/C8AY02422G")`) (or TCC) between the e.g. 3 to 6 best initialisations of the model could be an indicator to evaluate the stability of the model creation process. If one of the components is much different from the others, the best model is a lucky guess. Models with several initialisations giving very similar results are more trustworthy. You might overthink the modelling parameters and the preprocessing. To do this test, you need to keep all created models by adding the argument `output = "all"` to the `eem_parafac` function.
+
+```{r eval=FALSE, include=TRUE, fig.width=7}
+pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
+
+ssccheck <- eempf_ssccheck(pf4[[1]]$models, best = 3) # best 5 models are shown
+
+eempf_plot_ssccheck(ssccheck)
+```
+
+## Recombining components
 Recombining the components of a PARAFAC model is generally not advised. It should be an opportunity for advanced users to work through their data, test hypothesis and find new approaches. The results from such a model have to be investigated in detail and differ significantly from models created in the traditional way. Please beware of using these functions!
 
 Components can be extracted from models using `eempf_excomp`. The extracted components can then be used to create new models using `A_missing` and the `components` argument.

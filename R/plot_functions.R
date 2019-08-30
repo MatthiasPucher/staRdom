@@ -98,12 +98,36 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
     fill_max <- table$value %>% max(na.rm=TRUE)
   }
   #values_fill <- seq(0,fill_max,length.out = 55)
+  #diff()
+  diffs <- table %>%
+    select(-value) %>%
+    gather("spec","wl", -sample) %>%
+    group_by(sample,spec) %>%
+    unique() %>%
+    #arrange(sample,spec,wl) %>%
+    #mutate(diffs = wl - lag(wl))
+    summarise(slits = diff(wl) %>% n_distinct()) %>%
+    .$slits != 1
+
   plot <- table %>%
-    ggplot(aes(x = ex, y = em, z = value))+
-    geom_raster(aes(fill = value), interpolate = interpolate)+
+    ggplot(aes(x = ex, y = em, z = value))
+
+  if(any(diffs)){
+    plot <- plot +
+      #geom_raster(aes(fill = value), interpolate = interpolate)
+      layer(mapping = aes(colour = value, fill = value),
+            geom = "tile", stat = "identity", position = "identity")
+  } else {
+    plot <- plot +
+      layer(mapping = aes(fill = value),
+            geom = "raster", stat = "identity", position = "identity")
+  }
+
+  plot <- plot +
+    #geom_tile(aes(fill = value, colour = value))+
     #scale_fill_gradient2(low="blue",mid="yellow",high="red")
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-    facet_wrap(~sample)
+    facet_wrap(~sample, scales = "free")
   if(contour){
     plot <- plot +
       geom_contour(colour = "black", size = 0.3, ...)
@@ -113,14 +137,17 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
     vals <- (vals - min(vals))/diff(range(vals))
     if(redneg){
       plot <- plot +
-        scale_fill_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
+        scale_fill_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max)) +
+        scale_colour_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
     } else {
       plot <- plot +
-        scale_fill_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
+        scale_fill_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))+
+        scale_colour_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
     }
   } else {
     plot <- plot +
-      scale_fill_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))
+      scale_fill_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))+
+      scale_colour_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))
   }
   plot
 }

@@ -11,6 +11,7 @@
 #' @param ctol Convergence tolerance (R^2 change)
 #' @param strictly_converging calculate nstart converging models and take the best. Please see details!
 #' @param const constraints of PARAFAC analysis. Default is non-negative ("nonneg"), alternatively smooth and non-negative ("smonon") might be interesting for an EEM analysis.
+#' @param output Output the \code{"best"} solution (default) only or additionally add \code{"all"} \code{nstart} solutions to the model as an element named \code{"models"}.
 #' @param verbose print infos
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
 #'
@@ -32,15 +33,18 @@
 #'
 #' dim_min <- 3 # minimum number of components
 #' dim_max <- 7 # maximum number of components
-#' nstart <- 15 # random starts for PARAFAC analysis, models built simulanuously, best selected
+#' nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
 #' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
-#' maxit = 1000
-#' ctol <- 10^-5 # tolerance for parafac
+#' maxit = 2500
+#' ctol <- 10^-7 # tolerance for parafac
 #'
 #' pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
 #'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
+#'
+#' pfres_comps2 <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, output = "all")
 #' }
-eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 10, ctol = 10^-4, strictly_converging = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, ...){
+eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 20, ctol = 10^-8, strictly_converging = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, output = "best",...){
   eem_array <- eem2array(eem_list)
   if(normalise){
     if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
@@ -52,45 +56,65 @@ eem_parafac <- function(eem_list, comps, maxit = 500, normalise = TRUE, const = 
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
     cl <- NULL
     if(cores > 1){
-    cl <- makeCluster(cores, type="PSOCK")
-    clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
-    clusterEvalQ(cl, library(multiway))
+      cl <- makeCluster(cores, type="PSOCK")
+      clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
+      clusterEvalQ(cl, library(multiway))
     }
     if(strictly_converging){
-    cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "best", verbose = verbose, ...)
+      cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "all", verbose = verbose, ...)
     } else {
-      cpresult <- parafac(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "all", ...)#, ...
-      Rsqs <- lapply(cpresult,`[[`,"Rsq") %>% unlist()
-      cflags <- lapply(cpresult,`[[`,"cflag") %>% unlist()
-      converged <- sum(cflags == 0)/nstart
-      if(converged <= 0.5){
-        warning("Calculating the ",comp," component",ifelse(comp > 1, "s","")," model, only ",sum(cflags == 0)," out of ",nstart," models converged! You might want to increase the number of initialisations (nstart).")
-      }
-      cpresult <- cpresult[[which.max(Rsqs)]]
+      cpresult <- parafac(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "all",...)#, ...
     }
+    Rsqs <- lapply(cpresult,`[[`,"Rsq") %>% unlist()
+    cpresult1 <- cpresult[[which.max(Rsqs)]]
     if(cores > 1){
       stopCluster(cl)
     }
-    if(cpresult$cflag != 0){
-      warning("The PARAFAC model with ",comp," component",ifelse(comp > 1, "s", "")," did not converge! Increasing the number of initialisations (nstart) might solve the problem.")
+    cflags <- lapply(cpresult,`[[`,"cflag") %>% unlist()
+    converged <- sum(cflags == 0)/nstart
+    if(converged <= 0.5){
+      warning("Calculating the ",comp," component",ifelse(comp > 1, "s","")," model, only ",sum(cflags == 0)," out of ",nstart," models converged! You might want to increase the number of initialisations (nstart) or iterations (maxit).")
     }
-    attr(cpresult,"norm_factors") <- attr(eem_array,"norm_factors")
-    rownames(cpresult$B) <- eem_list[[1]]$em
-    rownames(cpresult$C) <- eem_list[[1]]$ex
-    rownames(cpresult$A) <- eem_list %>% eem_names()
-    labComp <- paste("Comp.",1:comp,sep="")
-    colnames(cpresult$A) <- labComp
-    colnames(cpresult$B) <- labComp
-    colnames(cpresult$C) <- labComp
-    # small issue with multiway: slightly negative values are possible despite using nonnegative constraints
-    non <- grepl("no|unsmpn",const)
-    if(non[1]) cpresult$A[cpresult$A < 0] <- 0
-    if(non[2]) cpresult$B[cpresult$B < 0] <- 0
-    if(non[3]) cpresult$C[cpresult$C < 0] <- 0
-    return(cpresult)
+    if(cpresult1$cflag != 0){
+      warning("The PARAFAC model with ",comp," component",ifelse(comp > 1, "s", "")," did not converge! Increasing the number of initialisations (nstart) or iterations (maxit) might solve the problem.")
+    }
+    if(output == "all"){
+      cpresult1$models <- lapply(cpresult,.trans_parafac, em = eem_list[[1]]$em, ex = eem_list[[1]]$ex, samples = eem_list %>% eem_names(), comp = comp, const = const, norm_factors = attr(eem_array,"norm_factors"))
+    }
+    cpresult1 <- .trans_parafac(cpresult1, em = eem_list[[1]]$em, ex = eem_list[[1]]$ex, samples = eem_list %>% eem_names(), comp = comp, const = const, norm_factors = attr(eem_array,"norm_factors"))
+    cpresult1$converged <- converged
+    cpresult1
   })
   mostattributes(res) <- attributes(eem_array)
   return(res)
+}
+
+#' Add data of a PARAFAC model derived from multiway from EEMs
+#'
+#' @param parafac parafac model
+#' @param em emission wavelengths
+#' @param ex excitation wavelengths
+#' @param samples sample names
+#' @param comp number of components
+#' @param const constraints
+#' @param norm_factors factors to invert normalisation
+#'
+#' @return parafac model
+.trans_parafac <- function(parafac, em, ex, samples, comp, const, norm_factors){
+  attr(parafac,"norm_factors") <- norm_factors
+  rownames(parafac$B) <- em #eem_list[[1]]$em
+  rownames(parafac$C) <- ex #eem_list[[1]]$ex
+  rownames(parafac$A) <- samples #eem_list %>% eem_names()
+  labComp <- paste("Comp.",1:comp,sep="")
+  colnames(parafac$A) <- labComp
+  colnames(parafac$B) <- labComp
+  colnames(parafac$C) <- labComp
+  # small issue with multiway: slightly negative values are possible despite using nonnegative constraints
+  non <- grepl("no|unsmpn",const)
+  if(non[1]) parafac$A[parafac$A < 0] <- 0
+  if(non[2]) parafac$B[parafac$B < 0] <- 0
+  if(non[3]) parafac$C[parafac$C < 0] <- 0
+  parafac
 }
 
 #' Calculate a PARAFAC model similar to and using \code{\link[multiway]{parafac}}.
@@ -175,8 +199,8 @@ eempf_rescaleBC <- function(pfmodel,newscale = "Fmax"){
     pfmodel$A <- pfmodel$A %*% diag(Bmax, nrow=comp) %*% diag(Cmax, nrow=comp) %>%
       `colnames<-`(colnames(pfmodel$B))
   } else {
-  pfmodel <- rescale(pfmodel,mode = "C", newscale = newscale, absorb = "A")
-  pfmodel <- rescale(pfmodel,mode = "B", newscale = newscale, absorb = "A")
+    pfmodel <- rescale(pfmodel,mode = "C", newscale = newscale, absorb = "A")
+    pfmodel <- rescale(pfmodel,mode = "B", newscale = newscale, absorb = "A")
   }
   attr(pfmodel,"norm_factors") <- nf
   labComp <- paste("Comp.",1:comp,sep="")
@@ -214,9 +238,9 @@ eempf_rescaleBC <- function(pfmodel,newscale = "Fmax"){
 eempf_comp_names <- function(pfmodel){
   if(class(pfmodel) == "parafac") {
     colnames(pfmodel$A)
-    }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
-      lapply(pfmodel, function(pfm) colnames(pfm$A))
-    } else{
+  }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
+    lapply(pfmodel, function(pfm) colnames(pfm$A))
+  } else{
     stop("pfmodel is not a parafac model or a list of parafac models!")
   }
 }
@@ -658,20 +682,25 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
 #' \donttest{
 #' data(eem_list)
 #'
-#' splithalf <- splithalf(eem_list,6,nstart=20)
+#' splithalf <- splithalf(eem_list, comps = 6)
 #' splithalf_plot(splithalf)
 #' }
-splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 10, cores = parallel::detectCores(logical = FALSE), maxit = 1000, ctol = 10^(-5), rescale = TRUE, verbose = FALSE, ...){
+splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 20, cores = parallel::detectCores(logical = FALSE), maxit = 2500, ctol = 10^(-7), rescale = TRUE, verbose = FALSE, ...){
   a <- seq(1,eem_list %>% length())
   if(rand){
     a <- a %>% sample()
   }
-  if(is.na(splits)) splits <- lapply(seq(1:4),function(sp) a[seq(sp,length(a),by=4)] %>% sort())
-  spl_eems <- lapply(combn(seq(1:4),2) %>% split(rep(1:ncol(.), each = nrow(.))), function(co){
+  if(is.na(splits[1])) splits <- lapply(seq(1:4),function(sp) a[seq(sp,length(a),by=4)] %>% sort())
+  names(splits) <- LETTERS[1:length(splits)]
 
+  spl_eems <- lapply(combn(seq(1:length(splits)),2) %>% split(rep(1:ncol(.), each = nrow(.))), function(co){
     eem_list %>% eem_extract(splits[co] %>% unlist() %>% sort(),keep=TRUE, verbose=FALSE)
-
   })
+
+  split_designations <- c("AB","AC","AD","BC","BD","CD")
+
+  names(spl_eems) <- split_designations
+
   if(verbose){
     cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
     if(normalise){
@@ -681,33 +710,49 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
     pb <- txtProgressBar(max = length(spl_eems), style=3)
   }
   fits <- lapply(1:length(spl_eems),function(i){
-    mod <- eem_parafac(spl_eems[[i]],comps=comps,normalise = normalise,maxit=maxit,nstart = nstart, cores = cores,ctol = ctol,verbose=FALSE,...)
+    # i <- 1
+    mod <- eem_parafac(spl_eems[[i]], comps = comps, normalise = normalise, maxit = maxit, nstart = nstart, cores = cores,ctol = ctol, verbose = FALSE)#,...
     if(rescale) mod <- lapply(mod,eempf_rescaleBC,newscale="Fmax")
     if(verbose) setTxtProgressBar(pb, i)
     mod
-    }) #
+  }) #
   if(verbose) close(pb)
-  reallign <- tcc_find_pairs(fits)
 
-  C_sort <- lapply(2:6,function(sel){
-    fit <- fits[[sel]]
-    reallign %>%
-      filter(selection==sel) %>%
-      arrange(comp1) %>%
-      .$comp2 %>%
-      substr(6,6) %>%
-      as.numeric()
-  })
+  sscs <- eempf_ssc(fits, tcc = TRUE)
 
-  fits <- lapply(2:6,function(sel){
+  sscs2 <- sscs %>%
+    lapply(lapply,ssc_max)
+
+  C_sort <- sscs2 %>%
+    .[grepl("1vs",names(.))] %>%
+    lapply(`[[`,2) %>%
+    lapply(attr, "order")
+
+  fits <- lapply(1:length(spl_eems),function(sel){
     lapply(fits[[sel]],function(f){
-      f$A <- f$A[,C_sort[[sel - 1]]]
-      f$B <- f$B[,C_sort[[sel - 1]]]
-      f$C <- f$C[,C_sort[[sel - 1]]]
+      f$A <- f$A[,C_sort[[sel]]]
+      f$B <- f$B[,C_sort[[sel]]]
+      f$C <- f$C[,C_sort[[sel]]]
       f
     })
   })
-  attr(fits,"tcc_table") <- attr(reallign,"tcc_table")
+
+  sel_comb <- lapply(1:(length(fits)/2), function(i){
+    paste0(split_designations[i],"vs",split_designations[length(fits) + 1 - i]) %>%
+      setNames(paste0(i,"vs",length(fits) + 1 - i))
+  }) %>%
+    unlist()
+
+  attr(fits,"tcc_table") <- sscs2 %>%
+    .[names(sel_comb)] %>%
+    lapply(lapply,data.frame) %>%
+    lapply(bind_cols) %>%
+    lapply(setNames, c("tcc_ex", "tcc_em")) %>%
+    lapply(mutate, component = paste0("Comp.",1:n())) %>%
+    bind_rows(.id = "comb") %>%
+    mutate(comb = sel_comb[comb]) %>%
+    select(component,comb,tcc_em,tcc_ex) %>%
+    arrange(component,comb)
   attr(fits,"splits") <- lapply(spl_eems,eem_names) %>% setNames(c("AB","AC","AD","BC","BD","CD"))
 
   fits
@@ -736,6 +781,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
 #' splithalf(eem_list,6,nstart=2)
 #' }
 tcc_find_pairs <- function(fits){
+  warning("This function is deprecated! Please use eempf_ssc and ssc_max.")
   sel <- 0
   problem <- FALSE
   table <- lapply(fits,function(fit){
@@ -811,31 +857,31 @@ tcc_find_pairs <- function(fits){
     ungroup()
 
   if(length(fits) == 6){
-  tt <- arrange_emex %>%
-    select(comp1) %>%
-    distinct(comp1) %>%
-    mutate(selection = "1", comp2 = substr(comp1,2,7)) %>%
-    bind_rows(arrange_emex) %>%
-    select(-tcc_em,-tcc_ex) %>%
-    group_by(comp1) %>%
-    spread(selection,comp2) %>%
-    ungroup()
+    tt <- arrange_emex %>%
+      select(comp1) %>%
+      distinct(comp1) %>%
+      mutate(selection = "1", comp2 = substr(comp1,2,7)) %>%
+      bind_rows(arrange_emex) %>%
+      select(-tcc_em,-tcc_ex) %>%
+      group_by(comp1) %>%
+      spread(selection,comp2) %>%
+      ungroup()
 
-  split_designations <- c("AB","AC","AD","BC","BD","CD")
+    split_designations <- c("AB","AC","AD","BC","BD","CD")
 
-  ttt <- lapply(1:3,function(i){
-    tt %>%
-      select(comp1,one_of(paste0(i),paste0(7-i))) %>%
-      mutate(i=i, comb = paste0(split_designations[i],"vs",split_designations[7-i])) %>%
-      setNames(c("set","x","y","i","comb"))
-  }) %>%
-    bind_rows() %>%
-    mutate(component = substr(set,2,7)) %>%
-    rowwise() %>%
-    mutate(tcc_ex = ct[[1]][paste0(i,x),paste0(7-i,y)],tcc_em = ct[[2]][paste0(i,x),paste0(7-i,y)]) %>%
-    arrange(component) %>%
-    select(component,comb,tcc_ex,tcc_em)
-  attr(arrange_emex,"tcc_table") <- ttt
+    ttt <- lapply(1:3,function(i){
+      tt %>%
+        select(comp1,one_of(paste0(i),paste0(7-i))) %>%
+        mutate(i=i, comb = paste0(split_designations[i],"vs",split_designations[7-i])) %>%
+        setNames(c("set","x","y","i","comb"))
+    }) %>%
+      bind_rows() %>%
+      mutate(component = substr(set,2,7)) %>%
+      rowwise() %>%
+      mutate(tcc_ex = ct[[1]][paste0(i,x),paste0(7-i,y)],tcc_em = ct[[2]][paste0(i,x),paste0(7-i,y)]) %>%
+      arrange(component) %>%
+      select(component,comb,tcc_ex,tcc_em)
+    attr(arrange_emex,"tcc_table") <- ttt
   }
   arrange_emex
 }
@@ -931,9 +977,9 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
     stop("The path to your file does not contain an existing directory. Please enter a correct path!")
   }
   factors <- rbind(pfmodel$C %>%
-    data.frame(mode = "Ex", wl = rownames(.),.),
-    pfmodel$B %>%
-      data.frame(mode = "Em", wl = rownames(.),.))
+                     data.frame(mode = "Ex", wl = rownames(.),.),
+                   pfmodel$B %>%
+                     data.frame(mode = "Em", wl = rownames(.),.))
   template <- system.file("openfluor_template.txt",package="staRdom")
   template <- readLines(template)
   template <- stringr::str_replace_all(template,"toolbox","toolbox\tstaRdom")
@@ -990,9 +1036,9 @@ eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NU
     if(is.null(cuvl)){
       warning("Because of missing cuvette length, absorbance slope parameters were not calculated!")
     } else {
-    abs_parameters <- abs_parms(absorbance %>%
-      select(one_of(names(absorbance))), cuvl)
-    loadings <- full_join(loadings,abs_parameters,by="sample")
+      abs_parameters <- abs_parms(absorbance %>%
+                                    select(one_of(names(absorbance))), cuvl)
+      loadings <- full_join(loadings,abs_parameters,by="sample")
     }
   }
   if(!is.null(export)){
@@ -1027,12 +1073,12 @@ eempf_export<- function(pfmodel,export = NULL, Fmax = TRUE,...){
   tabs <- list(pfmodel$A %>%
                  as.data.frame() %>%
                  tibble::rownames_to_column("sample") #%>%
-                 #`colnames<-`(colnames(.) %>% stringr::str_replace_all("Comp.","Fmax"))
+               #`colnames<-`(colnames(.) %>% stringr::str_replace_all("Comp.","Fmax"))
                ,
-               pfmodel$C %>%
+               pfmodel$B %>%
                  as.data.frame() %>%
                  tibble::rownames_to_column("Em"),
-               pfmodel$B %>%
+               pfmodel$C %>%
                  as.data.frame() %>%
                  tibble::rownames_to_column("Ex"))
   rows <- lapply(tabs,nrow) %>% unlist() %>% max()
@@ -1178,7 +1224,7 @@ eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
   if(order == "ex") order <- apply(pfmodel$C,2,which.max) %>% sort.list(decreasing = decreasing)
   if(ncol(pfmodel$A) != length(order)) stop("the length of the order vector does not fit the number of components")
 
-  mod <- try(multiway::reorder.parafac(pfmodel,neworder = order), silent=TRUE)
+  mod <- try(reorder.parafac(pfmodel,neworder = order), silent=TRUE)
   if(class(mod) =="try-error") stop(mod) else {
     mod
   }
@@ -1224,13 +1270,223 @@ eempf_excomp <- function(pfmodel,comps){
 #' comps3 <- eempf_bindxc(list(comps, comps2))
 #'
 eempf_bindxc <- function(components){
-B <- lapply(components, `[[`, "B") %>%
-  do.call(cbind,.)
-C <- lapply(components, `[[`, "C") %>%
-  do.call(cbind,.)
+  B <- lapply(components, `[[`, "B") %>%
+    do.call(cbind,.)
+  C <- lapply(components, `[[`, "C") %>%
+    do.call(cbind,.)
   list(B,C) %>%
-  `names<-`(c("B","C")) %>%
-  `class<-`("parafac_components")
+    `names<-`(c("B","C")) %>%
+    `class<-`("parafac_components")
+}
+
+#' Calculate the shift-and shape-sensitive congruence (SSC) between model components
+#'
+#' @param pf_models list of either PARAFAC models or component matrices
+#' @param tcc if set TRUE, TCC is returned instead
+#' @param m logical, if TRUE, emission and excitation SSCs or TCCs are combined by calculating the geometric mean
+#'
+#' @description The data variable pf_models can be supplied as list of PARAFAC models, output from a splithalf analysis or list of matrices
+#' Please see details of calculation in:
+#' U.J. Wünsch, R. Bro, C.A. Stedmon, P. Wenig, K.R. Murphy, Emerging patterns in the global distribution of dissolved matter fluorescence, Anal. Methods, 11 (2019), pp. 888-893
+#'
+#' @return (list of) tables containing SCCs between components
+#' @export
+#'
+#' @examples
+#' pf_models <- pf3[1:3]
+#'
+#' sscs <- eempf_ssc(pf_models)
+#' sscs
+#'
+#' tcc <- eempf_ssc(pf_models, tcc = TRUE)
+#' tcc
+#' ## mixed tcc (combine em and ex)
+#' mtcc <- eempf_ssc(pf_models, tcc = TRUE, m = TRUE)
+#' mtcc
+#'
+#' ## compare results from splithalf analysis
+#' sh_sscs <- eempf_ssc(sh)
+#'
+#' sh_sscs
+#' ## view diagonals only (components with similar numbers only)
+#' lapply(sh_sscs, lapply, diag)
+#'
+eempf_ssc <- function(pf_models, tcc = FALSE, m = FALSE){
+  classes <- unlist(lapply(unlist(pf_models, recursive = FALSE),class))
+  if(any(classes == "parafac") & !is.null(classes)){ ## Results from splithalf
+    pf_models %>%
+      unlist(recursive = FALSE) %>%
+      lapply(function(mod){
+        list(B=mod$B,C=mod$C)
+      }) %>%
+      eempf_ssc(tcc = tcc, m = m)
+  } else if(all(unlist(lapply(pf_models,class)) == "parafac") & !is.null(unlist(lapply(pf_models,class)))){ ## PARAFAC models
+    pf_models %>% lapply(function(mod){
+      list(B=mod$B,C=mod$C)
+    }) %>%
+      eempf_ssc(tcc = tcc, m = m)
+  } else if(all(classes == "matrix")){ ## matrices
+    SSCs <- lapply(1:length(pf_models),function(k){
+      lapply(k:length(pf_models), function(l){
+        B = ssc(pf_models[[k]][[1]], pf_models[[l]][[1]], tcc = tcc)
+        C = ssc(pf_models[[k]][[2]], pf_models[[l]][[2]], tcc = tcc)
+        list(B=B, C=C)
+      }) %>%
+        setNames(paste0(k,"vs",k:length(pf_models)))
+    }) %>% unlist(recursive = FALSE)
+    if(m){
+      SSCs <- lapply(SSCs, function(mats){
+        sqrt(mats[[1]]*mats[[2]])
+      })
+    }
+    SSCs
+  } else {
+    stop("No suitable data supplied! Please refer to the eempf_ssc help.")
+  }
+}
+
+#' Calculate the shift-and shape-sensitive congruence (SSC) between two matrices
+#'
+#' @param mat1 matrix
+#' @param mat2 matrix
+#' @param tcc if set TRUE, TCC is returned instead
+#'
+#' @description Please see details in:
+#' U.J. Wünsch, R. Bro, C.A. Stedmon, P. Wenig, K.R. Murphy, Emerging patterns in the global distribution of dissolved matter fluorescence, Anal. Methods, 11 (2019), pp. 888-893
+#'
+#' @return table containing pairwise SCC of matrices columns
+#' @export
+#'
+#' @examples
+#' pf_models <- pf3
+#' mat1 <- pf_models[[1]][[2]]
+#' mat2 <- pf_models[[2]][[2]]
+#'
+#' ## calculate SSC
+#' ssc(mat1,mat2)
+#'
+#' ## calculate TCC
+#' ssc(mat1,mat2, tcc = TRUE)
+#'
+ssc <- function(mat1, mat2, tcc = FALSE){
+  if(any(is.null(mat1),is.na(mat1),is.null(mat2), is.na(mat2))){
+    a <- NA
+  } else {
+    a <- lapply(1:ncol(mat1),function(nc){
+      col1 <- mat1[,nc]
+      apply(mat2,2,function(col2){
+        tcc_cal <- sum(col1*col2)/sqrt(sum(col1^2)*sum(col2^2))
+        if(!tcc){
+          wl <- as.numeric(names(col1))
+          if(any(is.na(wl)) | pracma::isempty(wl)){
+            stop("SSCs cannot be calculated. Please add wavelengths as rownames of the matrices!")
+          }
+          alpha <- abs((wl[which.max(col1)]-wl[which.max(col2)]) / diff(range(wl)))
+          beta <- abs((sum(col1/max(col1)) - sum(col2/max(col2))) / diff(range(wl)))
+          ssc <- tcc_cal -alpha - beta
+        } else {
+          tcc_cal
+        }
+      })
+    }) %>% setNames(colnames(mat1)) %>%
+      do.call(rbind,.)
+  }
+  attr(a,"method") <- ifelse(tcc, "TCC", "SSC")
+  a
 }
 
 
+#' Check SSCs between different models or initialisations of one model
+#'
+#' @param pfmodels list of parafac models
+#' @param best number of models with the highest R^2 to be used, default is all models
+#' @param tcc logical, if TRUE, TCC instead of SSC is calculated
+#'
+#' @return data.frame containing SSCs
+#' @export
+#'
+#' @import dplyr
+#'
+#' @examples
+#' data(pf_models)
+#'
+#' eempf_ssccheck(pf3[1:3])
+#'
+#' # SSCs of 3 split-half models, models need to be unlisted
+#' data(sh)
+#' eempf_ssccheck(unlist(sh[1:3], recursive = FALSE))
+eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE){
+  #pfmodels <- pf3
+  Rsqs <- lapply(pfmodels,`[[`,"Rsq") %>% unlist()
+  checkmods <- pfmodels[order(Rsqs, decreasing = TRUE)[1:best]]
+  not_conv <- checkmods %>%
+    lapply(`[[`,"cflag") %>%
+    unlist() %>%
+    sapply(identical, 0) %>%
+    sapply(`!`) %>%
+    sum()
+  if(not_conv){
+    warning(paste0(not_conv," of the best ", best, " chosen models ",ifelse(not_conv == 1, "is","are")," not converging!"))
+  }
+  #Rsqs <- lapply(checkmods,`[[`,"Rsq") %>% unlist()
+  sscs <- eempf_ssc(checkmods, tcc = tcc)
+  maxs <- lapply(sscs, lapply, ssc_max)
+  a <- names(maxs) %>%
+    lapply(function(na){
+      substr(na,1,1) != substr(na,4,4)
+    }) %>%
+    unlist() %>%
+    maxs[.] %>%
+    lapply(bind_rows)
+  ssccheck <- a %>%
+    lapply(mutate, comp = 1:n()) %>%
+    bind_rows() %>%
+    mutate(comparison = names(a)[cumsum(comp == 1)])
+  attr(ssccheck,"method") <- ifelse(tcc, "TCC", "SSC")
+  ssccheck
+}
+
+#' Calculate the combination of components giving the maximum of geometric mean of TCCs
+#'
+#' @param mat matrix
+#'
+#' @importFrom gtools permutations
+#' @import dplyr
+#'
+#' @return vector with TCCs having the highest possible geometric mean
+#' @export
+#'
+#' @examples
+#' mat <- matrix(c(7,2,13,6,0,7,1,5,5), nrow = 3)
+#' mat
+#'
+#' sscs <- ssc_max(mat)
+#' sscs
+#'
+#' # order of components:
+#' attr(sscs,"order")
+ssc_max <- function(mat){
+  n <- min(dim(mat))
+  p <- permutations(n , n)
+  combinations <- lapply(1:nrow(p),function(row){
+    per <- p[row,]
+    matrix(c(1:n,per), ncol = n,byrow = TRUE)
+  })
+
+  best_comb <- lapply(combinations, function(c){
+    pair <- c[,2] %>% unlist()
+    apply(c,2,function(pair){
+      mat[pair[1],pair[2]] %>% `^`(2)
+    }) %>%
+      sum() %>%
+      sqrt()
+  }) %>%
+    which.max() %>%
+    combinations[[.]]
+
+  res <- apply(best_comb,2,function(pair){
+    mat[pair[1],pair[2]]
+  })
+  attr(res,"order") <- best_comb[2,]
+  res
+}

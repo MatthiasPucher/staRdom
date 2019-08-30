@@ -533,3 +533,32 @@ eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, me
   TRUE
 }
 
+#' Plot results from an SSC check
+#'
+#' @param ssccheck outpout from \code{\link{eempf_ssccheck}}
+#'
+#' @return ggplot element
+#' @export
+#'
+#' @import dplyr
+#'
+#' @examples
+#' data(pf_models)
+#'
+#' ssccheck <- eempf_ssccheck(pf3[1:3])
+#' eempf_plot_ssccheck(ssccheck)
+eempf_plot_ssccheck <- function(ssccheck){
+  ssccheck %>%
+    mutate(excitation = B,  emission = C) %>%
+    select(-B,-C) %>%
+    gather("spectrum", "TCC", excitation, emission) %>%
+    group_by(comp, spectrum) %>%
+    mutate(mean = mean(TCC), min = min(TCC), max = max(TCC)) %>%
+    ggplot()+
+    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),y=mean, colour = comp, group = comp), shape = 21, size = 3)+
+    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),y=TCC, colour = comp, group = comp), alpha = 0.4)+
+    geom_errorbar(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),ymin = min, ymax = max, colour = comp, group = comp, linetype = spectrum))+
+    scale_color_viridis_c(guide = FALSE)+
+    labs(x = "Component", y = attr(ssccheck,"method"), linetype = "", shape = "")+
+    scale_x_continuous(breaks = c(1:max(ssccheck$comp)))
+}

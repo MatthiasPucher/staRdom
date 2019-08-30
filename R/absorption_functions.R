@@ -43,11 +43,11 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
     first_number <- min(which((substr(data,1,1) %>% grepl("[0-9]",.))))
     last_number <- max(which((substr(data,1,1) %>% grepl("[0-9]",.))))
     if(is.null(sep) | is.null(dec)){
-      nsepdec <- data[first_number] %>% stringr::str_extract_all("[^-0-9]") %>% unlist() %>% length()
-      example_number <- data[first_number] %>% stringr::str_extract("([-]?[0-9]+[.,]?[0-9]+)$")
-      if(is.null(dec) & nsepdec > 1) dec <- example_number %>% stringr::str_replace("([0-9]+)([.,]?)([0-9]*)","\\2")
-      if(is.null(sep)) sep <- gsub(pattern = dec, replacement = "", x=data[first_number], fixed=TRUE) %>%
-        stringr::str_replace("([0-9]+[.,]?[0-9]*)([^[-0-9]]+)([-]?[0-9]+[.,]?[0-9]+.*)","\\2")
+      nsepdec <- data[first_number] %>% stringr::str_extract_all("[^-0-9eE]") %>% unlist()
+      example_number <- data[first_number] %>% stringr::str_extract("([-]?[0-9]+[.,]?[0-9]+[eE]?[-0-9]+)$")
+      if(is.null(dec) & length(nsepdec) > 1) dec <- example_number %>% stringr::str_replace("([-0-9eE]+)([.,]?)([-0-9eE]*)","\\2")
+      if(is.null(sep)) sep <- gsub(pattern = dec, replacement = "", x = data[first_number], fixed = TRUE) %>%
+        stringr::str_extract(paste0("[^-0-9eE",dec,"]"))
       if(verbose) cat("using",sep,"as field separator and",dec,"as decimal separator.", fill=TRUE)
     }
     data <- stringr::str_split(data,sep)

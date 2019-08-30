@@ -14,7 +14,7 @@
 #' ### check
 eem_is.na <- function(eem_list){
   lapply(eem_list,function(eem){
-    any(is.na(eem$x)| is.infinite(eem$x))
+    sum(is.na(eem$x)| is.infinite(eem$x)) / length(eem$x)
   }) %>% unlist() %>%
     setNames(eem_names(eem_list))
 }
@@ -143,9 +143,14 @@ eem_duplicates.data.frame <- function(data){
 eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NULL, correction = FALSE, error = TRUE){
   problem = FALSE
 
-  nas <- which(eem_is.na(eem_list))
-  if(length(nas) > 0){
-    cat("NAs were found in the following samples: ",paste0(names(nas),collapse = "", sep=", "),fill=TRUE)
+  nas <- eem_is.na(eem_list)
+  if(any(nas > 0)){
+    cat("NAs were found in the following samples (ratio): ",paste0(names(nas)," (",round(nas,2),")",collapse = "", sep=", "),fill=TRUE)
+    if(any(nas > 0.12)){
+      cat(paste0("One or more samples have a NA ratio of ",round(max(nas),2)," a meaningful PARAFAC model might be difficult to produce. We suggest to interpolate the data or using a very high number of starts."), fill = TRUE)
+    } else {
+      cat("Please think about interpolating the data, this might give more stable and meaningful PARAFAC models!")
+    }
     problem = TRUE
   }
 

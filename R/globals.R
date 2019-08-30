@@ -48,5 +48,13 @@ globalVariables(c(
   "z",
   "mod_name",
   "control",
-  "modname"
+  "modname",
+  "B",
+  "C",
+  "TCC",
+  "emission",
+  "excitation",
+  "spec",
+  "spectrum",
+  "wl"
 ), package = "staRdom")

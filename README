@@ -16,6 +16,11 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.16 to 1.0.17
+  SSC included to measure the similarity between components
+  dec and sep recognition is possible with numbers in exponential format
+  SSCs between components of a model can be plotted
+
 1.0.15 to 1.0.16
   corrected reading single absorbance files
 
