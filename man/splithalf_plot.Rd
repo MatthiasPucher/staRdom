@@ -19,6 +19,7 @@ Graphs of all components of all models are plotted to be compared.
 data(sh)
 
 splithalf_plot(sh)
+str(sh)
 }
 \seealso{
 \code{\link[staRdom]{splithalf}}

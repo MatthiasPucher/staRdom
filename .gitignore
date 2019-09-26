@@ -5,3 +5,5 @@ doc
 .Rproj.user
 stardom.Rproj
 staRdom.Rproj
+.RData
+.gitignore

@@ -85,6 +85,7 @@ eempf_fits <- function(pfres,...){
 #' eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 #'
 eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
+  #pfres <- models
   c <- pfres %>% lapply(eempf_comp_mat)
   if(is.null(names(c))) names(c) <- paste0("model",seq(1:length(c)))
   tab <- lapply(1:length(c),function(n){
@@ -117,13 +118,14 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
       geom_line(aes(x=emn,y=value),colour="darkblue",group="emission", na.rm=TRUE)+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       facet_grid(comp ~ modname)+
-      labs(x="wavelength")
+      labs(x="wavelength (nm)")
   } else {
     pl <- tab %>%
       ggplot(aes(x = ex, y = em, z = value))+
       geom_raster(aes(fill = value))+ #,interpolate=TRUE+
       scale_fill_gradientn(colours=rainbow(75)[51:1],values=vals,limits = c(tab$value %>% min(na.rm=TRUE),fill_max))+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+      labs(x = "Excitation (nm)", y = "Emission (nm)") +
       facet_grid(comp ~ modname)
     if(contour){
       pl <- pl +
@@ -156,14 +158,26 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
 #' leverage <- eempf_leverage(pf4[[1]])
 #' eempf_leverage_plot(leverage)
 eempf_leverage_plot <- function(cpl, qlabel = 0.1){
-  cpl <- eempf_leverage_data(cpl,qlabel=qlabel)
-  breaks <- cpl$x[cpl$mode != "sample"] %>% as.numeric() %>% na.omit() %>% round() %>% unique() %>% .[.%%50 == 0]
+  cpl <- eempf_leverage_data(cpl,qlabel=qlabel) %>%
+    ungroup() %>%
+    mutate(mode = str_replace(mode,"em","Emission (nm)") %>% str_replace("ex","Excitation (nm)") %>% str_replace("sample","Sample"))
+  breaks <- seq(0,1000,50)
+  breaks2 <- cpl$x[cpl$mode == "Emission (nm)"] %>%
+    as.numeric() %>%
+    range(na.rm = TRUE)
+  breaks2 <- breaks[breaks >= breaks2[1] & breaks <= breaks2[2]]
+  vals2 <- cpl$x[cpl$mode == "Emission (nm)"][findInterval(breaks2, cpl$x[cpl$mode =="Emission (nm)"])]
+  breaks1 <- cpl$x[cpl$mode == "Excitation (nm)"] %>%
+    as.numeric() %>%
+    range(na.rm = TRUE)
+  breaks1 <- breaks[breaks >= breaks1[1] & breaks <= breaks1[2]]
+  vals <- cpl$x[cpl$mode == "Excitation (nm)"][findInterval(breaks1, cpl$x[cpl$mode =="Excitation (nm)"])]
   pl <- cpl %>%
     ggplot(aes(x=x,y=leverage))+
     geom_point(alpha = 0.4)+
     geom_text(aes(label=label),vjust="inward",hjust="inward", na.rm=TRUE, check_overlap = TRUE)+
-    scale_x_discrete(breaks = breaks) +
-    labs(x="variable") +
+    scale_x_discrete(labels = c(breaks1,breaks2), breaks = c(vals, vals2)) +
+    labs(x="Variables (wavelengths or samples)", y = "Leverage") +
     facet_wrap( ~ mode, scales = "free")
   pl
 }
@@ -368,6 +382,8 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #'
 eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE), contour = FALSE){
   #pfmodel,eem_list,select=eem_names(eem_list)[10:19]
+  #pfmodel <- pf4[[1]]
+  #eem_list <- eem_ex
   if(is.null(res_data)){
     res_data <- eempf_residuals(pfmodel,eem_list,select=select,cores = cores)
   }
@@ -390,10 +406,34 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
     #pos <- 1
     pl <- res_data %>%
       filter(Sample %in% (res_data$Sample %>% unique() %>% .[(spp*(pos-1)+1):(spp*pos)])) %>%
-      ggplot(aes(x=ex,y=em,z=value))+
-      geom_raster(aes(fill=value))+ #,interpolate=TRUE
+      ggplot(aes(x=ex,y=em,z=value))
+
+    diffs <- res_data %>%
+      select(-value, -type) %>%
+      gather("spec","wl", -Sample) %>%
+      group_by(Sample,spec) %>%
+      unique() %>%
+      #arrange(sample,spec,wl) %>%
+      #mutate(diffs = wl - lag(wl))
+      summarise(slits = diff(wl) %>% n_distinct()) %>%
+      .$slits != 1
+
+    if(any(diffs)){
+      pl <- pl +
+        #geom_raster(aes(fill = value), interpolate = interpolate)
+        layer(mapping = aes(colour = value, fill = value),
+              geom = "tile", stat = "identity", position = "identity") +
+        scale_colour_gradientn(colours=c(rainbow(70)[62],rainbow(70)[50:1]),values=vals,limits = c(res_data$value %>% min(na.rm=TRUE),fill_max))
+    } else {
+      pl <- pl +
+        layer(mapping = aes(fill = value),
+              geom = "raster", stat = "identity", position = "identity")
+    }
+    pl <- pl +
+      #geom_raster(aes(fill=value))+ #,interpolate=TRUE
       scale_fill_gradientn(colours=c(rainbow(70)[62],rainbow(70)[50:1]),values=vals,limits = c(res_data$value %>% min(na.rm=TRUE),fill_max))+
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+      labs(x = "Excitation (nm)", y = "Emission (nm)", fill = "fluorescence")
     if(contour){
       pl <- pl +
         geom_contour(colour = "black", size = 0.3)
@@ -425,6 +465,7 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
 #' data(sh)
 #'
 #' splithalf_plot(sh)
+#' str(sh)
 splithalf_plot <- function(fits){
   sel <- 0
   table <- lapply(fits,function(fit){
@@ -457,9 +498,9 @@ splithalf_plot <- function(fits){
     ggplot()+
     geom_line(data = . %>% filter(!is.na(ex)),aes(x=ex,y=value,colour=selection,group=selection),linetype=2)+
     geom_line(data = . %>% filter(!is.na(em)),aes(x=em,y=value,colour=selection,group=selection),linetype=1)+
-    facet_grid(. ~ comp)+
-    labs(x="wavelength",y="loading") +
-    theme(legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1))
+    labs(x="Wavelength (nm)",y="Loading") +
+    theme(legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1))+
+    facet_grid(. ~ comp)
   pl1 %>% print()
 }
 

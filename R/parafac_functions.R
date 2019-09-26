@@ -44,7 +44,7 @@
 #' pfres_comps2 <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
 #'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, output = "all")
 #' }
-eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 20, ctol = 10^-8, strictly_converging = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, output = "best",...){
+eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const = c("nonneg","nonneg","nonneg"), nstart = 30, ctol = 10^-8, strictly_converging = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE, output = "best",...){
   eem_array <- eem2array(eem_list)
   if(normalise){
     if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
@@ -451,7 +451,8 @@ eempf_leverage_data <- function(cpl,qlabel=0.1){
   pl <- cpl %>%
     group_by(mode) %>%
     mutate(q = quantile(leverage,1 - qlabel)) %>%
-    mutate(label = ifelse(leverage > q,x,NA))
+    mutate(label = ifelse(leverage > q,x,NA)) %>%
+    ungroup()
 }
 
 
@@ -1491,4 +1492,38 @@ ssc_max <- function(mat){
   })
   attr(res,"order") <- best_comb[2,]
   res
+}
+
+#' Extract modelling imformation from a PARAFAC model.
+#'
+#' @description The convergence behaviour of all initialisations in a PARAFAC model is shown by printing the numbers
+#'
+#' @param pfmodel PARAFAC model created with staRdom using output = "all"
+#' @param print logical, whether you want console output or just a list with results
+#'
+#' @return list with numbers of converging models, cflags and SSEs
+#' @export
+#'
+#' @examples
+#' data("pf_models")
+#' conv_beh <- eempf_convergence(pf4[[1]])
+eempf_convergence <- function(pfmodel, print = TRUE){
+  if(!is.list(pfmodel$models)){
+    stop("The supplied PARAFAC model does not contain the whole model set used in the calculation! Please rerun eem_parafac setting output = 'all'")
+  } else {
+    n <- length(pfmodel$models)
+    sses <- lapply(pfmodel$models,`[[`,"SSE") %>% unlist()
+    conv <- lapply(pfmodel$models,`[[`,"cflag") %>% unlist()
+    res <- list(models = n, converging = sum(conv == 0), nc_itlim = sum(conv == 1), nc_other = sum(conv == 2), conv = conv, sses = sses)
+    if(print){
+    cat("Calculated models: ", n, fill = TRUE)
+    cat("Converging models: ", sum(conv == 0), fill = TRUE)
+    cat("Not converging Models, iteration limit reached: ", sum(conv == 1), fill = TRUE)
+    cat("Not converging models, other reasons: ", sum(conv == 2), fill = TRUE)
+    cat("Best SSE: ", min(sses), fill = TRUE)
+    cat("Summary of SSEs of converging models:",fill = TRUE)
+    summary(sses[conv == 0])
+    }
+    invisible(res)
+  }
 }

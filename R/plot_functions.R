@@ -72,8 +72,6 @@ ggeem.eem <- function(data,fill_max=FALSE,...)
 #' @export
 ggeem.parafac <- function(data,fill_max=FALSE,...)
 {
-  #data("pf_models")
-  #data <- pf4[[1]]
   table <- data %>% eempf_comp_mat() #eem_list
   table <- lapply(table %>% names(),function(name){
     table[[name]] %>% mutate(sample = name)
@@ -110,7 +108,8 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
     .$slits != 1
 
   plot <- table %>%
-    ggplot(aes(x = ex, y = em, z = value))
+    ggplot(aes(x = ex, y = em, z = value))+
+    labs(x = "Excitation (nm)", y = "Emission (nm)")
 
   if(any(diffs)){
     plot <- plot +
@@ -127,7 +126,7 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
     #geom_tile(aes(fill = value, colour = value))+
     #scale_fill_gradient2(low="blue",mid="yellow",high="red")
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-    facet_wrap(~sample, scales = "free")
+    facet_wrap(~ sample)
   if(contour){
     plot <- plot +
       geom_contour(colour = "black", size = 0.3, ...)

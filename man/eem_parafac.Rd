@@ -5,7 +5,7 @@
 \title{Runs a PARAFAC analysis on EEM data}
 \usage{
 eem_parafac(eem_list, comps, maxit = 2500, normalise = TRUE,
-  const = c("nonneg", "nonneg", "nonneg"), nstart = 20, ctol = 10^-8,
+  const = c("nonneg", "nonneg", "nonneg"), nstart = 30, ctol = 10^-8,
   strictly_converging = FALSE, cores = parallel::detectCores(logical =
   FALSE), verbose = FALSE, output = "best", ...)
 }

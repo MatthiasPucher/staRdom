@@ -726,19 +726,12 @@ maxit = 10000 # increase number of maximum interations
 
 pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
 
-# check ratio of converging models
-lapply(pf4,`[[`,"converged")
-
-# which models converged?
-conv <- pf4[[1]]$models %>% lapply(`[[`, "cflag") %>% unlist()
-conv
-# what is the SSE in the different models
-sses <- pf4[[1]]$models %>% lapply(`[[`, "SSE") %>% unlist()
-sses
-
 pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 ```
-
+Checking the convergence behaviour of the created models:
+```{r eval=TRUE, include=TRUE, fig.width=4, fig.height=6}
+eempf_convergence(pf4[[1]])
+```
 ```{r eval=FALSE, include=TRUE, fig.width=4, fig.height=6}
 # just one model, not really a need to compare
 eempf_compare(pf4, contour = TRUE)
@@ -752,7 +745,7 @@ eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[1]] means the 4th model in the
 eempf_corplot(pf4[[1]], progress = FALSE)
 ```
 
-It is possible to use the results from a previous model as starting conditions (`Astart`, `Bstart` and `Cstart`). Supplying start matrices is only possible if a model with the same number of components, excitation and emission wavelengths is calculated. If samples differ (e.g. outlier removal or inclusion) simply remove the `Astart`. In the example, we set up a very rough model using a reduced tolerance but a lot of random starts. This step does the same as above but pushes your model towards global maxima without taking too much time. Please check the results from this step before you continue to avoid starting the next step close to a local maximum. In case of doubts, do not use start matrices because they are only used to speed up the calculations but do not provide better results!
+It is possible to use the results from a previous model as starting conditions (`Astart`, `Bstart` and `Cstart`). Supplying start matrices is only possible if a model with the same number of components, excitation and emission wavelengths is calculated. If samples differ (e.g. outlier removal or inclusion) simply remove the `Astart`. In the example, we set up a very rough model using a reduced tolerance but a lot of random starts. This step does the same as above but pushes the model towards global maxima without taking too much time. Please check the results from this step before you continue to avoid starting the next step close to a local maximum. In case of doubts, do not use start matrices because they are only used to speed up the calculations but do not provide better results!
 
 ```{r eval=FALSE, include=TRUE}
 # calculating a rough model, nstart is high (100) but ctol is 2 magnitudes larger or at least 0.01

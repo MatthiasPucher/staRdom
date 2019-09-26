@@ -374,4 +374,74 @@ eem_read_csv <- function(path, col = "ex", recursive = TRUE, is_blank_corrected 
     `class<-`("eemlist")
 }
 
-
+#' Applying functions on EEMs
+#'
+#' @param data eemlist to be modified
+#' @param func a function to be applied on the data.
+#' @param return either "eemlist" or "value"
+#' @param ... additional arguments passed on to func
+#'
+#' @details The EEMs are passed on as first argument to func. Additionally, the vector of excitation wavelengths is passed on as \code{ex} and the emission wavelengths as \code{em}. Therefore, the supplied function has to allow these arguments. The easiest way would be \code{...} (see example).
+#'
+#' @return eemlist or list
+#' @export
+#'
+#' @examples
+#' ## define a function, that would divide a matrix by its maximum
+#' # more general, if you want to return a valid eemlist (see below),
+#' # a matrix of the same size has to be returned
+#' # ... is used as a placeholder for any argument, important: em and
+#' # ex wavelengths are passed on, so the function needs to take them as arguments, even if they are not used
+#' norm_max <- function(x, ...){
+#'   x/max(x)
+#' }
+#'
+#' # load example data
+#' data("eem_list")
+#'
+#' # normalise eems by the function defined above
+#' norm_eems <- eem_apply(eem_list,norm_max,"eemlist")
+#'
+#' # plot the results to see the difference
+#' ggeem(norm_eems)
+#'
+#' # define another function. what values were used to
+#' # multiply the eems with?
+#' norm_fac <- function(x, ...){
+#'   1/max(x)
+#' }
+#'
+#' # return a list of factors used for normalisation
+#' norm_factors <- eem_apply(eem_list,norm_fac,"value")
+#'
+#' unlist(norm_factors)
+#'
+#' # return list of em vectors.
+#' # important: x needs to be in the first position, but
+#' # is not used later!
+#' extr_em <- function(x,em,...){
+#'   em
+#' }
+#'
+#' em_vectors <- eem_apply(eem_list,extr_em,"value")
+#'
+#' em_vectors
+#'
+eem_apply <- function(data, func, return = c("eemlist","value"),...){
+  stopifnot(class(data) == "eemlist")
+  #eem <- eem_list[[1]]
+  ress <- lapply(data, function(eem){
+    #extr_em(eem$x, ex = eem$ex, em = eem$em)
+    eem$x <- func(eem$x, ex = eem$ex, em = eem$em,...)#,...
+    if(return[1] == "eemlist"){
+      res <- eem
+    } else {
+      res <- eem$x
+    }
+    res
+  })
+  if(return[1] == "eemlist"){
+    class(ress) <- "eemlist"
+  }
+  ress
+}

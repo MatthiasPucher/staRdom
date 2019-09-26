@@ -16,6 +16,13 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.18 to 1.0.19
+  function eem_apply to apply any functions on EEMs
+  corrected wrong a254 and a300 were wrong when using absorption data
+
+1.0.17 to 1.0.18
+  Minor issues to fulfill CRAN requirements
+
 1.0.16 to 1.0.17
   SSC included to measure the similarity between components
   dec and sep recognition is possible with numbers in exponential format
