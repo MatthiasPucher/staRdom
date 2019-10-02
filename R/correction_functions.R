@@ -267,7 +267,7 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
 #'
 #' @param data fluorescence data of class eemlist
 #' @param abs_data absorbance data
-#' @param cuvl length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data
+#' @param cuvl length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data. This is ignored, if unit is "absorption".
 #' @param unit unit of absorbance data. Either "absorbance" or "absorption".
 #'
 #' @return fluorescence data of class eemlist
@@ -280,12 +280,13 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
 #' data(absorbance)
 #'
 #' eem_ife_correction(eem_list, absorbance, 5, unit = "absorbance")
-eem_ife_correction <- function(data,abs_data,cuvl, unit = "absorbance"){
-  #abs_data <- absorbance
-  # require(tidyverse)
-  if(unit == "absorption"){
+eem_ife_correction <- function(data, abs_data, cuvl = NULL, unit = c("absorbance","absorption")){
+  if(!unit[1] %in% c("absorbance","absorption")) stop("Unit must be either 'absorbance' or 'absorption'!")
+  if(unit[1] == absorbance & !is.numeric(cuvl)) stop("Please specify a valid cuvette length!")
+  if(unit[1] == "absorption"){
     abs_data <- abs_data %>%
       mutate_at(vars(-wavelength),`*`,(1/log(10)))
+    cuvl <- 100
   }
   eem_list <- data %>% lapply(function(eem1){
     if(is.data.frame(cuvl)) cl <- cuvl[eemnam,] else cl <- cuvl
@@ -296,7 +297,7 @@ eem_ife_correction <- function(data,abs_data,cuvl, unit = "absorbance"){
       eem1 <- eem1 %>% eem_inner_filter_effect(absorbance = na.omit(abs_data[c("wavelength",nam)]),pathlength=cl)
       eem1[[1]]$sample <- nam
     } else {
-      warning(paste0("No absorbance data was found for sample ",nam,"!"))
+      warning(paste0("No ",unit," data was found for sample ",nam,"!"))
     }
     eem1
   }) %>%

@@ -391,7 +391,8 @@ eem_read_csv <- function(path, col = "ex", recursive = TRUE, is_blank_corrected 
 #' # more general, if you want to return a valid eemlist (see below),
 #' # a matrix of the same size has to be returned
 #' # ... is used as a placeholder for any argument, important: em and
-#' # ex wavelengths are passed on, so the function needs to take them as arguments, even if they are not used
+#' # ex wavelengths are passed on, so the function needs to take them as arguments,
+#' # even if they are not used
 #' norm_max <- function(x, ...){
 #'   x/max(x)
 #' }

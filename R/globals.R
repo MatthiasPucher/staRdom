@@ -56,5 +56,6 @@ globalVariables(c(
   "excitation",
   "spec",
   "spectrum",
-  "wl"
+  "wl",
+  "absorbance"
 ), package = "staRdom")

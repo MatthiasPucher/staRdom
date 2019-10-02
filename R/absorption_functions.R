@@ -91,7 +91,7 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 #' Calculating slopes and slope ratios of a data frame of absorbance data.
 #'
 #' @param abs_data data frame containing absorbance data.
-#' @param cuvle path length in cm
+#' @param cuvle cuvette (path) length in cm, ignored if unit is absorption
 #' @param unit unit of absorbance data: if "absorbance", absorbance data is multiplied by log(10) = 2.303 for slope calculations
 #' @param add_as additionally to a254 and a300, absorbance at certain wavelengths can be added to the table
 #' @param limits list with vectors containig upper and lower bounds of wavelengeth ranges to be fitted
@@ -141,26 +141,26 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 #' \donttest{
 #' data(absorbance)
 #'
-#' a1 <- abs_parms(absorbance,cuvle=5, verbose = TRUE)
-#' a2 <- abs_parms(absorbance,cuvle=5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
+#' a1 <- abs_parms(absorbance, cuvle = 5, verbose = TRUE)
+#' a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
 #' }
-abs_parms <- function(abs_data,cuvle,unit = "absorbance",add_as = NULL,limits=list(c(275,295),c(350,400),c(300,700)),l_ref=list(275,350,300),S=TRUE,lref=FALSE,p=FALSE,model=FALSE,Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores(logical = FALSE), verbose = FALSE){
+abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption"), add_as = NULL, limits = list(c(275, 295), c(350, 400), c(300, 700)), l_ref = list(275, 350, 300), S = TRUE, lref = FALSE, p = FALSE, model = FALSE, Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores(logical = FALSE), verbose = FALSE){
+  if(!unit[1] %in% c("absorbance","absorption")) stop("Unit must be either 'absorbance' or 'absorption'!")
+  if(unit[1] == "absorbance" & !is.numeric(cuvle)) stop("Please specify a valid cuvette length!")
   if(S | lref | p | model){
     cl <- makeCluster(spec = cores, type = "PSOCK")
     doParallel::registerDoParallel(cl)
 
     if(verbose){
-      cat("calculating slopes of",ncol(abs_data)-1,"absorbance spectra...", fill=TRUE)
+      cat("calculating slopes of",ncol(abs_data)-1,unit[1],"spectra...", fill=TRUE)
     }
-
-    abs_data[,2:ncol(abs_data)] <- abs_data[,2:ncol(abs_data)]/cuvle*100
 
     res <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { #, .options.snow = opts
       samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
       r <- lapply(seq(1,length(limits)),function(n){
         wllim <- limits[[n]]
         ref <- l_ref[[n]]
-        do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]*ifelse(unit == "absorbance",log(10),1),wllim,ref))
+        do(abs_data,m1 = abs_fit_slope(.$wavelength,.[[samp]]*ifelse(unit[1] == "absorbance",100/cuvle*log(10),1),wllim,ref))
       }) %>%
         bind_cols(as_tibble(samp),.) %>%
         setNames(c("sample",lapply(limits,paste0,collapse="_") %>% unlist() %>% paste0("model",.)))
@@ -221,7 +221,7 @@ abs_parms <- function(abs_data,cuvle,unit = "absorbance",add_as = NULL,limits=li
 
     resSint <- foreach(i = 1:(ncol(abs_data)-1)) %dopar% { # , .options.snow = opts
       samp <- abs_data %>% names() %>% .[. != "wavelength"] %>% .[i]
-      r <- do(abs_data,Sint = cdom::cdom_spectral_curve(.$wavelength,.[[samp]]*ifelse(unit == "absorbance",log(10),1),interval = interval, r2threshold = r2threshold)) %>%
+      r <- do(abs_data,Sint = cdom::cdom_spectral_curve(.$wavelength,.[[samp]]*ifelse(unit[1] == "absorbance",100/cuvle*log(10),1),interval = interval, r2threshold = r2threshold)) %>%
         bind_cols(as_tibble(samp),.) %>%
         setNames(c("sample","Sint"))
     } %>%
@@ -241,7 +241,7 @@ abs_parms <- function(abs_data,cuvle,unit = "absorbance",add_as = NULL,limits=li
   as_vec <- c(250,254,300,365,465,665,add_as) %>% unique()
 
   as <- abs_data[-1] %>%
-    apply(2,function(col) approx(x=abs_data$wavelength,y=col*ifelse(unit == "absorbance",1,1/log(10)),xout=as_vec)) %>%
+    apply(2,function(col) approx(x=abs_data$wavelength,y=col*ifelse(unit[1] == "absorbance",100/cuvle,1/log(10)),xout=as_vec)) %>%
     lapply(`[[`,"y") %>%
     bind_cols(wavelength=as_vec,.)
 

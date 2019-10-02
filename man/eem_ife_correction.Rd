@@ -4,14 +4,15 @@
 \alias{eem_ife_correction}
 \title{Wrapper function to allow eem_inner_filter_effect (eemR) handling different cuvette lengths.}
 \usage{
-eem_ife_correction(data, abs_data, cuvl, unit = "absorbance")
+eem_ife_correction(data, abs_data, cuvl = NULL, unit = c("absorbance",
+  "absorption"))
 }
 \arguments{
 \item{data}{fluorescence data of class eemlist}
 
 \item{abs_data}{absorbance data}
 
-\item{cuvl}{length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data}
+\item{cuvl}{length of cuvette of absorption measurment in cm. Either a number or a data frame. Row names of data frame have to be similar to sample names in data. This is ignored, if unit is "absorption".}
 
 \item{unit}{unit of absorbance data. Either "absorbance" or "absorption".}
 }

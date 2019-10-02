@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.19 to 1.0.20
+  corrected an issue with absorption data
+
 1.0.18 to 1.0.19
   function eem_apply to apply any functions on EEMs
   corrected wrong a254 and a300 were wrong when using absorption data
