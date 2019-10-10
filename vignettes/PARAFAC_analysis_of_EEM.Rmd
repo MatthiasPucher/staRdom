@@ -146,7 +146,7 @@ This is an example to load data from instrument specific ASCII files. `import_fu
 eem_list <- eem_read(folder, import_function = "cary")
 ```
 
-If your instrument is not amongst the mentioned ones, eemR offers the opportunity to [create custom import functions](https://cran.r-project.org/web/packages/eemR/vignettes/custom-import-function.html).
+If your instrument is not amongst the mentioned ones, eemR offers the opportunity to create custom import functions ([see according vignette](https://cran.r-project.org/package=eemR)).
 
 To have a look at your data, you can plot the samples in several plots using `eem_overview_plot`. `ggeem` is another function that plots EEMs, but it produces only one plot, which can be overloaded in case of many samples. `spp` defines the number of samples per plot. Not present data is not shown (light greyish), NAs are dark grey. `contour = TRUE` adds contour lines to the EEM plots.
 ```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}

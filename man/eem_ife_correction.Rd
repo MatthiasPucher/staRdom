@@ -27,5 +27,5 @@ folder <- system.file("extdata/cary/scans_day_1", package = "eemR") # load examp
 eem_list <- eem_read(folder, import_function = "cary")
 data(absorbance)
 
-eem_ife_correction(eem_list, absorbance, 5, unit = "absorbance")
+eem_list <- eem_ife_correction(data = eem_list, abs_data = absorbance, cuvl = 5, unit = "absorbance")
 }

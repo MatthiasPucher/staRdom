@@ -279,10 +279,10 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
 #' eem_list <- eem_read(folder, import_function = "cary")
 #' data(absorbance)
 #'
-#' eem_ife_correction(eem_list, absorbance, 5, unit = "absorbance")
+#' eem_list <- eem_ife_correction(data = eem_list, abs_data = absorbance, cuvl = 5, unit = "absorbance")
 eem_ife_correction <- function(data, abs_data, cuvl = NULL, unit = c("absorbance","absorption")){
   if(!unit[1] %in% c("absorbance","absorption")) stop("Unit must be either 'absorbance' or 'absorption'!")
-  if(unit[1] == absorbance & !is.numeric(cuvl)) stop("Please specify a valid cuvette length!")
+  if(unit[1] == "absorbance" & !is.numeric(cuvl)) stop("Please specify a valid cuvette length!")
   if(unit[1] == "absorption"){
     abs_data <- abs_data %>%
       mutate_at(vars(-wavelength),`*`,(1/log(10)))
