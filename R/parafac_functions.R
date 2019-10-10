@@ -1506,7 +1506,9 @@ ssc_max <- function(mat){
 #'
 #' @examples
 #' data("pf_models")
-#' conv_beh <- eempf_convergence(pf4[[1]])
+#'
+#' pfmodel <- pf4[[1]]
+#' conv_beh <- eempf_convergence(pfmodel)
 eempf_convergence <- function(pfmodel, print = TRUE){
   if(!is.list(pfmodel$models)){
     stop("The supplied PARAFAC model does not contain the whole model set used in the calculation! Please rerun eem_parafac setting output = 'all'")
@@ -1522,7 +1524,8 @@ eempf_convergence <- function(pfmodel, print = TRUE){
     cat("Not converging models, other reasons: ", sum(conv == 2), fill = TRUE)
     cat("Best SSE: ", min(sses), fill = TRUE)
     cat("Summary of SSEs of converging models:",fill = TRUE)
-    summary(sses[conv == 0])
+    summary(sses[conv == 0]) %>%
+      print()
     }
     invisible(res)
   }

@@ -47,7 +47,7 @@ staRdom is a package for R version `r R.Version()$major` `r citep(citation())` t
 * humification index (HIX; `r citet("10.1021/es0155276")`)
 * calculating common absorbance (slope) parameters:
     * absorbance at 254 nm (a254; `r citet("10.1016/0043-1354(72)90017-6")`),
-    * absorbance at 300 nm (a300),
+    * absorbance at 300 nm (a300; `r citet("10.1007/s00027-005-0754-9")`),
     * ratio of absorbance at 250 to 365 nm (E2:E3; `r citet("10.1016/0043-1354(87)90086-8")`),
     * ratio of absorbance at 465 to 665 nm (E4:E6; `r citet("10.1016/0048-9697(87)90478-5")`),
     * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) `r citep("10.4319/lo.2008.53.3.0955")`,
@@ -141,15 +141,15 @@ folder <- system.file("extdata/EEMs/", package = "staRdom") # folder containing 
 eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv) # in case you use your own data, just replace folder by a path. e.g. "C:/folder/another folder" and change import_function according to instrument.
 ```
 
-This is an example to load data from instrument specific ASCII files. `import_function` has to be set accordingly: Varian Cary Eclipse (`"cary"`), Horiba Aqualog (`"aqualog"`), Horiba Fluoromax-4 (`"fluoromax4"`), Shimadzu (`"shimadzu"`), Hitachi F-7000 (`eem_hitachi`) and generic csv files (`eem_csv` when excitation wavelengths are in columns or `eem_csv2` when emission wavelengths are in columns). Please consider, `eem_hitachi`, `eem_csv` and `eem_csv2` are without hyphens!
+This is an example to load data from instrument specific ASCII files. `import_function` has to be set accordingly: Varian Cary Eclipse (`"cary"`), Horiba Aqualog (`"aqualog"`), Horiba Fluoromax-4 (`"fluoromax4"`), Shimadzu (`"shimadzu"`), Hitachi F-7000 (`eem_hitachi`) and generic csv files (`eem_csv` when excitation wavelengths are in columns or `eem_csv2` when emission wavelengths are in columns). Please note, `eem_hitachi`, `eem_csv` and `eem_csv2` are without hyphens!
 ```{r eval=FALSE, include=TRUE}
 eem_list <- eem_read(folder, import_function = "cary")
 ```
 
-If your instrument is not amongst the mentioned ones, eemR offers the opportunity to create custom import functions.
+If your instrument is not amongst the mentioned ones, eemR offers the opportunity to [create custom import functions](https://cran.r-project.org/web/packages/eemR/vignettes/custom-import-function.html).
 
 To have a look at your data, you can plot the samples in several plots using `eem_overview_plot`. `ggeem` is another function that plots EEMs, but it produces only one plot, which can be overloaded in case of many samples. `spp` defines the number of samples per plot. Not present data is not shown (light greyish), NAs are dark grey. `contour = TRUE` adds contour lines to the EEM plots.
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -185,13 +185,11 @@ The data can be checked for possible incorrect entries (in brackets names of the
 
 * NAs ([‘Not Available’ / missing values](https://stat.ethz.ch/R-manual/R-devel/library/base/html/NA.html)) in data (`NAs_in_EEMs`)
 
-* duplicate and invalid sample names (`Duplicate_EEM_names`, `Duplicate_absorbance_names`, `invalid_EEM_names`, `invalid_absorbance_names`)
-
 * wavelength range mismatches (in-between EEMs: `EEMs_more_data_than_smallest`, absorbance spectrum smaller than EEM spectrum: `EEM_absorbance_wavelength_range_mismatch`). Concerning wavelength spectra, only the range is important since values in-between are interpolated automatically for absorbance data and can be interpolated manually for different EEM samples using the function `eem_extend2largest` with `interpolation = TRUE`.
 
 * missing data (EEM but no absorbance: `EEMs_missing_absorbance`, absorbance but no EEM: `Absorbance_missing_EEMs`, EEM but no metadata: `EEMs_missing_metadata`,metadata but no EEM: `Metadata_missing_EEMs`)
 
-* inconsistencies in samples names between EEM, absorbance and metadata (e.g. samples missing in one of the three sets), (`Duplicate_EEM_names`, `Duplicate_absorbance_names`, `invalid_EEM_names`, `invalid_absorbance_names`,`Duplicates_metatable_names`)
+* inconsistencies (duplicates, invalid)in samples names between EEM, absorbance and metadata (e.g. samples missing in one of the three sets), (`Duplicate_EEM_names`, `Duplicate_absorbance_names`, `invalid_EEM_names`, `invalid_absorbance_names`,`Duplicates_metatable_names`)
 
 * not applied correction methods (`missing_data_correction`).
 
@@ -203,11 +201,11 @@ In case of problems, you need to reorganise your data manually and revise the st
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 ```
 
-EEM data can contain NAs to perform a PARAFAC analysis as long as there is a certain amount of numeric values present. Depending on the data set, more than 15 to 20 % might cause not-converging models or models converging in a lokal minimum. We always suggest an interpolation of the data to get good results and a stable PARAFAC modelling process `r citep("10.1016/j.chemolab.2015.01.017")`.
+EEM data can contain NAs to perform a PARAFAC analysis as long as there is a certain amount of numeric values present. Depending on the data set, more than 15 to 20 % might cause non-converging models or models converging in a lokal minimum. We always suggest an interpolation of the data to get good results and a stable PARAFAC modelling process `r citep("10.1016/j.chemolab.2015.01.017")`.
 
 Different EEM sizes are not a problem, because there is a way to address this as shown below. For a blank subtraction or a PARAFAC analysis, the available data for each sample must be similar.
 
-The above mentioned absence of absorbance data for the blank samples can be justified, as absorbance of MilliQ is theoretically 0 over the complete spectrum. In the further analysis, this is no problem.
+The above mentioned absence of absorbance data for the blank samples can be justified, as absorbance of ultrapure water is theoretically 0 over the complete spectrum. In the further analysis, this is no problem.
 
 # Data preparation and correction
 
@@ -247,7 +245,7 @@ eem_list <- eem_spectral_cor(eem_list,Excor,Emcor)
 
 ## Blank subtraction
 
-Blanks are samples of MilliQ that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They can be used to do some corrections on the samples in the same (sub)folders. If multiple blanks were measured, they are averaged. The example data consist of only two folders with one blank each. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors `r citep("10.1039/c3ay41160e")`.
+Blanks are samples of ultrapure water that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They can be used to apply blank subtractionand Raman normalisation (see below) and are used for samples in the same (sub)folders. If multiple blanks were measured, they are averaged. The example data consist of only two folders with one blank each. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors `r citep("10.1039/c3ay41160e")`.
 
 The blanks must be the same size as the samples they will be subtracted from. As different sample sizes were reported above, all samples will be brought to the same data range before. You can find a description on data and wavelength ranges below.
 
@@ -259,26 +257,26 @@ eem_list <- eem_extend2largest(eem_list, interpolation = 1, extend = FALSE, core
 eem_list <- eem_remove_blank(eem_list)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
 ## Inner-filter effect correction
 
-Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair `r citep("10.4319/lom.2013.11.616")`. In case of a maximum absorbance larger than 1.5 cm⁻¹, the sample needs to be diluted, because the absorbance is to high to be corrected by the applied IFE function (or mathematical IFE in general). The example uses a path length of 5 cm (5 cm long cuvettes) for absorption measurements.
+Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair `r citep("10.4319/lom.2013.11.616")`. In case of a maximum absorbance larger than 1.5 cm⁻¹, the sample needs to be diluted, because the absorbance is to high to be corrected by the applied IFE function (or mathematical IFE correction in general). The example uses a path length of 5 cm (5 cm long cuvettes) for absorption measurements.
 
-In the example below, there is a warning about no absorbance data for the blank samples. This warning is not a problem because in MilliQ samples there is practically no IFE and the sample is removed in the further analysis.
+In the example below, there is a warning about no absorbance data for the blank samples. This warning is not a problem because in ultrapure water samples there is practically no IFE and the sample is removed in the further analysis.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_ife_correction(eem_list,absorbance, cuvl = 5)
 ```
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
 ## Raman normalisation
 
-Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. Therefore it can be normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a MilliQ sample. All fluorescence intensities are divided by the area (integral) of the Raman peak (excitation of 350 nm between an emission of 371 nm and 428 nm) `r citep("10.1366/000370209788964548")`. Values are interpolated if the wavelengths are missing.
+Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. Therefore it can be normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a ultrapure water sample. All fluorescence intensities are divided by the area (integral) of the Raman peak (excitation of 350 nm between an emission of 371 nm and 428 nm) `r citep("10.1366/000370209788964548")`. Values are interpolated if the wavelengths are missing.
 
 You can use blanks, numeric values or data frames as source for the values. In case you use blank samples, again the blanks in the same sub-folder as the sample are used. Blanks are recognised by having "blank", "miliq", "milliq", "nano" or "mq" in the file name. This means regular samples must not have it.
 
@@ -286,7 +284,7 @@ You can use blanks, numeric values or data frames as source for the values. In c
 eem_list <- eem_raman_normalisation2(eem_list, blank = "blank")
 ```
 
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -313,23 +311,23 @@ remove_scatter_width <- c(15,15,15,15)
 eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatter_width = remove_scatter_width)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
-Removed scatter areas can be interpolated `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points`, (2) excitation and emission wavelength-wise interpolation with `pchip` and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear interpolation in 2 dimensions with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating.
+Although it is not always necessary, removed scatter areas should be interpolated for reasonable results and faster calculation in the PARAFAC analysis `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points` `r citep("10.1109/2945.620490")`, (2) excitation and emission wavelength-wise interpolation with `pchip` `r citep("10.1137/1.9780898717952")` and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear interpolation in 2 dimensions with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_interp(eem_list, cores = cores, type = 1, extend = FALSE)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.heigth = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
 ## Correct for dilution
 
-Data are corrected for dilution via `eem_dilution`. Each EEM is multiplied with a dilution factor (e.g. 10 if 1 part sample was diluted with 9 parts MilliQ). Either a single numeric value for all samples or a table with a specific value for each sample is used.
+Data are corrected for dilution via `eem_dilution`. Each EEM is multiplied with a dilution factor (e.g. 10 if 1 part sample was diluted with 9 parts ultrapure water). Either a single numeric value for all samples or a table with a specific value for each sample is used.
 
 This step can also be done manually after calculating peaks, indices and PARAFAC components. By that, a slightly different result has to be expected if EEMs are not normalised prior to creating a PARAFAC model. In other cases there is no difference whether EEMs or results are multiplied by the dilution factor.
 
@@ -345,7 +343,7 @@ eem_overview_plot(eem_list, spp=9) # plot spared, due to no dilution it looks li
 
 ## Smooth data
 
-Depending on your instrument smoothing the data could be beneficial for peak picking. For PARAFAC analysis smoothing is not advised. The parameter `n` specifies the moving average window size in nm. 
+Depending on your instrument, smoothing the data could be beneficial for peak picking. For PARAFAC analysis smoothing is not advised. The parameter `n` specifies the moving average window size in nm. 
 
 ```{r eval=TRUE, include=TRUE}
 eem4peaks <- eem_smooth(eem_list, n = 4)
@@ -418,7 +416,7 @@ kable(slope_parms %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),for
 
 # Creating a PARAFAC model
 
-Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, we used the same dataset and analysis procedure as in the drEEM tutorial which is an appendix to `r citet("10.1039/c3ay41160e")`.
+Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, we used the same dataset and analysis procedure as in the drEEM tutorial which is a supplement to `r citet("10.1039/c3ay41160e")`.
 
 ## Loading data
 
@@ -497,7 +495,7 @@ For a PARAFAC analysis, all samples of the set need to be similar in terms of pr
 ## Find and remove noise in EEM data
 
 An important way of finding noise in EEM data is viewing the samples. You can use the function `eem_overview_plot` to view all your samples in a convenient way. 
-With the following functions, data can be removed or set to NA (NAs are no problem for the PATRAFAC algorithm) in different ways, or be interpolated, depending on what you would like to do:
+With the following functions, data can be removed or set to NA (NAs are theoretically no problem for the PARAFAC algorithm, but the calculation process and the results are often more convient without) in different ways, or be interpolated, depending on what you would like to do:
 
 * `eem_extract` removes whole samples either by name or by number.
 
@@ -571,7 +569,7 @@ eem_ex <- eem_ex %>%
 ```
 
 Here, we show the changes, made to sample d667sf by the demonstrated steps above (including the removing of the scatter):
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height = 5}
 ggeem(eem_ex, contour = TRUE)
 ```
 
@@ -579,13 +577,13 @@ ggeem(eem_ex, contour = TRUE)
 
 It is crucial to find an appropriate number of components in the analysis. If the number of components is too large, it may be the case that one component was split into two; if it is too low, relevant components may get lost `r citep("10.1039/c3ay41160e")`. To help you find the appropriate number, a series of PARAFAC models can be calculated and compared. In this example 5 models with 3 to 7 components are calculated.
 
-The alternating-least-squares algorithm used to calculate the PARAFAC model optimises the components in order to minimise the residual error. The goal is to find a global minimum of the residual function. Depending on the random start values (random initialisation), different local minima can be found. To get the global minimum, a defined number `nstart` of initialisations is used for separate model calculations. The model with the smallest error is then used for further analyses, assuming it is a global minimum. 8 might by a good start for `nstart` although for a profound analysis higher values (e.g. 20 to 50) are suggested.
+The alternating-least-squares algorithm used to calculate the PARAFAC model optimises the components in order to minimise the residual error. The goal is to find a global minimum of the residual function. Depending on the random start values (random initialisation), different local minima can be found. To get the global minimum, a defined number `nstart` of initialisations is used for separate model calculations. The model with the smallest error is then used for further analyses, assuming it is a global minimum. 25 might by a good start for `nstart` although for a profound analysis higher values (e.g. 50) are suggested.
 
 Some of these random initialisations might not converge. If there are still enough converging models, the result is reliable and there is no problem. `eem_parafac` returns a warning in case of less than 50 % converging models. Furthermore, it is possible to calculate a specific number of converging models by setting the argument `strictly converging = TRUE`. When using this, due to the iterative restarting of not converging models, this takes more time and using more starts from the beginning is a faster way to get a reasonable number of converging models.
 
 You can speed up the calculations by using multiple `cores`. Beware, that calculating a PARAFAC model can take some time!
 
-Higher `maxit` (maximum number of iteration steps in PARAFAC) and lower `ctol` (tolerance to return result of PARAFAC, should not be larger than 10⁻⁴) increase the accuracy of the model but take more computation time. For a final model, we suggest to use a tolerance of 10⁻⁸ at most.
+Higher `maxit` (maximum number of iteration steps in PARAFAC) and lower `ctol` (tolerance to return result of PARAFAC, should not be larger than 10⁻⁶) increase the accuracy of the model but take more computation time. For a final model, we suggest to use a tolerance of 10⁻⁸ to 10⁻¹⁰.
 
 In this first model creation step, the constraints are tested. While `pf1` is calculated without any constraints, `pf1n` uses the assumption that modes are non-negative only. This is a very common assumption, because fluorescence cannot be negative. Common constraints are none ("uncons"), non-negative ("nonneg") and unimodal, non-negative ("uninon"). Besides these, other possible constraints can be seen using the command `CMLS::const()`.
 
@@ -721,14 +719,14 @@ Due to long calculation times with higher accuracy in the model calculation, the
 
 ```{r eval=FALSE, include=TRUE}
 ctol <- 10^-8 # decrease tolerance in PARAFAC analysis
-nstart = 20 # increase number of random starts
+nstart = 50 # increase number of random starts
 maxit = 10000 # increase number of maximum interations
 
 pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
 
 pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 ```
-Checking the convergence behaviour of the created models:
+Check the convergence behaviour of the created models:
 ```{r eval=TRUE, include=TRUE, fig.width=4, fig.height=6}
 eempf_convergence(pf4[[1]])
 ```
@@ -745,7 +743,7 @@ eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[1]] means the 4th model in the
 eempf_corplot(pf4[[1]], progress = FALSE)
 ```
 
-It is possible to use the results from a previous model as starting conditions (`Astart`, `Bstart` and `Cstart`). Supplying start matrices is only possible if a model with the same number of components, excitation and emission wavelengths is calculated. If samples differ (e.g. outlier removal or inclusion) simply remove the `Astart`. In the example, we set up a very rough model using a reduced tolerance but a lot of random starts. This step does the same as above but pushes the model towards global maxima without taking too much time. Please check the results from this step before you continue to avoid starting the next step close to a local maximum. In case of doubts, do not use start matrices because they are only used to speed up the calculations but do not provide better results!
+It is possible to use the results from a previous model as starting conditions (`Astart`, `Bstart` and `Cstart`). Supplying start matrices is only possible if a model with the same number of components, excitation and emission wavelengths is calculated. If samples differ (e.g. outlier removal or inclusion) simply remove the `Astart`. In the example, we set up a very rough model using a reduced tolerance but a lot of random starts. In case of doubts, do not use start matrices!
 
 ```{r eval=FALSE, include=TRUE}
 # calculating a rough model, nstart is high (100) but ctol is 2 magnitudes larger or at least 0.01

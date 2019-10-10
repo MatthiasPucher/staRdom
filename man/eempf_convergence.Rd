@@ -19,5 +19,7 @@ The convergence behaviour of all initialisations in a PARAFAC model is shown by 
 }
 \examples{
 data("pf_models")
-conv_beh <- eempf_convergence(pf4[[1]])
+
+pfmodel <- pf4[[1]]
+conv_beh <- eempf_convergence(pfmodel)
 }

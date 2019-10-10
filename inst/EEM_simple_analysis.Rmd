@@ -4,7 +4,7 @@ subtitle: "EEM peak picking, absorbance slope parameters"
 date: "`r format(Sys.time(), '%B %e %Y')`"
 author: "WCL"
 knit: (function(inputFile, encoding) {
-      output_dir = '~/output/';
+      output_dir = 'C:/some_folder/output/';
       rmarkdown::render(inputFile,
                         encoding=encoding, 
                         output_file=file.path(output_dir,paste0('DOM_EEM_analysis_report_',format(Sys.time(), "%Y%m%d_%H%M%S"),'.htm')))
@@ -76,7 +76,7 @@ output_dir = "~/output/" # e.g. output_dir = "C:/some_folder/output/"
 # The template refers to data coming with the package. Please use your data
 # by setting the path to your files!
 sample_dir = system.file("extdata/EEMs", package = "staRdom") # e.g. sample_dir = "C:/some_folder/input/fluor/", system.file() accesses the example data coming with the package!
-# Set the used instrument:
+# Set the used instrument (with hyphens!):
 # Cary Eclipse: "cary" 
 # Aqualog: "aqualog"
 # Shimadzu: "shimadzu"
@@ -221,7 +221,7 @@ abs_norm = TRUE # e.g. TRUE, c(700,800)
 # All samples are multiplied with this factor.
 # Please use a meta table (above) if your dilutions are differing
 # 1 for no dilution, 10 for dilution 1:10 (1 part sample and 9
-# parts milliq), "meta" for data from meta table
+# parts ultrapure water), "meta" for data from meta table
 dilution = "meta" # e.g. 1
 
 # In case of diluted samples, two absorbance measurements of the

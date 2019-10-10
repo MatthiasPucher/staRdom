@@ -14,7 +14,7 @@
    viewBox="0 0 709.19092 375.93826"
    version="1.1"
    id="svg8293"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="analysis_scheme.svg">
   <defs
      id="defs8287">
@@ -149,20 +149,20 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.175"
-     inkscape:cx="2760.748"
-     inkscape:cy="-642.87095"
+     inkscape:zoom="0.2474874"
+     inkscape:cx="1890.706"
+     inkscape:cy="319.7665"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g7909-6-5"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1920"
-     inkscape:window-height="1058"
+     inkscape:window-width="1366"
+     inkscape:window-height="740"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="256"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata8290">
@@ -172,7 +172,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -460,25 +460,25 @@
                style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.34722233px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.26499999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Peak picking, absorbance</tspan></text>
           <text
              xml:space="preserve"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26499999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-             x="902.56854"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.5277777px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.265;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             x="902.5685"
              y="-342.758"
              id="text7664-6-8-3-4"><tspan
                sodipodi:role="line"
                id="tspan7662-3-1-0-5"
-               x="902.56854"
+               x="902.5685"
                y="-342.758"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.34722233px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.26499999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Fluorescence peaks </tspan><tspan
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.3472223px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.265;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Fluorescence peaks </tspan><tspan
                id="tspan52613"
                sodipodi:role="line"
-               x="902.56854"
-               y="-327.32397"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.34722233px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.26499999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Fluorescence indices</tspan><tspan
+               x="902.5685"
+               y="-327.324"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.3472223px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.265;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Fluorescence indices</tspan><tspan
                sodipodi:role="line"
-               x="902.56854"
-               y="-311.88995"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.34722233px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.26499999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-               id="tspan7731-4-5">Absorbance slope parameters</tspan></text>
+               x="902.5685"
+               y="-311.89"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.3472223px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none;stroke-width:0.265;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               id="tspan7731-4-5">Absorbance indices</tspan></text>
         </g>
       </g>
     </g>
