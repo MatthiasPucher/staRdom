@@ -149,7 +149,7 @@ eem_list <- eem_read(folder, import_function = "cary")
 If your instrument is not amongst the mentioned ones, eemR offers the opportunity to create custom import functions ([see according vignette](https://cran.r-project.org/package=eemR)).
 
 To have a look at your data, you can plot the samples in several plots using `eem_overview_plot`. `ggeem` is another function that plots EEMs, but it produces only one plot, which can be overloaded in case of many samples. `spp` defines the number of samples per plot. Not present data is not shown (light greyish), NAs are dark grey. `contour = TRUE` adds contour lines to the EEM plots.
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width = 6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -257,7 +257,7 @@ eem_list <- eem_extend2largest(eem_list, interpolation = 1, extend = FALSE, core
 eem_list <- eem_remove_blank(eem_list)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.width=6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -270,7 +270,7 @@ In the example below, there is a warning about no absorbance data for the blank 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_ife_correction(eem_list,absorbance, cuvl = 5)
 ```
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
+```{r eval=TRUE, fig.width=6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -284,7 +284,7 @@ You can use blanks, numeric values or data frames as source for the values. In c
 eem_list <- eem_raman_normalisation2(eem_list, blank = "blank")
 ```
 
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
+```{r eval=TRUE, fig.width=6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -311,7 +311,7 @@ remove_scatter_width <- c(15,15,15,15)
 eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatter_width = remove_scatter_width)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
+```{r eval=TRUE, fig.width=6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -321,7 +321,7 @@ Although it is not always necessary, removed scatter areas should be interpolate
 eem_list <- eem_interp(eem_list, cores = cores, type = 1, extend = FALSE)
 ```
 
-```{r eval=TRUE, fig.width=7, fig.height = 6, message=FALSE, warning=FALSE, include=TRUE}
+```{r eval=TRUE, fig.width=6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -569,7 +569,7 @@ eem_ex <- eem_ex %>%
 ```
 
 Here, we show the changes, made to sample d667sf by the demonstrated steps above (including the removing of the scatter):
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height = 5}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height = 4}
 ggeem(eem_ex, contour = TRUE)
 ```
 
@@ -618,11 +618,11 @@ pf1n <- lapply(pf1n, eempf_rescaleBC, newscale = "Fmax")
 
 Use `eempf_compare` to plot the created models' components. You can see the models fits and components (rows) for models with different numbers of components (columns) in 2 different views. The single plots can be created using `eempf_fits` and `eempf_plot_comps`.
 
-```{r eval=FALSE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=FALSE, include=TRUE, fig.width=6, fig.height=5}
 # This plot is not shown, because the components violate the assumptions for fluorescence peaks (negative fluorescence). Please try, if you are interested.
 eempf_compare(pf1, contour = TRUE)
 ```
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
 eempf_compare(pf1n, contour = TRUE)
 ```
 
@@ -634,7 +634,7 @@ The PARAFAC algorithm assumes no correlation between the components. If samples 
 # check for correlation between components table
 eempf_cortable(pf1n[[4]], normalisation = FALSE)
 ```
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
 eempf_corplot(pf1n[[4]], progress = FALSE, normalisation = FALSE)
 ```
 
@@ -646,8 +646,10 @@ pf2 <- eem_parafac(eem_list, comps = seq(dim_min,dim_max), normalise = TRUE, con
 # rescale B and C modes
 pf2 <- lapply(pf2, eempf_rescaleBC, newscale = "Fmax")
 ```
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
-eempf_compare(pf2, contour = TRUE)
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
+# eempf_compare(pf2, contour = TRUE) # use this to show the same plot as above
+# for now, we are happy with just the components
+eempf_plot_comps(pf2, contour = TRUE, type = 1)
 ```
 
 ## Find and exclude outliers leverage
@@ -655,7 +657,7 @@ eempf_compare(pf2, contour = TRUE)
 The leverage is calculated by `eempf_leverage` and can be plotted with `eempf_leverage_plot`. Using `eempf_leverage_ident` to plot the leverage shows an interactive plot where you can click on certain values to save them in a variable. Three plots (samples, excitation, emission) show up one after the other. You can select wavelengths or samples by clicking on the certain point in the plot and click 'Finish' when you are done. The variable `exclude` in the example contains all selected values. The returned list can directly be used to exclude the outliers using `eem_exclude` (see above).
 `qlabel` defines the size of the upper quantile that is labelled in the plots. `eempf_mleverage` can be used to compare the leverages of samples in different models.
 
-```{r fig.width=7}
+```{r fig.width=6}
 # calculate leverage
 cpl <- eempf_leverage(pf2[[4]])
 
@@ -687,8 +689,8 @@ A new PARAFAC model is then generated without outliers:
 pf3 <- eem_parafac(eem_list_ex, comps = seq(dim_min,dim_max), normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 pf3 <- lapply(pf3, eempf_rescaleBC, newscale = "Fmax")
 ```
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
-eempf_compare(pf3, contour = TRUE)
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
+eempf_plot_comps(pf3, contour = TRUE, type = 1)
 ```
 
 ```{r eval=TRUE, include=TRUE, fig.width=7}
@@ -699,11 +701,11 @@ eempf_leverage_plot(eempf_leverage(pf3[[4]]),qlabel=0.1)
 
 The outliers determined above are included to show the difference in residuals. Analysing these residuals can show deficits in model creation, problems with sample handling and lab equipment or it can already be helpful in answering scientific questions.
 
-```{r eval=FALSE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=FALSE, include=TRUE, fig.width=6, fig.height=5}
 eempf_residuals_plot(pf3[[4]], eem_list, residuals_only = TRUE, select = c("d0680sfK", "d1266sf", "d1268sfK", "d1543sfK", "dsfb676psp", "dsgb447wt"), spp = 6, cores = cores, contour = TRUE)
 ```
 
-```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 data("eem_list_outliers")
 eem_list %>%
   eem_extract(5:15) %>%
@@ -735,11 +737,11 @@ eempf_convergence(pf4[[1]])
 eempf_compare(pf4, contour = TRUE)
 ```
 
-```{r eval=TRUE, include=TRUE, fig.width=7}
+```{r eval=TRUE, include=TRUE, fig.width=6}
 eempf_leverage_plot(eempf_leverage(pf4[[1]])) # [[1]] means the 4th model in the list, 6 component model in that case
 ```
 
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
 eempf_corplot(pf4[[1]], progress = FALSE)
 ```
 
@@ -767,7 +769,7 @@ Please redo the steps dscribed in the section "Creating a PARAFAC model" until y
 
 The following plot shows the shape of the determined components and the loadings in the different samples. The components' shapes are important for an interpretation from a chemical point of view. The loadings show the fluorescence differences of different components in different samples.
 
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=6}
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=5}
 eempf_comp_load_plot(pf4[[1]], contour = TRUE)
 
 # eempf_plot_comps(pf4[1], type = 2) # this function can be used to view the B- and C-modes
@@ -781,7 +783,7 @@ It is possible to view the components in 3D using `eempf_comps3D`.
 
 The plots show samples in columns and the rows show the components (6 in that case), the residuals and the whole sample.
 
-```{r eval=TRUE, include=TRUE, fig.width=7, fig.height=8}
+```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=7}
 # plot components in each sample, residual and whole sample
 eempf_residuals_plot(pf4[[1]], eem_list, select = eem_names(eem_list)[10:14], cores = cores, contour = TRUE)
 ```
@@ -803,7 +805,7 @@ data(sh)
 
 Plot the results from the split-half analysis. Your model is stable, if the graphs of all components look similar.
 
-```{r eval=TRUE, include=TRUE, fig.width=7}
+```{r eval=TRUE, include=TRUE, fig.width=6}
 splithalf_plot(sh)
 
 # you can also use the already known plots from eempf_compare
@@ -861,7 +863,7 @@ varimp <- eempf_varimp(pf4[[1]], eem_list_ex, cores = cores)
 # Formatting a model
 ## Naming models and components
 Models and components can be named. These names can be important for you to organise your models and interpretations of the components. They are also shown in the plots. Here are some examples:
-```{r fig.width=7}
+```{r fig.width=6}
 # get current model names (none set so far!)
 names(pf3)
 # set new model names, number of models must be equal to number of names

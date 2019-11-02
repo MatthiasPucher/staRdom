@@ -16,6 +16,12 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.0.24 to 1.0.24
+  changes in vignettes
+
+1.0.23 to 1.0.24
+  package size issues
+
 1.0.22 1.0.23
   bugfix in eem_ife_correction
 
