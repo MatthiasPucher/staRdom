@@ -315,7 +315,7 @@ eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatt
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
-Although it is not always necessary, removed scatter areas should be interpolated for reasonable results and faster calculation in the PARAFAC analysis `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points` `r citep("10.1109/2945.620490")`, (2) excitation and emission wavelength-wise interpolation with `pchip` `r citep("10.1137/1.9780898717952")` and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear interpolation in 2 dimensions with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating.
+Although it is not always necessary, removed scatter areas should be interpolated for reasonable results and faster calculation in the PARAFAC analysis `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points` `r citep("10.1109/2945.620490")`, (2) excitation and emission wavelength-wise interpolation with `pchip` `r citep("10.1137/1.9780898717952")` and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear excitation and emission wavelength-wise interpolation with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating. We recommend to use type 1 as a start, because its accuracy in interpolating surfaces. The smooth but still complex surface is exactly what one would expect from a theoretical EEM. In case of recognisable patterns in the residual plots close to the scatter areas or many not converging initialisations of the PARAFAC model, another interpolation method could improve the results.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_interp(eem_list, cores = cores, type = 1, extend = FALSE)
@@ -346,7 +346,7 @@ eem_overview_plot(eem_list, spp=9) # plot spared, due to no dilution it looks li
 Depending on your instrument, smoothing the data could be beneficial for peak picking. For PARAFAC analysis smoothing is not advised. The parameter `n` specifies the moving average window size in nm. 
 
 ```{r eval=TRUE, include=TRUE}
-eem4peaks <- eem_smooth(eem_list, n = 4)
+eem4peaks <- eem_smooth(eem_list, n = 4, cores = cores)
 ```
 
 ```{r eval=FALSE, fig.width=7, message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
@@ -931,7 +931,7 @@ The shift- and shape sensitive congruence coefficient (SSC, `r citet("10.1039/C8
 ```{r eval=FALSE, include=TRUE, fig.width=7}
 pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
 
-ssccheck <- eempf_ssccheck(pf4[[1]]$models, best = 3) # best 5 models are shown
+ssccheck <- eempf_ssccheck(pf4[[1]]$models, best = 3, cores = cores) # best 3 models are shown
 
 eempf_plot_ssccheck(ssccheck)
 ```

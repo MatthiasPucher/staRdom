@@ -4,14 +4,17 @@
 \alias{eempf_ssc}
 \title{Calculate the shift-and shape-sensitive congruence (SSC) between model components}
 \usage{
-eempf_ssc(pf_models, tcc = FALSE, m = FALSE)
+eempf_ssc(pfmodels, tcc = FALSE, m = FALSE,
+  cores = parallel::detectCores(logical = FALSE))
 }
 \arguments{
-\item{pf_models}{list of either PARAFAC models or component matrices}
+\item{pfmodels}{list of either PARAFAC models or component matrices}
 
 \item{tcc}{if set TRUE, TCC is returned instead}
 
 \item{m}{logical, if TRUE, emission and excitation SSCs or TCCs are combined by calculating the geometric mean}
+
+\item{cores}{number of CPU cores to be used}
 }
 \value{
 (list of) tables containing SCCs between components
@@ -24,17 +27,17 @@ U.J. Wünsch, R. Bro, C.A. Stedmon, P. Wenig, K.R. Murphy, Emerging patterns in 
 \examples{
 pf_models <- pf3[1:3]
 
-sscs <- eempf_ssc(pf_models)
+sscs <- eempf_ssc(pf_models, cores = 2)
 sscs
 
-tcc <- eempf_ssc(pf_models, tcc = TRUE)
+tcc <- eempf_ssc(pf_models, tcc = TRUE, cores = 2)
 tcc
 ## mixed tcc (combine em and ex)
-mtcc <- eempf_ssc(pf_models, tcc = TRUE, m = TRUE)
+mtcc <- eempf_ssc(pf_models, tcc = TRUE, m = TRUE, cores = 2)
 mtcc
 
 ## compare results from splithalf analysis
-sh_sscs <- eempf_ssc(sh)
+sh_sscs <- eempf_ssc(sh, cores = 2)
 
 sh_sscs
 ## view diagonals only (components with similar numbers only)

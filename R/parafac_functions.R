@@ -148,7 +148,7 @@ parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), 
     nmiss <- ceiling((nstart - nmod) * pred_factor / 8) * 8
     if(verbose) cat("start run with",nmiss,"models...",fill = TRUE)
     if(!is.null(cl)){
-      clusterExport(cl, c("nmiss"), envir=environment())
+      clusterExport(cl, c("nmiss"), envir = environment())
     }
     cpresult <- parafac(X, nstart = nmiss, output = "all", cl = cl, ...) #, ...
     cpresult_conv <- cpresult[lapply(cpresult,`[[`,"cflag") %>% unlist() == 0]
@@ -1184,7 +1184,7 @@ eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
 #'
 #' eempf_varimp(pf4[[1]],eem_list)
 #' }
-eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores(logical=FALSE),...){
+eempf_varimp <- function(pfmodel, eem_list, cores = parallel::detectCores(logical=FALSE),...){
 
   exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
                   "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
@@ -1194,7 +1194,7 @@ eempf_varimp <- function(pfmodel,eem_list, cores = parallel::detectCores(logical
     eem_red2smallest() %>%
     eem_exclude(exclude)
   mods <- lapply(1:(pfmodel$A %>% ncol()), function(c){
-    eem_parafac(x,comps = ncol(pfmodel$A)-1,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B[,-c], Cfixed = pfmodel$C[,-c],cores = cores,control = pfmodel$control, const = pfmodel$const)
+    eem_parafac(x, comps = ncol(pfmodel$A)-1,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = pfmodel$B[,-c], Cfixed = pfmodel$C[,-c],cores = cores,control = pfmodel$control, const = pfmodel$const, ...)
   })
   Rsq_al <- pfmodel$Rsq - (mods %>% lapply(function(mod) {mod[[1]]$Rsq}) %>% unlist())
 }
@@ -1282,9 +1282,10 @@ eempf_bindxc <- function(components){
 
 #' Calculate the shift-and shape-sensitive congruence (SSC) between model components
 #'
-#' @param pf_models list of either PARAFAC models or component matrices
+#' @param pfmodels list of either PARAFAC models or component matrices
 #' @param tcc if set TRUE, TCC is returned instead
 #' @param m logical, if TRUE, emission and excitation SSCs or TCCs are combined by calculating the geometric mean
+#' @param cores number of CPU cores to be used
 #'
 #' @description The data variable pf_models can be supplied as list of PARAFAC models, output from a splithalf analysis or list of matrices
 #' Please see details of calculation in:
@@ -1293,48 +1294,58 @@ eempf_bindxc <- function(components){
 #' @return (list of) tables containing SCCs between components
 #' @export
 #'
+#' @import parallel
+#' @import dplyr
+#'
 #' @examples
 #' pf_models <- pf3[1:3]
 #'
-#' sscs <- eempf_ssc(pf_models)
+#' sscs <- eempf_ssc(pf_models, cores = 2)
 #' sscs
 #'
-#' tcc <- eempf_ssc(pf_models, tcc = TRUE)
+#' tcc <- eempf_ssc(pf_models, tcc = TRUE, cores = 2)
 #' tcc
 #' ## mixed tcc (combine em and ex)
-#' mtcc <- eempf_ssc(pf_models, tcc = TRUE, m = TRUE)
+#' mtcc <- eempf_ssc(pf_models, tcc = TRUE, m = TRUE, cores = 2)
 #' mtcc
 #'
 #' ## compare results from splithalf analysis
-#' sh_sscs <- eempf_ssc(sh)
+#' sh_sscs <- eempf_ssc(sh, cores = 2)
 #'
 #' sh_sscs
 #' ## view diagonals only (components with similar numbers only)
 #' lapply(sh_sscs, lapply, diag)
 #'
-eempf_ssc <- function(pf_models, tcc = FALSE, m = FALSE){
-  classes <- unlist(lapply(unlist(pf_models, recursive = FALSE),class))
+eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detectCores(logical = FALSE)){
+  classes <- unlist(lapply(unlist(pfmodels, recursive = FALSE),class))
   if(any(classes == "parafac") & !is.null(classes)){ ## Results from splithalf
-    pf_models %>%
+    pfmodels %>%
       unlist(recursive = FALSE) %>%
       lapply(function(mod){
         list(B=mod$B,C=mod$C)
       }) %>%
-      eempf_ssc(tcc = tcc, m = m)
-  } else if(all(unlist(lapply(pf_models,class)) == "parafac") & !is.null(unlist(lapply(pf_models,class)))){ ## PARAFAC models
-    pf_models %>% lapply(function(mod){
+      eempf_ssc(tcc = tcc, m = m, cores = cores)
+  } else if(all(unlist(lapply(pfmodels,class)) == "parafac") & !is.null(unlist(lapply(pfmodels,class)))){ ## PARAFAC models
+    pfmodels %>% lapply(function(mod){
       list(B=mod$B,C=mod$C)
     }) %>%
-      eempf_ssc(tcc = tcc, m = m)
+      eempf_ssc(pfmodels = ., tcc = tcc, m = m, cores = cores)
   } else if(all(classes == "matrix")){ ## matrices
-    SSCs <- lapply(1:length(pf_models),function(k){
-      lapply(k:length(pf_models), function(l){
-        B = ssc(pf_models[[k]][[1]], pf_models[[l]][[1]], tcc = tcc)
-        C = ssc(pf_models[[k]][[2]], pf_models[[l]][[2]], tcc = tcc)
+
+    cl <- makePSOCKcluster(cores)
+    clusterExport(cl, c("pfmodels","tcc"), envir = environment())
+    clusterEvalQ(cl,require(staRdom))
+
+    SSCs <- parLapply(cl,1:length(pfmodels),function(k){
+      lapply(k:length(pfmodels), function(l){
+        B = ssc(pfmodels[[k]][[1]], pfmodels[[l]][[1]], tcc = tcc)
+        C = ssc(pfmodels[[k]][[2]], pfmodels[[l]][[2]], tcc = tcc)
         list(B=B, C=C)
       }) %>%
-        setNames(paste0(k,"vs",k:length(pf_models)))
+        setNames(paste0(k,"vs",k:length(pfmodels)))
     }) %>% unlist(recursive = FALSE)
+    stopCluster(cl)
+
     if(m){
       SSCs <- lapply(SSCs, function(mats){
         sqrt(mats[[1]]*mats[[2]])
@@ -1402,23 +1413,25 @@ ssc <- function(mat1, mat2, tcc = FALSE){
 #' @param pfmodels list of parafac models
 #' @param best number of models with the highest R^2 to be used, default is all models
 #' @param tcc logical, if TRUE, TCC instead of SSC is calculated
+#' @param cores number of CPU cores to be used
 #'
 #' @return data.frame containing SSCs
 #' @export
 #'
 #' @import dplyr
+#' @importFrom stringr str_extract
 #'
 #' @examples
 #' data(pf_models)
 #'
-#' eempf_ssccheck(pf3[1:2])
+#' eempf_ssccheck(pf3[1:2], cores = 2)
 #'
 #'\donttest{
 #' # SSCs of split-half models, models need to be unlisted
 #' data(sh)
-#' eempf_ssccheck(unlist(sh, recursive = FALSE))
+#' eempf_ssccheck(unlist(sh, recursive = FALSE), cores = 2)
 #' }
-eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE){
+eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE, cores = parallel::detectCores(logical = FALSE)){
   #pfmodels <- pf3
   Rsqs <- lapply(pfmodels,`[[`,"Rsq") %>% unlist()
   checkmods <- pfmodels[order(Rsqs, decreasing = TRUE)[1:best]]
@@ -1432,11 +1445,19 @@ eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE){
     warning(paste0(not_conv," of the best ", best, " chosen models ",ifelse(not_conv == 1, "is","are")," not converging!"))
   }
   #Rsqs <- lapply(checkmods,`[[`,"Rsq") %>% unlist()
-  sscs <- eempf_ssc(checkmods, tcc = tcc)
-  maxs <- lapply(sscs, lapply, ssc_max)
+  sscs <- eempf_ssc(pfmodels = checkmods, tcc = tcc, cores = cores)
+
+  cl <- makePSOCKcluster(cores)
+  clusterExport(cl, c("sscs"), envir=environment())
+  clusterEvalQ(cl,require(staRdom))
+
+  maxs <- parLapply(cl, sscs, lapply, ssc_max)
+
+  stopCluster(cl)
+
   a <- names(maxs) %>%
     lapply(function(na){
-      substr(na,1,1) != substr(na,4,4)
+      str_extract(na,"^[0-9]{1,2}") != str_extract(na,"[0-9]{1,2}$")
     }) %>%
     unlist() %>%
     maxs[.] %>%

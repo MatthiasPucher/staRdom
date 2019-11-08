@@ -16,11 +16,14 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
-1.0.24 to 1.0.24
+1.0.26 to 1.0.27
+  eem_smooth, eempf_ssc and eempf_ssccheck use multiple CPUs now
+
+1.0.24 to 1.0.26
   changes in vignettes
 
 1.0.23 to 1.0.24
-  package size issues
+  reduced package size by restructuring data
 
 1.0.22 1.0.23
   bugfix in eem_ife_correction

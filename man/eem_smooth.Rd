@@ -4,12 +4,14 @@
 \alias{eem_smooth}
 \title{Smooth fluorescence data by calculating rolling mean along excitation wavelengths.}
 \usage{
-eem_smooth(data, n = 4)
+eem_smooth(data, n = 4, cores = parallel::detectCores(logical = FALSE))
 }
 \arguments{
 \item{data}{fluorescence data of class eemlist}
 
 \item{n}{width of rolling mean window in nm}
+
+\item{cores}{number of CPU cores to be used}
 }
 \value{
 eemlist with smoothed data
@@ -21,6 +23,6 @@ Smooth fluorescence data by calculating rolling mean along excitation wavelength
 \donttest{
 data(eem_list)
 
-eem_list <- eem_smooth(eem_list,n=4)
+eem_list <- eem_smooth(eem_list, n=4, cores = 2)
 }
 }

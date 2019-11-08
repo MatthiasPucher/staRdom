@@ -18,6 +18,6 @@ Plot results from an SSC check
 \examples{
 data(pf_models)
 
-ssccheck <- eempf_ssccheck(pf3[1:3])
+ssccheck <- eempf_ssccheck(pfmodels = pf3[1:3], cores = 2)
 eempf_plot_ssccheck(ssccheck)
 }
