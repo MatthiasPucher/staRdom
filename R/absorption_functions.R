@@ -7,6 +7,7 @@
 #' @param dec optional, either you set a decimal separator or the table is tested for . and ,
 #' @param sep optional, either you set a field separator or it is tried to be determined automatically
 #' @param verbose logical, provide more information
+#' @param cores number of CPU cores to be used simultanuously
 #' @param ... additional arguments that are passed on to \code{\link[data.table]{fread}}.
 #'
 #' @details If absorbance_path is a directory, contained files that end on "csv" or "txt" are passed on to \code{read.table}. If the path is a file, this file is read. Tables can either contain data from one sample or from several samples in columns. The first column is considered the wavelength column. A multi-sample file must have sample names as column names. All tables are combined to one with one wavelength column and one column for each sample containing the absorbance data.
@@ -16,17 +17,17 @@
 #'
 #' @seealso \code{\link[data.table]{fread}}
 #'
-#' @import dplyr tidyr
+#' @import dplyr tidyr parallel
 #' @importFrom utils read.table
-#' @importFrom stringr str_replace_all str_replace
+#' @import stringr
 #' @importFrom data.table fread
 #'
 #' @export
 #'
 #' @examples
 #' absorbance_path <- system.file("extdata", "absorbance", package = "staRdom")
-#' absorbance <- absorbance_read(absorbance_path, verbose = TRUE)
-absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,sep=NULL,verbose = FALSE,...){
+#' absorbance <- absorbance_read(absorbance_path, verbose = TRUE, cores = 2)
+absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,sep=NULL,verbose = FALSE,cores = parallel::detectCores(logical = FALSE),...){
   #absorbance_path = absorbance_dir
   if(dir.exists(absorbance_path)){
     abs_data <- list.files(absorbance_path, full.names = TRUE, recursive = recursive, no.. = TRUE, include.dirs = FALSE, pattern = "*.txt|*.csv", ignore.case = TRUE)
@@ -35,22 +36,28 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
     abs_data <- absorbance_path
   } else stop("Absorbance data was not found!")
 
-  abs_data <- lapply(abs_data, function(tab) {
-    if(verbose) cat("processing",tab,fill=TRUE)
+  cl <- makeCluster(min(cores, length(abs_data)), type="PSOCK")
+  clusterExport(cl, c("dec","sep","verbose"), envir=environment())
+  clusterEvalQ(cl, require(dplyr))
+  clusterEvalQ(cl, require(stringr))
+
+  #abs_data <- lapply(abs_data, function(tab) {
+  abs_data <- parLapply(cl,abs_data, function(tab) {
+    #if(verbose) warning("processing",tab,fill=TRUE)
     rawdata <- readLines(tab)
     data <- rawdata %>%
-      sapply(stringr::str_remove,pattern="([^0-9]*$)")
+      sapply(str_remove,pattern="([^0-9]*$)")
     first_number <- min(which((substr(data,1,1) %>% grepl("[0-9]",.))))
     last_number <- max(which((substr(data,1,1) %>% grepl("[0-9]",.))))
     if(is.null(sep) | is.null(dec)){
-      nsepdec <- data[first_number] %>% stringr::str_extract_all("[^-0-9eE]") %>% unlist()
-      example_number <- data[first_number] %>% stringr::str_extract("([-]?[0-9]+[.,]?[0-9]+[eE]?[-0-9]+)$")
-      if(is.null(dec) & length(nsepdec) > 1) dec <- example_number %>% stringr::str_replace("([-0-9eE]+)([.,]?)([-0-9eE]*)","\\2")
+      nsepdec <- data[first_number] %>% str_extract_all("[^-0-9eE]") %>% unlist()
+      example_number <- data[first_number] %>% str_extract("([-]?[0-9]+[.,]?[0-9]+[eE]?[-0-9]+)$")
+      if(is.null(dec) & length(nsepdec) > 1) dec <- example_number %>% str_replace("([-0-9eE]+)([.,]?)([-0-9eE]*)","\\2")
       if(is.null(sep)) sep <- gsub(pattern = dec, replacement = "", x = data[first_number], fixed = TRUE) %>%
-        stringr::str_extract(paste0("[^-0-9eE",dec,"]"))
-      if(verbose) cat("using",sep,"as field separator and",dec,"as decimal separator.", fill=TRUE)
+        str_extract(paste0("[^-0-9eE",dec,"]"))
+      if(verbose) warning("processing",tab,": using",sep,"as field separator and",dec,"as decimal separator.", fill=TRUE)
     }
-    data <- stringr::str_split(data,sep)
+    data <- str_split(data,sep)
     table <- data[(first_number):last_number] %>%
       unlist() %>%
       matrix(ncol = length(data[[first_number]]), byrow = TRUE) %>%
@@ -65,10 +72,10 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
     attr(table,"location") <- rep(tab,ncol(table) - 1)
     if(ncol(table) == 2) {samples <- tab %>%
       basename() %>%
-      stringr::str_replace_all(stringr::regex(".txt$|.csv$", ignore_case = TRUE),"")
+      str_replace_all(regex(".txt$|.csv$", ignore_case = TRUE),"")
     } else {
       samples <- rawdata[[1]] %>%
-        stringr::str_split(sep) %>%
+        str_split(sep) %>%
         unlist() %>%
         matrix(ncol = length(.), byrow = TRUE) %>%
         data.frame(stringsAsFactors = FALSE) %>%
@@ -78,6 +85,8 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
       setNames(c("wavelength",samples)
       )
   })
+  stopCluster(cl)
+
   locations <- lapply(abs_data,function(tab){
     attr(tab,"location")
   }) %>%
@@ -148,7 +157,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
   if(!unit[1] %in% c("absorbance","absorption")) stop("Unit must be either 'absorbance' or 'absorption'!")
   if(unit[1] == "absorbance" & !is.numeric(cuvle)) stop("Please specify a valid cuvette length!")
   if(S | lref | p | model){
-    cl <- makeCluster(spec = cores, type = "PSOCK")
+    cl <- makeCluster(spec = min(cores,ncol(abs_data)), type = "PSOCK")
     doParallel::registerDoParallel(cl)
 
     if(verbose){
@@ -212,7 +221,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
   }
 
   if(Sint){
-    cl <- parallel::makeCluster(spec = cores, type = "PSOCK")
+    cl <- parallel::makeCluster(spec = min(cores,ncol(abs_data)), type = "PSOCK")
     doParallel::registerDoParallel(cl)
 
     if(verbose){

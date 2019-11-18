@@ -5,7 +5,8 @@
 \title{Reading absorbance data from txt and csv files.}
 \usage{
 absorbance_read(absorbance_path, order = TRUE, recursive = TRUE,
-  dec = NULL, sep = NULL, verbose = FALSE, ...)
+  dec = NULL, sep = NULL, verbose = FALSE,
+  cores = parallel::detectCores(logical = FALSE), ...)
 }
 \arguments{
 \item{absorbance_path}{directory containing absorbance data files or path to single file. See details for format of absorbance data.}
@@ -19,6 +20,8 @@ absorbance_read(absorbance_path, order = TRUE, recursive = TRUE,
 \item{sep}{optional, either you set a field separator or it is tried to be determined automatically}
 
 \item{verbose}{logical, provide more information}
+
+\item{cores}{number of CPU cores to be used simultanuously}
 
 \item{...}{additional arguments that are passed on to \code{\link[data.table]{fread}}.}
 }
@@ -34,7 +37,7 @@ If absorbance_path is a directory, contained files that end on "csv" or "txt" ar
 }
 \examples{
 absorbance_path <- system.file("extdata", "absorbance", package = "staRdom")
-absorbance <- absorbance_read(absorbance_path, verbose = TRUE)
+absorbance <- absorbance_read(absorbance_path, verbose = TRUE, cores = 2)
 }
 \seealso{
 \code{\link[data.table]{fread}}

@@ -56,7 +56,7 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
     cl <- NULL
     if(cores > 1){
-      cl <- makeCluster(cores, type="PSOCK")
+      cl <- makeCluster(min(cores,nstart), type="PSOCK")
       clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
       clusterEvalQ(cl, library(multiway))
     }
@@ -1220,9 +1220,9 @@ eempf_varimp <- function(pfmodel, eem_list, cores = parallel::detectCores(logica
 #' pf4r <- eempf_reorder(pf4[[1]],"ex")
 #' ggeem(pf4r)
 eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
-  if(!(order == "em" | order == "ex" | is.vector(order))) stop("no valid data suppli ed for order!")
-  if(order == "em") order <- apply(pfmodel$B,2,which.max) %>% sort.list(decreasing = decreasing)
-  if(order == "ex") order <- apply(pfmodel$C,2,which.max) %>% sort.list(decreasing = decreasing)
+  if(!(order[1] == "em" | order[1] == "ex" | is.vector(order))) stop("no valid data suppli ed for order!")
+  if(order[1] == "em") order <- apply(pfmodel$B,2,which.max) %>% sort.list(decreasing = decreasing)
+  if(order[1] == "ex") order <- apply(pfmodel$C,2,which.max) %>% sort.list(decreasing = decreasing)
   if(ncol(pfmodel$A) != length(order)) stop("the length of the order vector does not fit the number of components")
 
   mod <- try(reorder.parafac(pfmodel,neworder = order), silent=TRUE)
@@ -1332,7 +1332,7 @@ eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detect
       eempf_ssc(pfmodels = ., tcc = tcc, m = m, cores = cores)
   } else if(all(classes == "matrix")){ ## matrices
 
-    cl <- makePSOCKcluster(cores)
+    cl <- makePSOCKcluster(min(cores,length(pfmodels)))
     clusterExport(cl, c("pfmodels","tcc"), envir = environment())
     clusterEvalQ(cl,require(staRdom))
 
@@ -1447,7 +1447,7 @@ eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE, cores
   #Rsqs <- lapply(checkmods,`[[`,"Rsq") %>% unlist()
   sscs <- eempf_ssc(pfmodels = checkmods, tcc = tcc, cores = cores)
 
-  cl <- makePSOCKcluster(cores)
+  cl <- makePSOCKcluster(min(cores, length(sscs)))
   clusterExport(cl, c("sscs"), envir=environment())
   clusterEvalQ(cl,require(staRdom))
 

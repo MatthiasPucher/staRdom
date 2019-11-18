@@ -58,7 +58,7 @@
 #'
 #' }
 eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type = TRUE, verbose = FALSE, nonneg=TRUE, extend = FALSE,...){
-  cl <- makeCluster(spec = cores, type = "PSOCK")
+  cl <- makeCluster(spec = min(cores,length(data)), type = "PSOCK")
   doParallel::registerDoParallel(cl)
   if(verbose){
     cat("interpolating missing data in",length(data),"EEMs", fill=TRUE)
@@ -361,7 +361,8 @@ eem_dilution <- function(data,dilution=1){
 #' }
 eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALSE)){
   n <- n/2
-  cl <- makePSOCKcluster(cores)
+
+  cl <- makePSOCKcluster(min(cores, length(data)))
   clusterExport(cl, c("data","n"))
   clusterEvalQ(cl,require(dplyr))
   data <- parLapply(cl,data,function(eem){
@@ -369,6 +370,7 @@ eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALS
     eem$x <- eem$x %>% apply(2,function(col) col %>% zoo::rollmean(k=k,fill=c(0,0,0)))
     eem
   })
+
   stopCluster(cl)
   class(data) <- "eemlist"
   data

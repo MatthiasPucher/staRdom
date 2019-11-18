@@ -1,10 +1,16 @@
-year <- sub("-.*", "", meta$Date)
-note <- sprintf("R package version %s", meta$Version)
-
-bibentry(bibtype = "Manual",
-         title = "{staRdom}: PARAFAC analysis on DOM EEMs, calculating absorbance slopes",
-         author = c(person("Matthias", "Pucher"),person("Daniel", "Graeber")),
-         institution = c("Wassercluster Lunz, BOKU Vienna", "UFZ Leipzig"),
-         address = "Lunz, Austria",
-         year = "2019",
-         url = "https://github.com/MatthiasPucher/staRdom")
+bibentry(bibtype = "Article",
+	       title = "{staRdom}: {Versatile} {Software} for {Analyzing} {Spectroscopic} {Data} of {Dissolved} {Organic} {Matter} in {R}",
+         author = c(person("Matthias", "Pucher"),person("Urban","Wünsch"),person("Gabriele","Weigelhofer"),person("Kathleen","Murphy"),person("Thomas","Hein"),person("Daniel", "Graeber")),
+         	volume = "11",
+	copyright = "http://creativecommons.org/licenses/by/3.0/",
+	shorttitle = "{staRdom}",
+	url = "https://www.mdpi.com/2073-4441/11/11/2366",
+	doi = "10.3390/w11112366",
+         language = "en",
+	urldate = "2019-11-12",
+	journal = "Water",
+	month = "nov",
+	year = "2019",
+	keywords = c("absorbance", "dissolved organic matter", "DOM", "drEEM", "EEM", "fluorescence", "PARAFAC", "peak picking", "R", "spectroscopy", "staRdom"),
+	pages = "2366"
+	)

@@ -56,7 +56,7 @@ staRdom is a package for R version `r R.Version()$major` `r citep(citation())` t
 
 staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
 
-The analysis process was developed and discussed in other papers and tutorials (e.g. `r citet("10.1039/c3ay41160e")`). The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of `r citet("10.1039/c3ay41160e")`. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
+A comparison in quality of results and performance of the PARAFAC algorithms in staRdom and drEEM can be found in `r citep("10.3390/w11112366")`. The analysis process was developed and discussed in other papers and tutorials (e.g. `r citet("10.1039/c3ay41160e")`). The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of `r citet("10.1039/c3ay41160e")`. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
 
 For easy data correction and calculations of peaks, indices and slope parameters in R but without using R functions and codes please see [vignette for basic analysis](Basic_analysis_of_DOM_samples.html). We use functions from the R package eemR, for information on eemR and its functions please see the [eemR vignette](https://CRAN.R-project.org/package=eemR). Details on the actual PARAFAC calculation can be found in the [multiway documentation](https://CRAN.R-project.org/package=multiway).
 
@@ -161,7 +161,7 @@ absorbance_path = system.file("extdata/absorbance", package = "staRdom") # load 
 
 To load the data, please use:
 ```{r eval=TRUE, include=TRUE}
-absorbance <- absorbance_read(absorbance_path) # load csv or txt tables in folder
+absorbance <- absorbance_read(absorbance_path, cores = cores) # load csv or txt tables in folder
 ```
 
 In some cases, it is necessary to use individual dilution factors, Raman areas or pathlengths. This data is read using the base R function read.table. Please check that the column separator of your file is the same as in read.table (sep, which is defined as blank space here, hence sep = “ “). The same is true for the decimal separator of your numbers (dec, which is defined as dec = “,” in our case). Here, we import a table containing meta data provided with the package as an example. In the example only dilution data is provided via this table.
