@@ -4,8 +4,15 @@
 \alias{eempf4analysis}
 \title{Create table of PARAFAC components and (optionally) EEM peaks and indices as well as absorbance slope parameters.}
 \usage{
-eempf4analysis(pfmodel, eem_list = NULL, absorbance = NULL,
-  cuvl = NULL, n = 4, export = NULL, ...)
+eempf4analysis(
+  pfmodel,
+  eem_list = NULL,
+  absorbance = NULL,
+  cuvl = NULL,
+  n = 4,
+  export = NULL,
+  ...
+)
 }
 \arguments{
 \item{pfmodel}{PARAFAC model where loadings of the components are extracted}

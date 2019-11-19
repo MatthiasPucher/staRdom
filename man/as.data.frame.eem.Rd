@@ -4,8 +4,7 @@
 \alias{as.data.frame.eem}
 \title{Converting EEM data from class eem to data.frame.}
 \usage{
-\method{as.data.frame}{eem}(x, row.names = NULL, optional = FALSE,
-  gather = TRUE, ...)
+\method{as.data.frame}{eem}(x, row.names = NULL, optional = FALSE, gather = TRUE, ...)
 }
 \arguments{
 \item{x}{blabla}

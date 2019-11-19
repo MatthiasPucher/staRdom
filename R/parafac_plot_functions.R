@@ -584,10 +584,12 @@ eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, me
 #' @import dplyr
 #'
 #' @examples
+#' \donttest{
 #' data(pf_models)
 #'
 #' ssccheck <- eempf_ssccheck(pfmodels = pf3[1:3], cores = 2)
 #' eempf_plot_ssccheck(ssccheck)
+#' }
 eempf_plot_ssccheck <- function(ssccheck){
   ssccheck %>%
     mutate(excitation = B,  emission = C) %>%

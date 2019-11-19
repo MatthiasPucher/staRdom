@@ -4,8 +4,14 @@
 \alias{parafac_conv}
 \title{Calculate a PARAFAC model similar to and using \code{\link[multiway]{parafac}}.}
 \usage{
-parafac_conv(X, nstart, verbose = FALSE, output = c("best", "all"),
-  cl = NULL, ...)
+parafac_conv(
+  X,
+  nstart,
+  verbose = FALSE,
+  output = c("best", "all"),
+  cl = NULL,
+  ...
+)
 }
 \arguments{
 \item{X}{array}

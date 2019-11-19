@@ -4,9 +4,15 @@
 \alias{A_missing}
 \title{Calculate the amount of each component for samples not involved in model building}
 \usage{
-A_missing(eem_list, pfmodel = NULL,
-  cores = parallel::detectCores(logical = FALSE), components = NULL,
-  const = NULL, control = NULL, ...)
+A_missing(
+  eem_list,
+  pfmodel = NULL,
+  cores = parallel::detectCores(logical = FALSE),
+  components = NULL,
+  const = NULL,
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{eem_list}{object of class eemlist with sample data}

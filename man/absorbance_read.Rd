@@ -4,9 +4,16 @@
 \alias{absorbance_read}
 \title{Reading absorbance data from txt and csv files.}
 \usage{
-absorbance_read(absorbance_path, order = TRUE, recursive = TRUE,
-  dec = NULL, sep = NULL, verbose = FALSE,
-  cores = parallel::detectCores(logical = FALSE), ...)
+absorbance_read(
+  absorbance_path,
+  order = TRUE,
+  recursive = TRUE,
+  dec = NULL,
+  sep = NULL,
+  verbose = FALSE,
+  cores = parallel::detectCores(logical = FALSE),
+  ...
+)
 }
 \arguments{
 \item{absorbance_path}{directory containing absorbance data files or path to single file. See details for format of absorbance data.}

@@ -4,8 +4,14 @@
 \alias{eem_eemdil}
 \title{Correct names of EEM samples to match undiluted absorbance data.}
 \usage{
-eem_eemdil(eem_list, abs_data = NULL, dilution = NULL,
-  cor_data = NULL, auto = TRUE, verbose = FALSE)
+eem_eemdil(
+  eem_list,
+  abs_data = NULL,
+  dilution = NULL,
+  cor_data = NULL,
+  auto = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{eem_list}{eemlist}

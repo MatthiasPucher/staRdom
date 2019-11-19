@@ -4,10 +4,20 @@
 \alias{splithalf}
 \title{Running a Split-Half analysis on a PARAFAC model}
 \usage{
-splithalf(eem_list, comps, splits = NA, rand = FALSE,
-  normalise = TRUE, nstart = 20,
-  cores = parallel::detectCores(logical = FALSE), maxit = 2500,
-  ctol = 10^(-7), rescale = TRUE, verbose = FALSE, ...)
+splithalf(
+  eem_list,
+  comps,
+  splits = NA,
+  rand = FALSE,
+  normalise = TRUE,
+  nstart = 20,
+  cores = parallel::detectCores(logical = FALSE),
+  maxit = 2500,
+  ctol = 10^(-7),
+  rescale = TRUE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{eem_list}{eemlist containing sample data}

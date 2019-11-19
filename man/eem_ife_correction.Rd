@@ -4,8 +4,12 @@
 \alias{eem_ife_correction}
 \title{Wrapper function to allow eem_inner_filter_effect (eemR) handling different cuvette lengths.}
 \usage{
-eem_ife_correction(data, abs_data, cuvl = NULL, unit = c("absorbance",
-  "absorption"))
+eem_ife_correction(
+  data,
+  abs_data,
+  cuvl = NULL,
+  unit = c("absorbance", "absorption")
+)
 }
 \arguments{
 \item{data}{fluorescence data of class eemlist}

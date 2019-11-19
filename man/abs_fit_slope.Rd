@@ -4,8 +4,14 @@
 \alias{abs_fit_slope}
 \title{Fit absorbance data to exponential curve. \code{\link[drc]{drm}} is used for the fitting process.}
 \usage{
-abs_fit_slope(wl, abs, lim, l_ref = 350, control = drmc(errorm = FALSE,
-  noMessage = TRUE), ...)
+abs_fit_slope(
+  wl,
+  abs,
+  lim,
+  l_ref = 350,
+  control = drmc(errorm = FALSE, noMessage = TRUE),
+  ...
+)
 }
 \arguments{
 \item{wl}{vector containing wavelengths}

@@ -4,11 +4,23 @@
 \alias{abs_parms}
 \title{Calculating slopes and slope ratios of a data frame of absorbance data.}
 \usage{
-abs_parms(abs_data, cuvle = NULL, unit = c("absorbance", "absorption"),
-  add_as = NULL, limits = list(c(275, 295), c(350, 400), c(300, 700)),
-  l_ref = list(275, 350, 300), S = TRUE, lref = FALSE, p = FALSE,
-  model = FALSE, Sint = FALSE, interval = 21, r2threshold = 0.8,
-  cores = parallel::detectCores(logical = FALSE), verbose = FALSE)
+abs_parms(
+  abs_data,
+  cuvle = NULL,
+  unit = c("absorbance", "absorption"),
+  add_as = NULL,
+  limits = list(c(275, 295), c(350, 400), c(300, 700)),
+  l_ref = list(275, 350, 300),
+  S = TRUE,
+  lref = FALSE,
+  p = FALSE,
+  model = FALSE,
+  Sint = FALSE,
+  interval = 21,
+  r2threshold = 0.8,
+  cores = parallel::detectCores(logical = FALSE),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{abs_data}{data frame containing absorbance data.}

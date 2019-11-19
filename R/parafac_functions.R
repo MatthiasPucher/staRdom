@@ -1298,6 +1298,7 @@ eempf_bindxc <- function(components){
 #' @import dplyr
 #'
 #' @examples
+#' \donttest{
 #' pf_models <- pf3[1:3]
 #'
 #' sscs <- eempf_ssc(pf_models, cores = 2)
@@ -1315,7 +1316,7 @@ eempf_bindxc <- function(components){
 #' sh_sscs
 #' ## view diagonals only (components with similar numbers only)
 #' lapply(sh_sscs, lapply, diag)
-#'
+#' }
 eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detectCores(logical = FALSE)){
   classes <- unlist(lapply(unlist(pfmodels, recursive = FALSE),class))
   if(any(classes == "parafac") & !is.null(classes)){ ## Results from splithalf
@@ -1422,11 +1423,11 @@ ssc <- function(mat1, mat2, tcc = FALSE){
 #' @importFrom stringr str_extract
 #'
 #' @examples
+#' \donttest{
 #' data(pf_models)
 #'
 #' eempf_ssccheck(pf3[1:2], cores = 2)
 #'
-#'\donttest{
 #' # SSCs of split-half models, models need to be unlisted
 #' data(sh)
 #' eempf_ssccheck(unlist(sh, recursive = FALSE), cores = 2)

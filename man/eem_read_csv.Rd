@@ -4,10 +4,17 @@
 \alias{eem_read_csv}
 \title{Import EEMs from generic csv tables (deprecated)}
 \usage{
-eem_read_csv(path, col = "ex", recursive = TRUE,
-  is_blank_corrected = FALSE, is_scatter_corrected = FALSE,
-  is_ife_corrected = FALSE, is_raman_normalized = FALSE,
-  manufacturer = "unknown", ...)
+eem_read_csv(
+  path,
+  col = "ex",
+  recursive = TRUE,
+  is_blank_corrected = FALSE,
+  is_scatter_corrected = FALSE,
+  is_ife_corrected = FALSE,
+  is_raman_normalized = FALSE,
+  manufacturer = "unknown",
+  ...
+)
 }
 \arguments{
 \item{path}{path to file(s), either a filename or a folder}

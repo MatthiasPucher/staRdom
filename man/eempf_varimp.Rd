@@ -4,8 +4,12 @@
 \alias{eempf_varimp}
 \title{Calculate the importance of each component.}
 \usage{
-eempf_varimp(pfmodel, eem_list, cores = parallel::detectCores(logical =
-  FALSE), ...)
+eempf_varimp(
+  pfmodel,
+  eem_list,
+  cores = parallel::detectCores(logical = FALSE),
+  ...
+)
 }
 \arguments{
 \item{pfmodel}{model of class parafac}

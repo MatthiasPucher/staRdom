@@ -4,8 +4,13 @@
 \alias{eempf_corplot}
 \title{Plot correlations of components in samples}
 \usage{
-eempf_corplot(pfmodel, normalisation = FALSE, lower = list(continuous =
-  "smooth"), mapping = aes(alpha = 0.2), ...)
+eempf_corplot(
+  pfmodel,
+  normalisation = FALSE,
+  lower = list(continuous = "smooth"),
+  mapping = aes(alpha = 0.2),
+  ...
+)
 }
 \arguments{
 \item{pfmodel}{object of class parafac}

@@ -4,8 +4,15 @@
 \alias{eem_interp}
 \title{Missing values are interpolated within EEM data}
 \usage{
-eem_interp(data, cores = parallel::detectCores(logical = FALSE),
-  type = TRUE, verbose = FALSE, nonneg = TRUE, extend = FALSE, ...)
+eem_interp(
+  data,
+  cores = parallel::detectCores(logical = FALSE),
+  type = TRUE,
+  verbose = FALSE,
+  nonneg = TRUE,
+  extend = FALSE,
+  ...
+)
 }
 \arguments{
 \item{data}{object of class eemlist with spectra containing missing values}

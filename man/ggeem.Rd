@@ -13,15 +13,20 @@ ggeem(data, fill_max = FALSE, ...)
 
 \method{ggeem}{default}(data, fill_max = FALSE, ...)
 
-\method{ggeem}{eemlist}(data, fill_max = FALSE, eemlist_order = TRUE,
-  ...)
+\method{ggeem}{eemlist}(data, fill_max = FALSE, eemlist_order = TRUE, ...)
 
 \method{ggeem}{eem}(data, fill_max = FALSE, ...)
 
 \method{ggeem}{parafac}(data, fill_max = FALSE, ...)
 
-\method{ggeem}{data.frame}(data, fill_max = FALSE, redneg = FALSE,
-  contour = FALSE, interpolate = FALSE, ...)
+\method{ggeem}{data.frame}(
+  data,
+  fill_max = FALSE,
+  redneg = FALSE,
+  contour = FALSE,
+  interpolate = FALSE,
+  ...
+)
 }
 \arguments{
 \item{data}{eem, eemlist, parafac or data.frame. The details are given under 'Details'.}

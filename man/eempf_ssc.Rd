@@ -4,8 +4,12 @@
 \alias{eempf_ssc}
 \title{Calculate the shift-and shape-sensitive congruence (SSC) between model components}
 \usage{
-eempf_ssc(pfmodels, tcc = FALSE, m = FALSE,
-  cores = parallel::detectCores(logical = FALSE))
+eempf_ssc(
+  pfmodels,
+  tcc = FALSE,
+  m = FALSE,
+  cores = parallel::detectCores(logical = FALSE)
+)
 }
 \arguments{
 \item{pfmodels}{list of either PARAFAC models or component matrices}
@@ -25,6 +29,7 @@ Please see details of calculation in:
 U.J. Wünsch, R. Bro, C.A. Stedmon, P. Wenig, K.R. Murphy, Emerging patterns in the global distribution of dissolved matter fluorescence, Anal. Methods, 11 (2019), pp. 888-893
 }
 \examples{
+\donttest{
 pf_models <- pf3[1:3]
 
 sscs <- eempf_ssc(pf_models, cores = 2)
@@ -42,5 +47,5 @@ sh_sscs <- eempf_ssc(sh, cores = 2)
 sh_sscs
 ## view diagonals only (components with similar numbers only)
 lapply(sh_sscs, lapply, diag)
-
+}
 }

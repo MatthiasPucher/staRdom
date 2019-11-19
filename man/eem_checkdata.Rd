@@ -4,8 +4,14 @@
 \alias{eem_checkdata}
 \title{Check your EEM, absorption and metadata before processing}
 \usage{
-eem_checkdata(eem_list, absorbance, metadata = NULL,
-  metacolumns = NULL, correction = FALSE, error = TRUE)
+eem_checkdata(
+  eem_list,
+  absorbance,
+  metadata = NULL,
+  metacolumns = NULL,
+  correction = FALSE,
+  error = TRUE
+)
 }
 \arguments{
 \item{eem_list}{eemlist continaing EEM data.}

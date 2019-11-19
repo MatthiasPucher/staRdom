@@ -4,8 +4,14 @@
 \alias{eem_setNA}
 \title{set parts of specific samples to NA and optionally interpolate these parts}
 \usage{
-eem_setNA(eem_list, sample = NULL, em = NULL, ex = NULL,
-  interpolate = TRUE, ...)
+eem_setNA(
+  eem_list,
+  sample = NULL,
+  em = NULL,
+  ex = NULL,
+  interpolate = TRUE,
+  ...
+)
 }
 \arguments{
 \item{eem_list}{EEMs as eemlist}

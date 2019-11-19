@@ -16,8 +16,10 @@ ggplot element
 Plot results from an SSC check
 }
 \examples{
+\donttest{
 data(pf_models)
 
 ssccheck <- eempf_ssccheck(pfmodels = pf3[1:3], cores = 2)
 eempf_plot_ssccheck(ssccheck)
+}
 }

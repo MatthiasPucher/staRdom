@@ -4,8 +4,12 @@
 \alias{eempf_ssccheck}
 \title{Check SSCs between different models or initialisations of one model}
 \usage{
-eempf_ssccheck(pfmodels, best = length(pfmodels), tcc = FALSE,
-  cores = parallel::detectCores(logical = FALSE))
+eempf_ssccheck(
+  pfmodels,
+  best = length(pfmodels),
+  tcc = FALSE,
+  cores = parallel::detectCores(logical = FALSE)
+)
 }
 \arguments{
 \item{pfmodels}{list of parafac models}
@@ -23,11 +27,11 @@ data.frame containing SSCs
 Check SSCs between different models or initialisations of one model
 }
 \examples{
+\donttest{
 data(pf_models)
 
 eempf_ssccheck(pf3[1:2], cores = 2)
 
-\donttest{
 # SSCs of split-half models, models need to be unlisted
 data(sh)
 eempf_ssccheck(unlist(sh, recursive = FALSE), cores = 2)

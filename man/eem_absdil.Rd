@@ -4,8 +4,14 @@
 \alias{eem_absdil}
 \title{Multiply absorbance data according to the dilution and remove absorbance from samples where undiluted data is used.}
 \usage{
-eem_absdil(abs_data, eem_list = NULL, dilution = NULL,
-  cor_data = NULL, auto = TRUE, verbose = FALSE)
+eem_absdil(
+  abs_data,
+  eem_list = NULL,
+  dilution = NULL,
+  cor_data = NULL,
+  auto = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{abs_data}{absorbance data}
