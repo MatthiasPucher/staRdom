@@ -1021,8 +1021,9 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
 #'                           cuvl = 5, n = 4)
 #'                           }
 eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NULL, n = 4, export = NULL,...){
-  loadings <- pfmodel$A %>%
+  loadings <- pfmodel %>%
     norm2A() %>%
+    .$A %>%
     data.frame() %>%
     tibble::rownames_to_column("sample")
   if(!is.null(eem_list)){

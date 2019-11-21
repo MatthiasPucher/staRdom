@@ -16,6 +16,12 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.0 to 1.1.1
+  bug fixed: eempf4analysis now returnes loadings multiplied with normalisation factors
+
+1.0.28 to 1.1.0
+  changes in examples
+
 1.0.27 to 1.0.28
   added information on paper comparing staRdom and drEEM
   absorbance_read and abs_parms use multiple CPUs now
