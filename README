@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.2 to 1.1.3
+  corrected release date ;-)
+
 1.1.1 to 1.1.2
   eem_hitachi : added error catcher to provide more information in case of faulty files
   eem_overview_plot: rows and columns of samples in a plot can be defined
