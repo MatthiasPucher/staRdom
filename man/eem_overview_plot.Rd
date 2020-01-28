@@ -9,7 +9,7 @@ eem_overview_plot(data, spp = 8, ...)
 \arguments{
 \item{data}{fluorescence data of class eemlist}
 
-\item{spp}{number of samples per plot}
+\item{spp}{number of samples per plot or a vector with the numbers of rows and columns in the plot.}
 
 \item{...}{arguments passed on to \code{\link[staRdom]{ggeem}}}
 }
@@ -22,6 +22,9 @@ Plot fluorescence data from several samples split into several plots.
 \examples{
 \donttest{
 data(eem_list)
-eem_overview_plot(eem_list,spp=9)
+eem_overview_plot(eem_list, spp = 9)
+
+# define number of rows and columns in plot
+eem_overview_plot(eem_list, spp = c(3, 5))
 }
 }

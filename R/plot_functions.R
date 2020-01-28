@@ -155,7 +155,7 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
 #' Plot fluorescence data from several samples split into several plots.
 #'
 #' @param data fluorescence data of class eemlist
-#' @param spp number of samples per plot
+#' @param spp number of samples per plot or a vector with the numbers of rows and columns in the plot.
 #' @param ... arguments passed on to \code{\link[staRdom]{ggeem}}
 #'
 #' @return list of ggplots
@@ -164,18 +164,26 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
 #' @examples
 #' \donttest{
 #' data(eem_list)
-#' eem_overview_plot(eem_list,spp=9)
+#' eem_overview_plot(eem_list, spp = 9)
+#'
+#' # define number of rows and columns in plot
+#' eem_overview_plot(eem_list, spp = c(3, 5))
 #' }
-eem_overview_plot <- function(data,spp = 8,...){
+eem_overview_plot <- function(data, spp = 8,...){
   #data <- eem_list
-  ppp <- data %>% length()/spp
+  ppp <- data %>% length()/prod(spp)
   fill_max <- data %>% eem_scale_ext() %>% .[2]
   #print(fill_max)
   ov_plot <- lapply(1:ceiling(ppp),function(pos){
     #pos <- 1
-    data[(spp*(pos-1)+1):(spp*pos)] %>%
+    pl <- data[(prod(spp)*(pos-1)+1):(prod(spp)*pos)] %>%
       `attr<-`("class", "eemlist") %>%
       ggeem(fill_max=fill_max,...)#,...
+    if(length(spp) == 2){
+      pl <- pl +
+        facet_wrap(sample ~ ., nrow = spp[1], ncol = spp[2])
+    }
+    pl
   })
   ov_plot
 }

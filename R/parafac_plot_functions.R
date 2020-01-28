@@ -85,7 +85,7 @@ eempf_fits <- function(pfres,...){
 #' eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 #'
 eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
-  #pfres <- models
+  #pfres <- pf3
   c <- pfres %>% lapply(eempf_comp_mat)
   if(is.null(names(c))) names(c) <- paste0("model",seq(1:length(c)))
   tab <- lapply(1:length(c),function(n){
@@ -107,7 +107,7 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
   vals <- seq(from=0,to=fill_max,length.out = 51)
   vals <- (vals - min(vals))/diff(range(vals))
   if(type==2){
-    pl <- tab %>%
+    plot <- tab %>%
       group_by(modname,comp) %>%
       mutate(max_pos = which.max(value), max_em = em[max_pos],max_ex = ex[max_pos]) %>%
       mutate(exn = ifelse(em == max_em,ex,NA),emn = ifelse(ex == max_ex,em,NA)) %>%
@@ -120,20 +120,40 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
       facet_grid(comp ~ modname)+
       labs(x="wavelength (nm)")
   } else {
-    pl <- tab %>%
-      ggplot(aes(x = ex, y = em, z = value))+
-      geom_raster(aes(fill = value))+ #,interpolate=TRUE+
-      scale_fill_gradientn(colours=rainbow(75)[51:1],values=vals,limits = c(tab$value %>% min(na.rm=TRUE),fill_max))+
+    diffs <- tab %>%
+      select(-value,-comps) %>%
+      gather("spec","wl", -comp, -modname) %>%
+      group_by(comp,modname,spec) %>%
+      unique() %>%
+      summarise(slits = diff(wl) %>% n_distinct()) %>% #View()
+      .$slits != 1
+
+    plot <- tab %>%
+      ggplot(aes(x = ex, y = em, z = value))
+
+    if(any(diffs)){
+      plot <- plot +
+        #geom_raster(aes(fill = value), interpolate = interpolate)
+        layer(mapping = aes(colour = value, fill = value),
+              geom = "tile", stat = "identity", position = "identity")
+    } else {
+      plot <- plot +
+        layer(mapping = aes(fill = value),
+              geom = "raster", stat = "identity", position = "identity")
+    }
+
+    plot <- plot +
+      scale_fill_gradientn(colours=rainbow(75)[51:1],values=vals,limits = c(tab$value %>% min(na.rm=TRUE),fill_max), aesthetics = c("fill", "colour"))+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       labs(x = "Excitation (nm)", y = "Emission (nm)") +
       facet_grid(comp ~ modname)
     if(contour){
-      pl <- pl +
+      plot <- plot +
         geom_contour(colour = "black", size = 0.3)
     }
   }
   #print(pl)
-  pl
+  plot
 }
 
 

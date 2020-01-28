@@ -93,7 +93,8 @@ eem_csv2 <- function(file) {
 #' eem_list
 #' }
 eem_hitachi <- function(file) {
-  data <- read_lines(file)
+  #file <- "~/AL/DOM/Anna/DOM_analysis_R/Fluorometer/Algae_1_End_With_Gamingbach.txt"
+  read <- tryCatch({data <- read_lines(file)
 
   data <- str_split(data, "\t")
 
@@ -125,5 +126,14 @@ eem_hitachi <- function(file) {
     ex = ex
   )
 
-  return(l)
+  return(l)},
+  error = function(err){
+    warning("No data was imported for file ",file,"! ",file," caused an error: ",err)
+    l <- list(
+      file = file,
+      x = NA,
+      em = NA,
+      ex = NA
+    )
+  })
 }

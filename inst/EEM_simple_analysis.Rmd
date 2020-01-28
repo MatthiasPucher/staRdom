@@ -111,7 +111,7 @@ absorbance_path = 1 # e.g. absorbance_path = 5
 
 # read table with metadata as *.TXT or *.CSV
 # either a path or FALSE if no metadata file is used.
-metadata = system.file("extdata/metatable_dreem.csv",package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv", system.file() accesses the exmaple data coming with the package!
+metadata = system.file("extdata/metatable_dreem.csv", package = "staRdom") # e.g. metadata = "C:/some_folder/input/metatable.csv", system.file() accesses the exmaple data coming with the package!
 
 #### Meta data: names of columns ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -140,9 +140,9 @@ col_raman_area = "raman"
 # you do not want spectral correction to be done, setting these two input
 # files it not necessary. 
 # Emission correction vector
-Emcor <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv",package="staRdom") # e.g. "C:\folder\emcor.csv", FALSE
+Emcor <- system.file("extdata/CorrectionFiles/mcorrs_4nm.csv", package = "staRdom") # e.g. "C:\folder\emcor.csv", FALSE
 # Excitation correction vector
-Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
+Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv", package = "staRdom")
 ```
 ## Output parameters
 ```{r}
@@ -157,7 +157,7 @@ Excor <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
 output_xls = TRUE # e.g. TRUE
 
 # In case of a csv export you can define the separator and the decimal point here.
-out_sep_dec = c("\t",".") # e.g. out_sep_dec = c("\t",".")
+out_sep_dec = c("\t", ".") # e.g. out_sep_dec = c("\t",".")
 
 #### Plot settings PNG ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -246,10 +246,10 @@ spectral_cor = TRUE # e.g. TRUE, set to FALSE, if your instrument already provid
 # Set a vector with range of wavelengths to be plotted and saved.
 # Peak picking is done before range reduction.
 # Emission wavelength:
-em_range = c(0,Inf) # e.g. c(300,500), c(0,Inf) to use everything
+em_range = c(0, Inf) # e.g. c(300,500), c(0,Inf) to use everything
 
 # Excitation wavelength:
-ex_range = c(0,Inf) # e.g. c(300,500), c(0,Inf) to use everything
+ex_range = c(0, Inf) # e.g. c(300,500), c(0,Inf) to use everything
 
 # Cut all samples to fit largest range available in all samples
 cut_range_to_smallest = FALSE # e.g. FALSE
@@ -278,7 +278,7 @@ remove_scatter <- c(TRUE, TRUE, TRUE, TRUE) # logical values, ordered by raman1,
 # If you can still see traces of scattering after interpolation,
 # this value should be increased. You can specify a vector containing
 # separate widths for each scatter c(15,16,16,14), ordered by raman1,raman2,rayleigh1,rayleigh2.
-remove_scatter_width = c(15,20,15,18) # e.g. 15 or c(15,15,15,15)
+remove_scatter_width = c(15, 20, 15, 18) # e.g. 15 or c(15,15,15,15)
 
 # state whether removed scattering should be interpolated
 interpolation <- TRUE # e.g. TRUE
@@ -339,15 +339,15 @@ eem_list <- eem_read(sample_dir, recursive = TRUE, import_function = fluorometer
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # In this case, "(FD3)" is replaced by nothing from sample name.
 # It is a Hitachi related thing
-eem_list <- eem_list %>% eem_name_replace(c("\\(FD3\\)"),c(""))
+eem_list <- eem_list %>% eem_name_replace(c("\\(FD3\\)"), c(""))
 
 #### Read table with meta data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # There is an additional step to automatically reread the table with comma decimal separator if dot did not work.
 if(metadata != FALSE){
   meta <- data.table::fread(file = metadata, header = TRUE)
-  if(!all(sapply(meta,is.numeric)[-which(colnames(meta) == col_samples)])) meta <- data.table::fread(file = metadata, header = TRUE,dec=",")
-  meta <- meta %>% mutate_at(vars(one_of(col_samples)),make.names) %>%
+  if(!all(sapply(meta,is.numeric)[-which(colnames(meta) == col_samples)])) meta <- data.table::fread(file = metadata, header = TRUE, dec = ",")
+  meta <- meta %>% mutate_at(vars(one_of(col_samples)), make.names) %>%
     tibble::column_to_rownames(var=col_samples)
 }
 
@@ -436,7 +436,7 @@ eem_list <- eem_list %>% eem_dilution(dil_data)
 # correct absorbance data according to dilution
 if(dil_sample_name_correction){
   # find out what is done
-  dc <- eem_dilcorr(eem_list, abs_data, dilution = dil_data, auto=TRUE)
+  dc <- eem_dilcorr(eem_list, abs_data, dilution = dil_data, auto = TRUE)
   # apply to absorbance data
   abs_data <- eem_absdil(abs_data, cor_data = dc)
   # apply to EEM data
