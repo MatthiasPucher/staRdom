@@ -1,8 +1,8 @@
 Package: staRdom
 Type: Package
 Title: PARAFAC Analysis of EEMs from DOM
-Version: 1.1.3
-Date: 2020-01-28
+Version: 1.1.4
+Date: 2020-02-12
 Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@wcl.ac.at",
                   role = c("aut", "cre")),
                   person("Daniel", "Graeber", email = "daniel.graeber@ufz.de",

@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.3 to 1.1.4
+  added error catcher to absorbance read to improve readability of errors.
+
 1.1.2 to 1.1.3
   corrected release date ;-)
 

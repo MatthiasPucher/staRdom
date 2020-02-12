@@ -42,8 +42,9 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
   clusterEvalQ(cl, require(stringr))
 
   #abs_data <- lapply(abs_data, function(tab) {
-  abs_data <- parLapply(cl,abs_data, function(tab) {
+  abs_data <- parLapply(cl,abs_data, function(tab){
     #if(verbose) warning("processing",tab,fill=TRUE)
+    tryCatch({
     rawdata <- readLines(tab)
     data <- rawdata %>%
       sapply(str_remove,pattern="([^0-9]*$)")
@@ -83,7 +84,11 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
     }
     table <- table %>%
       setNames(c("wavelength",samples)
-      )
+      )},
+    error = function(err){
+      stop("Error while reading ",tab,": ",err)
+      #warning("Error while reading ",tab,": ",err,"\nFile ",tab," was not included in the absorbance data!")
+    })
   })
   stopCluster(cl)
 
