@@ -176,7 +176,7 @@ overview_number = 6 # e.g. 6
 scale_col = FALSE # e.g. TRUE
 
 # Add contours to yout plots?
-contours = FALSE
+contour = FALSE
 
 #### Plot settings report ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -576,7 +576,7 @@ if(class(try(library(kableExtra),silent=TRUE)) != "try-error" & class(try(librar
 
 if(overview | output_overview_png) {
   ov_plots <- eem_list %>%
-    eem_overview_plot(spp = overview_number, contours = contours)
+    eem_overview_plot(spp = overview_number, contour = contour)
 }
 
 if(overview){
@@ -596,7 +596,7 @@ if(overview){
 if(scale_col) fill_max <- eem_list %>% eem_scale_ext() %>% .[2] else fill_max <- FALSE
 
 if(output_single_png | single_plots){
-  sing_plots <- lapply(eem_list, ggeem, fill_max = fill_max, contours = contours)
+  sing_plots <- lapply(eem_list, ggeem, fill_max = fill_max, contour = contour)
 }
 
 if(single_plots){

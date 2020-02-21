@@ -16,6 +16,11 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.4 to 1.1.5
+  eem_dilution: improved error behaviour
+  basic analysis: bug in contour plots corrected
+  eem_hitachi: throws an error instead of a warning if there is a problem
+
 1.1.3 to 1.1.4
   added error catcher to absorbance read to improve readability of errors.
 
