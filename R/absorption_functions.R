@@ -110,7 +110,7 @@ absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,s
 #' @param add_as additionally to a254 and a300, absorbance at certain wavelengths can be added to the table
 #' @param limits list with vectors containig upper and lower bounds of wavelengeth ranges to be fitted
 #' @param l_ref list with reference wavelengths, same length as limits
-#' @param S logical, include slope parameter in the table
+#' @param S logical, include slope indices in the table
 #' @param lref logical, include reference wavelength in the table
 #' @param p logical, include ps of the coefficients in the table
 #' @param model logical, include complete model in data frame

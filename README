@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.5 to 1.1.6
+  eem_smooth: bug fixed
+
 1.1.4 to 1.1.5
   eem_dilution: improved error behaviour
   basic analysis: bug in contour plots corrected

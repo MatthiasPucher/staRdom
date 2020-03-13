@@ -367,13 +367,13 @@ eem_dilution <- function(data,dilution=1){
 #' \donttest{
 #' data(eem_list)
 #'
-#' eem_list <- eem_smooth(eem_list, n=4, cores = 2)
+#' eem_list <- eem_smooth(eem_list, n = 4, cores = 2)
 #' }
 eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALSE)){
   n <- n/2
 
   cl <- makePSOCKcluster(min(cores, length(data)))
-  clusterExport(cl, c("data","n"))
+  clusterExport(cl, c("data","n"), envir = environment())
   clusterEvalQ(cl,require(dplyr))
   data <- parLapply(cl,data,function(eem){
     k <- which(eem$em[1] + n >= eem$em) %>% max()
