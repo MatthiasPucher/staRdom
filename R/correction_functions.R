@@ -331,7 +331,7 @@ eem_ife_correction <- function(data, abs_data, cuvl = NULL, unit = c("absorbance
 #'
 eem_dilution <- function(data,dilution=1){
   if(((is.numeric(dilution) & length(dilution)==1) | is.data.frame(dilution)) & class(data) == "eemlist"){
-    if(all(eem_names()))
+    #if(all(eem_names(data) %in% row.names(dilution)))
     res_list <- lapply(1:length(data),function(i){
       if(is.data.frame(dilution)){
         no_dil <- which(!(eem_names(data) %in% row.names(dilution)))

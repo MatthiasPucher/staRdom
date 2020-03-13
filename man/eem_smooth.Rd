@@ -23,6 +23,6 @@ Smooth fluorescence data by calculating rolling mean along excitation wavelength
 \donttest{
 data(eem_list)
 
-eem_list <- eem_smooth(eem_list, n=4, cores = 2)
+eem_list <- eem_smooth(eem_list, n = 4, cores = 2)
 }
 }

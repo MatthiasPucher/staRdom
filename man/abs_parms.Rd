@@ -35,7 +35,7 @@ abs_parms(
 
 \item{l_ref}{list with reference wavelengths, same length as limits}
 
-\item{S}{logical, include slope parameter in the table}
+\item{S}{logical, include slope indices in the table}
 
 \item{lref}{logical, include reference wavelength in the table}
 

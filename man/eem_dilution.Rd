@@ -20,5 +20,12 @@ If samples were diluted before measuring, a dilution factor has to be added to t
 \examples{
 data(eem_list)
 
-eem_list <- eem_dilution(eem_list,dilution=5)
+eem_list2 <- eem_dilution(eem_list,dilution = 5)
+
+dilutionT <- data.frame(dilution = rep(5,length(eem_list)))
+row.names(dilutionT) <- eem_names(eem_list)
+dilutionT
+
+eem_list3 <- eem_dilution(eem_list, dilution = dilutionT)
+
 }
