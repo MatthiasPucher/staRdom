@@ -4,7 +4,9 @@
 \name{eem_list}
 \alias{eem_list}
 \title{15 fluorescence samples from drEEM used for examples.}
-\format{eemlist}
+\format{
+eemlist
+}
 \usage{
 eem_list
 }

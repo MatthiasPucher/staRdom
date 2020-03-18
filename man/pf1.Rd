@@ -4,7 +4,9 @@
 \name{pf1}
 \alias{pf1}
 \title{PARAFAC model, see vignette, unconstrained}
-\format{list of parafacs}
+\format{
+list of parafacs
+}
 \usage{
 pf1
 }

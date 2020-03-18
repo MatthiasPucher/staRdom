@@ -255,7 +255,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
   as_vec <- c(250,254,300,365,465,665,add_as) %>% unique()
 
   as <- abs_data[-1] %>%
-    apply(2,function(col) approx(x=abs_data$wavelength,y=col*ifelse(unit[1] == "absorbance",100/cuvle,1/log(10)),xout=as_vec)) %>%
+    apply(2,function(col) approx(x=abs_data$wavelength,y=col*ifelse(unit[1] == "absorbance",100/cuvle*log(10),1),xout=as_vec)) %>%
     lapply(`[[`,"y") %>%
     bind_cols(wavelength=as_vec,.)
 

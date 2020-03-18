@@ -4,7 +4,9 @@
 \name{pf3}
 \alias{pf3}
 \title{PARAFAC model, see vignette, non-negative constraints, normalised, outliers removed}
-\format{list of parafacs}
+\format{
+list of parafacs
+}
 \usage{
 pf3
 }

@@ -4,7 +4,9 @@
 \name{eem_list_outliers}
 \alias{eem_list_outliers}
 \title{2 fluorescence samples from drEEM that were excluded as outliers from the PARAFAC model.}
-\format{eemlist}
+\format{
+eemlist
+}
 \usage{
 eem_list_outliers
 }

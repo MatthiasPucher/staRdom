@@ -4,7 +4,9 @@
 \name{pf2}
 \alias{pf2}
 \title{PARAFAC model, see vignette, non-negative constraints, normalised}
-\format{list of parafacs}
+\format{
+list of parafacs
+}
 \usage{
 pf2
 }

@@ -4,7 +4,9 @@
 \name{sh}
 \alias{sh}
 \title{result from PARAFAC split-half analysis, periodic data split}
-\format{list of parafacs}
+\format{
+list of parafacs
+}
 \usage{
 sh
 }
