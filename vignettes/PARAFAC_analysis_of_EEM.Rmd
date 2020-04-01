@@ -3,7 +3,7 @@ title: "PARAFAC analysis of EEM data to separate DOM components in R"
 subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
 author: "`r packageDescription('staRdom')$Maintainer`"
 date: "`r format(Sys.time(), '%B %e %Y')`"
-bibliography: "references2.bib"
+bibliography: "staRdom.bib"
 output:
   rmarkdown::html_vignette:
     toc: true
@@ -23,10 +23,6 @@ vignette: >
 # If you encounter troubles or you do not know, what this means please start with a fresh, plain R script, read
 # the turial and use the code provided there!
 
-library(knitcitations)
-cleanbib()
-options("citation_format" = "pandoc")
-bibliography() #style="apalike"
 library(knitr)
 library(kableExtra)
 cores <- 2
@@ -35,32 +31,35 @@ cores <- 2
 ![](staRdom384.png){width=180}
 
 # Introduction
-staRdom is a package for R version `r R.Version()$major` `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
+staRdom is a package for R version `r R.Version()$major` [@r_development_core_team_r:_2019] to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
 
-* separating the components of the EEMs via PARAFAC/CANDECOMP `r citep(list("10.1039/c3ay41160e","10.1016/S0169-7439(97)00032-4",citation(package="multiway")))`.
+# Introduction
+staRdom is a package for R version [@r_development_core_team_r:_2019] to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
+
+* separating the components of the EEMs via PARAFAC/CANDECOMP [@murphy_fluorescence_2013; @bro_parafac_1997; @helwig_multiway_2019].
 * validating the model using a split-half analysis, the core consistency, the model fit or visually examining the residuals
-* correcting excitation-emission-matrices `r citep(list("10.1039/c3ay41160e",citation(package="eemR")))`
-* calculating fluorescence peaks and indices `r citep(citation(package="eemR"))`
-* autochthonous productivity index / freshness index (BIX; `r citet(list("10.1016/j.orggeochem.2009.03.002","10.4319/lo.2010.55.6.2452"))`)
-* classical peaks based on manual peak picking (B, T, A, M, C; `r citet("10.1016/0304-4203(95)00062-3")`)
-* fluorescence index (FI; `r citet("10.4319/lo.2001.46.1.0038")`)
-* humification index (HIX; `r citet("10.1021/es0155276")`)
+* correcting excitation-emission-matrices [@murphy_fluorescence_2013; @massicotte_eemr_2019]
+* calculating fluorescence peaks and indices [@massicotte_eemr_2019]
+* autochthonous productivity index / freshness index [BIX; @huguet_properties_2009; @fellman_fluorescence_2010]
+* classical peaks based on manual peak picking [B, T, A, M, C; @coble_characterization_1996]
+* fluorescence index [FI; @mcknight_spectrofluorometric_2001]
+* humification index [HIX; @ohno_fluorescence_2002]
 * calculating common absorbance (slope) parameters:
-    * absorbance at 254 nm (a254; `r citet("10.1016/0043-1354(72)90017-6")`),
-    * absorbance at 300 nm (a300; `r citet("10.1007/s00027-005-0754-9")`),
-    * ratio of absorbance at 250 to 365 nm (E2:E3; `r citet("10.1016/0043-1354(87)90086-8")`),
-    * ratio of absorbance at 465 to 665 nm (E4:E6; `r citet("10.1016/0048-9697(87)90478-5")`),
-    * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) `r citep("10.4319/lo.2008.53.3.0955")`,
-    * the wavelength distribution of absorption spectral slopes `r citep("10.4319/lo.2009.54.2.0590")` and
+    * absorbance at 254 nm [a254; @dobbs_use_1972],
+    * absorbance at 300 nm [a300; @molot_effect_2005],
+    * ratio of absorbance at 250 to 365 nm [E2:E3; @de_haan_applicability_1987],
+    * ratio of absorbance at 465 to 665 nm [E4:E6; @summers_molecular_1987],
+    * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) [@helms_absorption_2008],
+    * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
 staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
 
-A comparison in quality of results and performance of the PARAFAC algorithms in staRdom and drEEM can be found in `r citep("10.3390/w11112366")`. The analysis process was developed and discussed in other papers and tutorials (e.g. `r citet("10.1039/c3ay41160e")`). The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of `r citet("10.1039/c3ay41160e")`. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
+A comparison in quality of results and performance of the PARAFAC algorithms in staRdom and drEEM can be found in Pucher et al. [-@pucher_stardom_2019]. The analysis process was developed and discussed in other papers and tutorials [e.g. @murphy_fluorescence_2013]. The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of Murphy et al. [-@murphy_fluorescence_2013]. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
 
 For easy data correction and calculations of peaks, indices and slope parameters in R but without using R functions and codes please see [vignette for basic analysis](Basic_analysis_of_DOM_samples.html). We use functions from the R package eemR, for information on eemR and its functions please see the [eemR vignette](https://CRAN.R-project.org/package=eemR). Details on the actual PARAFAC calculation can be found in the [multiway documentation](https://CRAN.R-project.org/package=multiway).
 
-This tutorial was created using R version `r R.Version()[c("major","minor")] %>% paste0(collapse=".")` and the packages dplyr `r citep(citation(package="dplyr"))` and tidyr `r citep(citation(package="tidyr"))`.
+This tutorial was created using R version `r R.Version()[c("major","minor")] %>% paste0(collapse=".")` and the packages dplyr [@wickham_dplyr_2020] and tidyr [@wickham_tidyr_2020].
 ```{r message=FALSE, warning=TRUE}
 library(dplyr)
 library(tidyr)
@@ -201,7 +200,7 @@ In case of problems, you need to reorganise your data manually and revise the st
 problem <- eem_checkdata(eem_list,absorbance,meta,metacolumns = c("dilution"),error=FALSE)
 ```
 
-EEM data can contain NAs to perform a PARAFAC analysis as long as there is a certain amount of numeric values present. Depending on the data set, more than 15 to 20 % might cause non-converging models or models converging in a lokal minimum. We always suggest an interpolation of the data to get good results and a stable PARAFAC modelling process `r citep("10.1016/j.chemolab.2015.01.017")`.
+EEM data can contain NAs to perform a PARAFAC analysis as long as there is a certain amount of numeric values present. Depending on the data set, more than 15 to 20 % might cause non-converging models or models converging in a lokal minimum. We always suggest an interpolation of the data to get good results and a stable PARAFAC modelling process [@elcoroaristizabal_parafac_2015].
 
 Different EEM sizes are not a problem, because there is a way to address this as shown below. For a blank subtraction or a PARAFAC analysis, the available data for each sample must be similar.
 
@@ -221,14 +220,14 @@ eem_list <- eem_name_replace(eem_list,c("\\(FD3\\)"),c(""))
 
 ## Absorbance baseline correction
 
-The instrumental baseline drift in absorbance data can be corrected by subtracting the mean of the absorbance at high wavelengths `r citep("10.1080/10643389.2017.1309186")`. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
+The instrumental baseline drift in absorbance data can be corrected by subtracting the mean of the absorbance at high wavelengths [@li_utilization_2017]. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
 
 ```{r eval=TRUE, include=TRUE}
 absorbance <- abs_blcor(absorbance,wlrange = c(680,700))
 ```
 
 ## Spectral correction
-Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. The example EEMs are corrected using `eem_spectral_cor`. Correction vectors have to be provided in the same range as the EEM measurements. If this is not the case, the EEMs can be cut to this range using `eem_range`.
+Spectral correction is done to remove instrument-specific influences on the EEMs [@derose_recommendations_2010]. Some instruments can do this automatically. The example EEMs are corrected using `eem_spectral_cor`. Correction vectors have to be provided in the same range as the EEM measurements. If this is not the case, the EEMs can be cut to this range using `eem_range`.
 
 ```{r eval=TRUE, include=TRUE}
 excorfile <- system.file("extdata/CorrectionFiles/xc06se06n.csv",package="staRdom")
@@ -245,7 +244,7 @@ eem_list <- eem_spectral_cor(eem_list,Excor,Emcor)
 
 ## Blank subtraction
 
-Blanks are samples of ultrapure water that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They can be used to apply blank subtractionand Raman normalisation (see below) and are used for samples in the same (sub)folders. If multiple blanks were measured, they are averaged. The example data consist of only two folders with one blank each. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors `r citep("10.1039/c3ay41160e")`.
+Blanks are samples of ultrapure water that must contain either "nano", "miliq", "milliq", "mq" or "blank" in their file names. They can be used to apply blank subtractionand Raman normalisation (see below) and are used for samples in the same (sub)folders. If multiple blanks were measured, they are averaged. The example data consist of only two folders with one blank each. Blanks are subtracted from each sample to reduce the effects of scatter bands and systematic errors [@murphy_fluorescence_2013].
 
 The blanks must be the same size as the samples they will be subtracted from. As different sample sizes were reported above, all samples will be brought to the same data range before. You can find a description on data and wavelength ranges below.
 
@@ -263,7 +262,7 @@ eem_overview_plot(eem_list, spp=9, contour = TRUE)
 
 ## Inner-filter effect correction
 
-Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair `r citep("10.4319/lom.2013.11.616")`. In case of a maximum absorbance larger than 1.5 cm⁻¹, the sample needs to be diluted, because the absorbance is to high to be corrected by the applied IFE function (or mathematical IFE correction in general). The example uses a path length of 5 cm (5 cm long cuvettes) for absorption measurements.
+Inner-filter effects (IFE) occur when excitation light is absorbed by chromophores. A simple method to correct the IFE is to use the sample's absorbance. The EEM is multiplied by a correction matrix corresponding to each wavelength pair [@kothawala_inner_2013]. In case of a maximum absorbance larger than 1.5 cm⁻¹, the sample needs to be diluted, because the absorbance is to high to be corrected by the applied IFE function (or mathematical IFE correction in general). The example uses a path length of 5 cm (5 cm long cuvettes) for absorption measurements.
 
 In the example below, there is a warning about no absorbance data for the blank samples. This warning is not a problem because in ultrapure water samples there is practically no IFE and the sample is removed in the further analysis.
 
@@ -276,7 +275,7 @@ eem_overview_plot(eem_list, spp=9, contour = TRUE)
 
 ## Raman normalisation
 
-Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. Therefore it can be normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a ultrapure water sample. All fluorescence intensities are divided by the area (integral) of the Raman peak (excitation of 350 nm between an emission of 371 nm and 428 nm) `r citep("10.1366/000370209788964548")`. Values are interpolated if the wavelengths are missing.
+Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. Therefore it can be normalised to a standard scale of Raman Units by dividing all intensities by the area of the Raman peak of a ultrapure water sample. All fluorescence intensities are divided by the area (integral) of the Raman peak (excitation of 350 nm between an emission of 371 nm and 428 nm) [@lawaetz_fluorescence_2009]. Values are interpolated if the wavelengths are missing.
 
 You can use blanks, numeric values or data frames as source for the values. In case you use blank samples, again the blanks in the same sub-folder as the sample are used. Blanks are recognised by having "blank", "miliq", "milliq", "nano" or "mq" in the file name. This means regular samples must not have it.
 
@@ -302,7 +301,7 @@ absorbance <- dplyr::select(absorbance, -matches("nano|miliq|milliq|mq|blank", i
 
 ## Remove and interpolate scattering
 
-The function removes scattering from the samples. `remove_scatter` is a logical vector where values are ordered by the meaning of "raman1", "raman2", "rayleigh1" and "rayleigh2". `remove_scatter_width` is either a number or a vector containing 4 different wavelength width in nm, one for each scatter type. `r citep(list("10.1039/c3ay41160e","10.1007/978-0-387-46312-4"))`
+The function removes scattering from the samples. `remove_scatter` is a logical vector where values are ordered by the meaning of "raman1", "raman2", "rayleigh1" and "rayleigh2". `remove_scatter_width` is either a number or a vector containing 4 different wavelength width in nm, one for each scatter type [@murphy_fluorescence_2013; @lakowicz_principles_2006].
 
 ```{r eval=TRUE, include=TRUE}
 remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
@@ -315,7 +314,7 @@ eem_list <- eem_rem_scat(eem_list, remove_scatter = remove_scatter, remove_scatt
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
-Although it is not always necessary, removed scatter areas should be interpolated for reasonable results and faster calculation in the PARAFAC analysis `r citep("10.1016/j.chemolab.2015.01.017")`. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points` `r citep("10.1109/2945.620490")`, (2) excitation and emission wavelength-wise interpolation with `pchip` `r citep("10.1137/1.9780898717952")` and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear excitation and emission wavelength-wise interpolation with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating. We recommend to use type 1 as a start, because its accuracy in interpolating surfaces. The smooth but still complex surface is exactly what one would expect from a theoretical EEM. In case of recognisable patterns in the residual plots close to the scatter areas or many not converging initialisations of the PARAFAC model, another interpolation method could improve the results.
+Although it is not always necessary, removed scatter areas should be interpolated for reasonable results and faster calculation in the PARAFAC analysis [@elcoroaristizabal_parafac_2015]. `eem_interp` offers different methods of interpolation. The types of interpolation are (0) setting all NAs to 0, (1) spline interpolation with `mba.points` [@lee_scattered_1997], (2) excitation and emission wavelength-wise interpolation with `pchip` [@moler_numerical_2004] and subsequent `mean`, (3) excitation wavelength-wise interpolation with `pchip` and (4) linear excitation and emission wavelength-wise interpolation with `na.approx` and again subsequent `mean` calculation. Calculating the mean is a way of ensuring NAs are also interpolated where missing boundary values would make that impossible. In case of interpolation type 1, `extend = FALSE` prevents the function from extrapolating. We recommend to use type 1 as a start, because its accuracy in interpolating surfaces. The smooth but still complex surface is exactly what one would expect from a theoretical EEM. In case of recognisable patterns in the residual plots close to the scatter areas or many not converging initialisations of the PARAFAC model, another interpolation method could improve the results.
 
 ```{r eval=TRUE, include=TRUE}
 eem_list <- eem_interp(eem_list, cores = cores, type = 1, extend = FALSE)
@@ -372,7 +371,7 @@ eem_list %>%
 
 # Peak picking and indices
 
-Peaks and indices known from the literature `r citep(list("10.1016/j.orggeochem.2009.03.002","10.1016/0304-4203(95)00062-3","10.4319/lo.2001.46.1.0038","10.1021/es0155276"))` can be  calculated.
+Peaks and indices known from the literature [@huguet_properties_2009; @zepp_dissolved_2004; @mcknight_spectrofluorometric_2001; @ohno_fluorescence_2002] can be  calculated.
 
 If wavelength ranges needed for certain indices or peaks (e.g. the humification index (HIX) uses an excitation wavelength of 254 nm, but EEMs usually contain measurements at 250 and 255 nm) an interpolation is done automatically between existing measurements (no extrapolation!). This will be reported with warnings, however, these warnings can be ignored. The smoothed EEMs `eem4peaks` are used for the calculation. To extract individual peaks, the function `eem_peaks` can be used.
 
@@ -400,7 +399,7 @@ kable(indices_peaks %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),f
 
 # Absorbance indices
 
-`abs_parms` can be used to calculate a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes `r citep(list("10.4319/lo.2008.53.3.0955","10.1016/j.marchem.2004.02.008",citation(package="cdom"),"10.4319/lo.2009.54.2.0590"))`. `r citet(list("10.1080/10643389.2017.1309186"))` give a broad overview of possible values and their applications used in recent literature. Missing wavelengths, needed for certain indices or ratios are interpolated automatically.
+`abs_parms` can be used to calculate a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR and the wavelength distribution of absorption spectral slopes [@helms_absorption_2008; @twardowski_modeling_2004; @massicotte_cdom_2016; @loiselle_optical_2009]. Li and Hur [-@li_utilization_2017] give a broad overview of possible values and their applications used in recent literature. Missing wavelengths, needed for certain indices or ratios are interpolated automatically.
 
 ```{r eval=TRUE, include=TRUE}
 slope_parms <- abs_parms(absorbance, cuvl = 1, cores = cores)
@@ -416,7 +415,7 @@ kable(slope_parms %>% mutate_if(is.numeric,prettyNum,digits = 2,format="fg"),for
 
 # Creating a PARAFAC model
 
-Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, we used the same dataset and analysis procedure as in the drEEM tutorial which is a supplement to `r citet("10.1039/c3ay41160e")`.
+Finding an appropriate PARAFAC model is an iterative process. For comparing different methods, we used the same dataset and analysis procedure as in the drEEM tutorial which is a supplement to Murphy et al. [-@murphy_fluorescence_2013].
 
 ## Loading data
 
@@ -575,7 +574,7 @@ ggeem(eem_ex, contour = TRUE)
 
 ## Explore dataset
 
-It is crucial to find an appropriate number of components in the analysis. If the number of components is too large, it may be the case that one component was split into two; if it is too low, relevant components may get lost `r citep("10.1039/c3ay41160e")`. To help you find the appropriate number, a series of PARAFAC models can be calculated and compared. In this example 5 models with 3 to 7 components are calculated.
+It is crucial to find an appropriate number of components in the analysis. If the number of components is too large, it may be the case that one component was split into two; if it is too low, relevant components may get lost [@murphy_fluorescence_2013]. To help you find the appropriate number, a series of PARAFAC models can be calculated and compared. In this example 5 models with 3 to 7 components are calculated.
 
 The alternating-least-squares algorithm used to calculate the PARAFAC model optimises the components in order to minimise the residual error. The goal is to find a global minimum of the residual function. Depending on the random start values (random initialisation), different local minima can be found. To get the global minimum, a defined number `nstart` of initialisations is used for separate model calculations. The model with the smallest error is then used for further analyses, assuming it is a global minimum. 25 might by a good start for `nstart` although for a profound analysis higher values (e.g. 50) are suggested.
 
@@ -790,7 +789,7 @@ eempf_residuals_plot(pf4[[1]], eem_list, select = eem_names(eem_list)[10:14], co
 
 ## Split-half analysis
 
-The split-half analysis is intended to show the stability of your model. The data is recombined in 6 different ways and results from each sub-sample should be similar `r citep("10.1039/c3ay41160e")`.
+The split-half analysis is intended to show the stability of your model. The data is recombined in 6 different ways and results from each sub-sample should be similar [@murphy_fluorescence_2013].
 
 ```{r eval=FALSE, include=TRUE}
 #calculate split_half analysis
@@ -826,7 +825,7 @@ tcc_sh_table <- splithalf_tcc(sh)
 tcc_sh_table
 ```
 
-The function `eempf_ssc` can be used to compare models, not only from a split-half analysis. It returns the shift- and shape-sensitive congruence (SSC, `r citet("10.1039/c8ay02422g")`). Alternatively, the TCC can be calculated using the attribute `tcc = TRUE`. TCCs and SSCs can be combined over excitation and emission spectra using `m = TRUE` to calculate the modified TCC `r citep("10.4319/lom.2014.12.114")` or modified SSC respectively.
+The function `eempf_ssc` can be used to compare models, not only from a split-half analysis. It returns the shift- and shape-sensitive congruence [SSC, @wunsch_emerging_2019]. Alternatively, the TCC can be calculated using the attribute `tcc = TRUE`. TCCs and SSCs can be combined over excitation and emission spectra using `m = TRUE` to calculate the modified TCC [@parr_comparafac_2014] or modified SSC respectively.
 
 ## Loadings of outliers
 
@@ -841,7 +840,7 @@ pf4_wOutliers <- A_missing(eem_list, pfmodel = pf4[[1]], cores = cores)
 
 ### Core consistency
 
-As a way of model validation, the core consistency can be calculated. Please see `r citet("10.1039/c3ay41160e")` for the limited usability of core consistency for model validation from natural EEMs.
+As a way of model validation, the core consistency can be calculated. Please see Murphy et al. [-@murphy_fluorescence_2013] for the limited usability of core consistency for model validation from natural EEMs.
 
 ```{r eval=FALSE, include=TRUE, fig.width=7}
 corcondia <- eempf_corcondia(pf4[[1]], eem_list_ex)
@@ -849,7 +848,7 @@ corcondia <- eempf_corcondia(pf4[[1]], eem_list_ex)
 
 ### EEMqual
 
-EEMqual is a quality parameter integrating the model fit, the core consistency and the split-half analysis according to `r citet("10.1016/j.chemolab.2010.06.005")`. Due to the fact that the core consistency is included, the limitations are similar (see above).
+EEMqual is a quality parameter integrating the model fit, the core consistency and the split-half analysis according to Bro and Vidal [-@bro_eemizer:_2011]. Due to the fact that the core consistency is included, the limitations are similar (see above).
 
 ```{r eval=FALSE, include=TRUE, fig.width=7}
 eemqual <- eempf_eemqual(pf4[[1]], eem_list_ex, sh, cores = cores)
@@ -895,14 +894,14 @@ Components within a PARAFAC model can be reordered using `eempf_reorder`.
 
 ## Comparing your data using openfluor.org
 
-You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org `r citep("10.1039/c3ay41935e")`. Please check the file header manually after export as some values are not set automatically. Openfluor offers ways to compare your components with those found in other publications. This is a very important step in interpreting the results and coming to ecological sound conclusions.
+You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org [@murphy_openfluor_2014]. Please check the file header manually after export as some values are not set automatically. Openfluor offers ways to compare your components with those found in other publications. This is a very important step in interpreting the results and coming to ecological sound conclusions.
 
 ```{r eval=FALSE, include = TRUE}
 eempf_openfluor(pf4[[1]], file = "my_model_openfluor.txt")
 ```
 
 ## Comparing data using SSC
-`r citet("10.1039/C8AY02422G")` showed, that the TCC is sometimes not sensitive enough to separate different components. Therefore, they developed the shift- and shape sensitive congruence coefficient (SSC). It can be calculated using the function `eempf_ssc`.
+[@wunsch_emerging_2019] showed, that the TCC is sometimes not sensitive enough to separate different components. Therefore, they developed the shift- and shape sensitive congruence coefficient (SSC). It can be calculated using the function `eempf_ssc`.
 
 ## Creating a report on your analysis
 The report created by `eempf_report` contains important settings and results of your analysis and is exported as an html file. You can specify the information you want to include.
@@ -926,7 +925,7 @@ Using `eempf_export` you can export your model matrices to a csv file.
 
 # Experimental(!) functions
 ## SSCs between initialisations
-The shift- and shape sensitive congruence coefficient (SSC, `r citet("10.1039/C8AY02422G")`) (or TCC) between the e.g. 3 to 6 best initialisations of the model could be an indicator to evaluate the stability of the model creation process. If one of the components is much different from the others, the best model is a lucky guess. Models with several initialisations giving very similar results are more trustworthy. You might overthink the modelling parameters and the preprocessing. To do this test, you need to keep all created models by adding the argument `output = "all"` to the `eem_parafac` function.
+The shift- and shape sensitive congruence coefficient [SSC, @wunsch_emerging_2019] (or TCC) between the e.g. 3 to 6 best initialisations of the model could be an indicator to evaluate the stability of the model creation process. If one of the components is much different from the others, the best model is a lucky guess. Models with several initialisations giving very similar results are more trustworthy. You might overthink the modelling parameters and the preprocessing. To do this test, you need to keep all created models by adding the argument `output = "all"` to the `eem_parafac` function.
 
 ```{r eval=FALSE, include=TRUE, fig.width=7}
 pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
@@ -942,6 +941,3 @@ Recombining the components of a PARAFAC model is generally not advised. It shoul
 Components can be extracted from models using `eempf_excomp`. The extracted components can then be used to create new models using `A_missing` and the `components` argument.
 
 # References
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-write.bibtex(file="references2.bib")
-```

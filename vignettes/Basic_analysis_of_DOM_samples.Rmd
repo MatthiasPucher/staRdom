@@ -3,7 +3,7 @@ title: "Correcting raw data, calculating peaks and indices in EEMS and absorbanc
 subtitle: "staRdom: spectroscopic analysis of dissolved organic matter in R"
 author: "`r packageDescription('staRdom')$Maintainer`"
 date: "`r format(Sys.time(), '%B %e %Y')`"
-bibliography: "references.bib"
+bibliography: "staRdom.bib"
 output:
   rmarkdown::html_vignette:
     toc: true
@@ -14,34 +14,30 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-library(knitcitations)
 library(dplyr)
 library(tidyr)
-cleanbib()
-options("citation_format" = "pandoc")
-bibliography() #style="apalike"
 ```
 
 ![](staRdom384.png){width=180}
 
 # Introduction
-staRdom is a package for R version `r R.Version()$major` `r citep(citation())` to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
+staRdom is a package for R version `r R.Version()$major` [@r_development_core_team_r:_2019] to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
 
-* separating the components of the EEMs via PARAFAC/CANDECOMP `r citep(list("10.1039/c3ay41160e","10.1016/S0169-7439(97)00032-4",citation(package="multiway")))`.
+* separating the components of the EEMs via PARAFAC/CANDECOMP [@murphy_fluorescence_2013; @bro_parafac_1997; @helwig_multiway_2019].
 * validating the model using a split-half analysis, the core consistency, the model fit or visually examining the residuals
-* correcting excitation-emission-matrices `r citep(list("10.1039/c3ay41160e",citation(package="eemR")))`
-* calculating fluorescence peaks and indices `r citep(citation(package="eemR"))`
-* autochthonous productivity index / freshness index (BIX; `r citet(list("10.1016/j.orggeochem.2009.03.002","10.4319/lo.2010.55.6.2452"))`)
-* classical peaks based on manual peak picking (B, T, A, M, C; `r citet("10.1016/0304-4203(95)00062-3")`)
-* fluorescence index (FI; `r citet("10.4319/lo.2001.46.1.0038")`)
-* humification index (HIX; `r citet("10.1021/es0155276")`)
+* correcting excitation-emission-matrices [@murphy_fluorescence_2013; @massicotte_eemr_2019]
+* calculating fluorescence peaks and indices [@massicotte_eemr_2019]
+* autochthonous productivity index / freshness index [BIX; @huguet_properties_2009; @fellman_fluorescence_2010]
+* classical peaks based on manual peak picking [B, T, A, M, C; @coble_characterization_1996]
+* fluorescence index [FI; @mcknight_spectrofluorometric_2001]
+* humification index [HIX; @ohno_fluorescence_2002]
 * calculating common absorbance (slope) parameters:
-    * absorbance at 254 nm (a254; `r citet("10.1016/0043-1354(72)90017-6")`),
-    * absorbance at 300 nm (a300; `r citet("10.1007/s00027-005-0754-9")`),
-    * ratio of absorbance at 250 to 365 nm (E2:E3; `r citet("10.1016/0043-1354(87)90086-8")`),
-    * ratio of absorbance at 465 to 665 nm (E4:E6; `r citet("10.1016/0048-9697(87)90478-5")`),
-    * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) `r citep("10.4319/lo.2008.53.3.0955")`,
-    * the wavelength distribution of absorption spectral slopes `r citep("10.4319/lo.2009.54.2.0590")` and
+    * absorbance at 254 nm [a254; @dobbs_use_1972],
+    * absorbance at 300 nm [a300; @molot_effect_2005],
+    * ratio of absorbance at 250 to 365 nm [E2:E3; @de_haan_applicability_1987],
+    * ratio of absorbance at 465 to 665 nm [E4:E6; @summers_molecular_1987],
+    * spectral slope within log-transformed absorption spectra range (S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400 (SR) [@helms_absorption_2008],
+    * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
 staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
@@ -175,7 +171,7 @@ col_raman_area = "raman"
 
 ### Spectral correction
 
-Spectral correction is done to remove instrument-specific influences on the EEMs `r citep("10.1021/ac902507p")`. Some instruments can do this automatically. Correction vectors should be provided in at least the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range. Please provide paths to csv tables containing wavelengths in the first column and correction values in the second.
+Spectral correction is done to remove instrument-specific influences on the EEMs [@derose_recommendations_2010]. Some instruments can do this automatically. Correction vectors should be provided in at least the same range as the EEM measurements. If this is not the case, the EEMs are cut to this range. Please provide paths to csv tables containing wavelengths in the first column and correction values in the second.
 
 ```{r eval=FALSE}
 #### Spectral correction of EEMs ####
@@ -262,11 +258,11 @@ eem_name = "eem_list"
 
 ## Data correction
 
-Raw data from fluorometers and photometers bear several shortcomings. `r citet("10.1039/c3ay41160e")` addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be applied. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. `r citet("10.1002/cem.773")` offer additional information on correction of EEM data.
+Raw data from fluorometers and photometers bear several shortcomings. Murphy et al. [-@murphy_fluorescence_2013] addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be applied. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. Bro and Smilde [-@bro_centering_2003] offer additional information on correction of EEM data.
 
 ### Absorbance baseline correction
 
-The instrumental baseline drift in absorbance data can be removed by subtracting the mean of the absorbance at high wavelengths `r citep("10.1080/10643389.2017.1309186")`. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
+The instrumental baseline drift in absorbance data can be removed by subtracting the mean of the absorbance at high wavelengths [@li_utilization_2017]. The default is to use the spectrum between 680 and 700 nm but any other range can be set manually.
 
 ```{r eval=FALSE}
 #### Normalising absorbance data to baseline ####
@@ -293,7 +289,7 @@ If samples were diluted before the spectroscopic measurements, the dilution fact
 dilution = "meta" # e.g. 1 for undiluted samples
 ```
 
-The reason of diluting a sample can be inner-filter effects that cannot be corrected conveniently if they are too high `r citep("10.4319/lom.2013.11.616")`. On the contrary, absorbance data might be better analysed undiluted. To combine the results of diluted EEM measurements and undiluted absorbance measurements, the following parameter can be set to do this automatically. Please check the results because depending on your sample names, automatically guessed combinations might not be recognised correctly!
+The reason of diluting a sample can be inner-filter effects that cannot be corrected conveniently if they are too high [@kothawala_inner_2013]. On the contrary, absorbance data might be better analysed undiluted. To combine the results of diluted EEM measurements and undiluted absorbance measurements, the following parameter can be set to do this automatically. Please check the results because depending on your sample names, automatically guessed combinations might not be recognised correctly!
 
 ```{r eval=FALSE}
 # In case of diluted samples, two absorbance measurements of the
@@ -339,7 +335,7 @@ cut_range_to_smallest = FALSE # e.g. FALSE
 
 ### Blank correction
 
-Blank samples are data from measuring ultrapure water. Systematic biases can be removed by subtracting the blank sample from each sample. The blank samples have to contain "nano", "miliq", "milliq", "mq" or "blank" (cases are ignored) in the file name. Regular samples must not contain one of these words. Blanks have to be in the same (sub)folder as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It needs to be measured with each sample set (e.g. once a day) `r citep("10.1039/c3ay41160e")` and kept together in one folder.
+Blank samples are data from measuring ultrapure water. Systematic biases can be removed by subtracting the blank sample from each sample. The blank samples have to contain "nano", "miliq", "milliq", "mq" or "blank" (cases are ignored) in the file name. Regular samples must not contain one of these words. Blanks have to be in the same (sub)folder as the samples that are corrected with the certain blank. Multiple blanks in one (sub)folder are averaged. It needs to be measured with each sample set (e.g. once a day) [@murphy_fluorescence_2013] and kept together in one folder.
 
 ```{r eval=FALSE}
 ### Blank correction ###
@@ -354,7 +350,7 @@ blank_correction = FALSE # e.g. FALSE
 
 ### Correct inner filter effects
 
-The inner-filter effect is caused by absorbance that blocks light in the pathway from the source to the sensor during fluorescence measurements. To apply the inner-filter effects correction described in `r citet("10.4319/lom.2013.11.616")`, absorbance data have to be measured for each sample. By knowing the exact absorbance, this effect can be mathematically corrected. In case of a total absorbance greater than 1.5, the sample has to be diluted because otherwise, the linear relationship is not appropriate anymore.
+The inner-filter effect is caused by absorbance that blocks light in the pathway from the source to the sensor during fluorescence measurements. To apply the inner-filter effects correction described in Kothawala et al. [-@kothawala_inner_2013], absorbance data have to be measured for each sample. By knowing the exact absorbance, this effect can be mathematically corrected. In case of a total absorbance greater than 1.5, the sample has to be diluted because otherwise, the linear relationship is not appropriate anymore.
 
 ```{r eval=FALSE}
 ### Inner filter effect correction ###
@@ -366,9 +362,9 @@ ife_correction = TRUE # e.g. FALSE
 
 ### Remove and interpolate scattering
 
-Diagonal scatter peaks hinder the analysis of EEM data as they usually are much greater than peaks from DOM. They can be partly removed by subtracting the blank sample as described above. Diagonal peaks are called Rayleigh and Raman peaks of first and second order. They can also make a PARAFAC analysis impossible. `r citet("10.1016/s0003-2670(00)81226-x")`, `r citet("10.1007/978-0-387-46312-4")` and `r citet("10.1038/348432a0")` offer additional information.
+Diagonal scatter peaks hinder the analysis of EEM data as they usually are much greater than peaks from DOM. They can be partly removed by subtracting the blank sample as described above. Diagonal peaks are called Rayleigh and Raman peaks of first and second order. They can also make a PARAFAC analysis impossible. Senesi [-@senesi_molecular_1990], Lakowicz et al. [-@lakowicz_principles_2006] and Coble et al. [-@coble_characterization_1990] offer additional information.
 
-The width of the removed scatter slot can be set. Make sure not to lose too much data while still removing the whole peak. If you use the interpolation below, a remaining diagonal peak hints at insufficient width. `r citet("10.1016/j.chemolab.2015.01.017")`, `r citet("10.1002/cem.978")` and `r citet("10.1016/j.marchem.2004.02.006")` suggest an interpolation of the removed scattering prior to a PARAFAC analysis and offer a description.
+The width of the removed scatter slot can be set. Make sure not to lose too much data while still removing the whole peak. If you use the interpolation below, a remaining diagonal peak hints at insufficient width. Elcoroaristizabal et al. [- @elcoroaristizabal_parafac_2015], Bahram et al. [-@bahram_handling_2006] and Zepp et al. [-@zepp_dissolved_2004] suggest an interpolation of the removed scattering prior to a PARAFAC analysis and offer a description.
 
 ```{r eval=FALSE}
 ### Remove scattering and interpolate missing data ###
@@ -389,7 +385,7 @@ interpolation <- TRUE # e.g. TRUE
 
 ### Raman normalisation
 
-Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. The so-called Raman normalisation makes samples comparable and normalises fluorescence intensities to Raman units. In staRdom, it can be applied in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation `r citep("10.1366/000370209788964548")` or you provide a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
+Fluorescence intensities can differ between analyses on different fluorometers, different settings or different days on the same fluorometer. The so-called Raman normalisation makes samples comparable and normalises fluorescence intensities to Raman units. In staRdom, it can be applied in two ways. Either you use a blank sample (details see at chapter Blank correction above) to calculate the value for the normalisation [@lawaetz_fluorescence_2009] or you provide a certain value, that is used. Fixed values for each sample can be set in the meta table as well.
 
 ```{r eval=FALSE}
 ### Raman normailsation ###
@@ -448,7 +444,7 @@ You can run the script by clicking the "Knit" button in the toolbar of RStudio. 
 
 # Installation
 
-The script is running in R environment `r citep(citation())`. Using a graphical user interface like RStudio (https://www.rstudio.com/) can help beginners to get into it.
+The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://www.rstudio.com/) can help beginners to get into it.
 
 You can install staRdom via RStudio by klicking Tools -> Install Packages... or by entering the command `install.packages("staRdom")` in the command line.
 
@@ -499,9 +495,6 @@ https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizar
 Be sure the specified drive and folder existis on your system (e.g. C:/) and you have write access.
 
 # References
-```{r message=FALSE, warning=FALSE, include=FALSE}
-write.bibtex(file="references.bib")
-```
 
   
 
