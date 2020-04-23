@@ -5,9 +5,10 @@
 #'
 #' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'.
 #' @param fill_max sets the maximum fluorescence value for the colour scale. This is mainly used by other functions, and makes different plots visually comparable.
-#' @param redneg logical, whether negative values should be coloured discreet.
+#' @param colpal "default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.
 #' @param contour logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}
 #' @param interpolate logical, whether fluorescence should be interpolated, see \code{\link[ggplot2]{geom_raster}}
+#' @param redneg deprecated! logical, whether negative values should be coloured discreet.
 #' @param eemlist_order logical, in case of an eemlist, the order of samples in the plot is the same as in the eemlist, alphabetically otherwise
 #' @param ... parameters passed on to \code{\link[ggplot2]{ggplot}}.
 #'
@@ -39,6 +40,20 @@
 #' eem_names(eem_list)
 #' eem <- eem_extract(eem_list,c("^d667sf$", "^d661sf$"),keep=TRUE)
 #' ggeem(eem)
+#'
+#' # the former redneg argument is deprecated, please see a similar looking example below!
+#' #ggeem(eem, redneg = TRUE)
+#' ggeem(eem, colpal = c(rainbow(75)[58],rainbow(75)[53:1]))
+#'
+#' # use any custom colour palette
+#' ggeem(eem, colpal = heat.colors(50))
+#' # needs package matlab to be installed:
+#' # ggeem(eem, colpal = matlab::jet.colors(50))
+#' # or by adding ggplot2 colour and fill functions:
+#' # ggeem(eem)+
+#' #   scale_fill_viridis_c()+
+#' #   scale_color_viridis_c()
+#'
 #' ggeem(eem, interpolate = TRUE)
 #' ggeem(eem, contour = TRUE)
 ggeem <- function(data, fill_max=FALSE, ...) UseMethod("ggeem")
@@ -61,7 +76,7 @@ ggeem.eemlist <- function(data, fill_max = FALSE, eemlist_order = TRUE, ...)
 
 #' @rdname ggeem
 #' @export
-ggeem.eem <- function(data,fill_max=FALSE,...)
+ggeem.eem <- function(data, fill_max = FALSE, ...)
 {
   table <- data %>% as.data.frame()
   #filename <- paste0('EEM_spectrum_',table$sample[1],"_",format(Sys.time(), "%Y%m%d_%H%M%S"))
@@ -70,7 +85,7 @@ ggeem.eem <- function(data,fill_max=FALSE,...)
 
 #' @rdname ggeem
 #' @export
-ggeem.parafac <- function(data,fill_max=FALSE,...)
+ggeem.parafac <- function(data, fill_max = FALSE, ...)
 {
   table <- data %>% eempf_comp_mat() #eem_list
   table <- lapply(table %>% names(),function(name){
@@ -83,12 +98,17 @@ ggeem.parafac <- function(data,fill_max=FALSE,...)
 
 #' @rdname ggeem
 #' @export
-ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALSE, interpolate = FALSE, ...)
+ggeem.data.frame <- function(data, fill_max=FALSE, colpal = "default", contour = FALSE, interpolate = FALSE, redneg = NULL, ...)
 {
   #data <- table
-  if(!exists("colpal")){
-    colpal <- rainbow
+  if(!is.null(redneg)){
+    warning("redneg is deprecated and will be ignored! Please use the argument 'colpal = c(rainbow(75)[58],rainbow(75)[51:1])' to produce similar behaviour.")
+  }
+  if(colpal[1] == "default"){
+    colpal <- rainbow(75)[53:1]
     # warning("using rainbow colour palette")
+  } else if(!is.vector(colpal)) {
+    stop("Please provide a vector of colours!")
   }
   table <- data %>%
     mutate_at(vars(ex,em,value),as.numeric)
@@ -132,21 +152,15 @@ ggeem.data.frame <- function(data,fill_max=FALSE, redneg = FALSE, contour = FALS
       geom_contour(colour = "black", size = 0.3, ...)
   }
   if(table$value %>% min(na.rm=TRUE) < 0){
-    vals <- c(table$value %>% min(na.rm=TRUE),seq(from=0,to=fill_max,length.out = 51))
+    vals <- c(table$value %>% min(na.rm = TRUE), seq(from = 0, to = fill_max, length.out = length(colpal) - 1))
     vals <- (vals - min(vals))/diff(range(vals))
-    if(redneg){
-      plot <- plot +
-        scale_fill_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max)) +
-        scale_colour_gradientn(colours=c(colpal(75)[58],colpal(75)[51:1]),values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
-    } else {
-      plot <- plot +
-        scale_fill_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))+
-        scale_colour_gradientn(colours=colpal(75)[52:1],values=vals,limits = c(table$value %>% min(na.rm=TRUE),fill_max))
-    }
+    plot <- plot +
+      scale_fill_gradientn(colours = colpal, values = vals, limits = c(table$value %>% min(na.rm=TRUE),fill_max))+
+      scale_colour_gradientn(colours = colpal, values = vals, limits = c(table$value %>% min(na.rm=TRUE),fill_max))
   } else {
     plot <- plot +
-      scale_fill_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))+
-      scale_colour_gradientn(colours=colpal(75)[51:1],limits = c(0,fill_max))
+      scale_fill_gradientn(colours = colpal, limits = c(0,fill_max))+
+      scale_colour_gradientn(colours = colpal, limits = c(0,fill_max))
   }
   plot
 }

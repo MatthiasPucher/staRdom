@@ -4,7 +4,14 @@
 \alias{eempf_plot_comps}
 \title{Plot all components of PARAFAC models}
 \usage{
-eempf_plot_comps(pfres, type = 1, names = TRUE, contour = FALSE, ...)
+eempf_plot_comps(
+  pfres,
+  type = 1,
+  names = TRUE,
+  contour = FALSE,
+  colpal = "default",
+  ...
+)
 }
 \arguments{
 \item{pfres}{list of PARAFAC models}
@@ -15,7 +22,9 @@ eempf_plot_comps(pfres, type = 1, names = TRUE, contour = FALSE, ...)
 
 \item{contour}{in case of 3 dimensional component plots, contours are added}
 
-\item{...}{arguments passed on to other functions}
+\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
+
+\item{...}{arguments passed on to other functions, e.g.}
 }
 \value{
 object of class ggplot
@@ -27,6 +36,9 @@ The components can be plottet in two ways: either as a colour map or as two line
 data(pf_models)
 
 eempf_plot_comps(pf4, type = 1)
+
+# use a different colour scheme:
+# eempf_plot_comps(pf4, type = 1, colpal = heat.colors(50))
 eempf_plot_comps(pf4, type = 2)
 eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 

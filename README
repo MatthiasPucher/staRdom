@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.9 to 1.1.11
+  the use of colour palettes in plots was changed slightly to be more intuitive and consistent over all staRdom functions
+
 1.1.8 to 1.1.9
   changed citation system in vignettes: no internet connection necessary for knitting now
 

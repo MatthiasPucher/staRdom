@@ -321,9 +321,9 @@ eem_ife_correction <- function(data, abs_data, cuvl = NULL, unit = c("absorbance
 #' @examples
 #' data(eem_list)
 #'
-#' eem_list2 <- eem_dilution(eem_list,dilution = 5)
+#' eem_list2 <- eem_dilution(eem_list, dilution = 5)
 #'
-#' dilutionT <- data.frame(dilution = rep(5,length(eem_list)))
+#' dilutionT <- data.frame(dilution = rep(5, length(eem_list)))
 #' row.names(dilutionT) <- eem_names(eem_list)
 #' dilutionT
 #'

@@ -22,9 +22,10 @@ ggeem(data, fill_max = FALSE, ...)
 \method{ggeem}{data.frame}(
   data,
   fill_max = FALSE,
-  redneg = FALSE,
+  colpal = "default",
   contour = FALSE,
   interpolate = FALSE,
+  redneg = NULL,
   ...
 )
 }
@@ -37,11 +38,13 @@ ggeem(data, fill_max = FALSE, ...)
 
 \item{eemlist_order}{logical, in case of an eemlist, the order of samples in the plot is the same as in the eemlist, alphabetically otherwise}
 
-\item{redneg}{logical, whether negative values should be coloured discreet.}
+\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
 
 \item{contour}{logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}}
 
 \item{interpolate}{logical, whether fluorescence should be interpolated, see \code{\link[ggplot2]{geom_raster}}}
+
+\item{redneg}{deprecated! logical, whether negative values should be coloured discreet.}
 }
 \value{
 a ggplot object
@@ -72,6 +75,20 @@ data(eem_list)
 eem_names(eem_list)
 eem <- eem_extract(eem_list,c("^d667sf$", "^d661sf$"),keep=TRUE)
 ggeem(eem)
+
+# the former redneg argument is deprecated, please see a similar looking example below!
+#ggeem(eem, redneg = TRUE)
+ggeem(eem, colpal = c(rainbow(75)[58],rainbow(75)[53:1]))
+
+# use any custom colour palette
+ggeem(eem, colpal = heat.colors(50))
+# needs package matlab to be installed:
+# ggeem(eem, colpal = matlab::jet.colors(50))
+# or by adding ggplot2 colour and fill functions:
+# ggeem(eem)+
+#   scale_fill_viridis_c()+
+#   scale_color_viridis_c()
+
 ggeem(eem, interpolate = TRUE)
 ggeem(eem, contour = TRUE)
 }

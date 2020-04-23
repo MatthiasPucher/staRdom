@@ -9,7 +9,7 @@ eempf_compare(pfres, ...)
 \arguments{
 \item{pfres}{list of several objects of class parafac}
 
-\item{...}{arguments passe don to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}}
+\item{...}{arguments passed on to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}}
 }
 \value{
 3 objects of class ggplot

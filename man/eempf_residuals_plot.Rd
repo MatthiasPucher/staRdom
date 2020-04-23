@@ -12,7 +12,8 @@ eempf_residuals_plot(
   select = NULL,
   residuals_only = FALSE,
   cores = parallel::detectCores(logical = FALSE),
-  contour = FALSE
+  contour = FALSE,
+  colpal = "default"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ eempf_residuals_plot(
 \item{cores}{number of cores to use for parallel processing}
 
 \item{contour}{logical, states whether contours should be plotted}
+
+\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
 }
 \value{
 several ggplot objects
@@ -40,13 +43,28 @@ A raster of plots is created. Each column shows one sample. The top n rows show 
 }
 \details{
 eem_list may contain samples not used for modelling. Calculation is done by \code{\link[staRdom]{A_missing}}. This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
+Usually, residuals contain negative values, while these is the exception in samples and PARAFAC components. Therefore, we decided to use a similar colour palette as in the other plot functions but adding a purple tone for negative values.
 }
 \examples{
 \donttest{
 data(eem_list)
 data(pf_models)
 
-eempf_residuals_plot(pf4[[1]],eem_list)
+eem_list <- eem_extract(eem_list, 1:10)
+
+eem_list <- eem_rem_scat(eem_list, rep(TRUE, 4), c(15,10,16,12))
+
+eempf_residuals_plot(pf4[[1]], eem_list)
+
+# use other colour schemes:
+# eempf_residuals_plot(pf4[[1]], eem_list, colpal = c("blue",heat.colors(50)))
+# plots <- eempf_residuals_plot(pf4[[1]], eem_list)
+# lapply(plots, function(pl){
+#   pl +
+#     scale_fill_viridis_c() +
+#     scale_colour_viridis_c()
+# })
+
 }
 
 }

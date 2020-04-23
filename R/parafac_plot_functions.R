@@ -9,7 +9,7 @@
 #' The plots are intended to help with a suitable number of components.
 #'
 #' @param pfres list of several objects of class parafac
-#' @param ... arguments passe don to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}
+#' @param ... arguments passed on to \code{\link[staRdom]{eempf_fits}} and \code{\link[staRdom]{eempf_plot_comps}}
 #'
 #' @return 3 objects of class ggplot
 #' @export
@@ -68,7 +68,8 @@ eempf_fits <- function(pfres,...){
 #' @param type 1 for a colour map and 2 for em and ex wavelength loadings
 #' @param names logical, whether names of components should be written into the plot
 #' @param contour in case of 3 dimensional component plots, contours are added
-#' @param ... arguments passed on to other functions
+#' @param colpal "default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.
+#' @param ... arguments passed on to other functions, e.g.
 #'
 #' @return object of class ggplot
 #' @export
@@ -81,11 +82,20 @@ eempf_fits <- function(pfres,...){
 #' data(pf_models)
 #'
 #' eempf_plot_comps(pf4, type = 1)
+#'
+#' # use a different colour scheme:
+#' # eempf_plot_comps(pf4, type = 1, colpal = heat.colors(50))
 #' eempf_plot_comps(pf4, type = 2)
 #' eempf_plot_comps(list(pf4[[1]],pf4[[1]]), type=1)
 #'
-eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
+eempf_plot_comps <- function(pfres, type = 1, names = TRUE, contour = FALSE, colpal = "default", ...){
   #pfres <- pf3
+  if(colpal[1] == "default"){
+    colpal <- rainbow(75)[53:1]
+    # warning("using rainbow colour palette")
+  } else if(!is.vector(colpal)) {
+    stop("Please provide a vector of colours!")
+  }
   c <- pfres %>% lapply(eempf_comp_mat)
   if(is.null(names(c))) names(c) <- paste0("model",seq(1:length(c)))
   tab <- lapply(1:length(c),function(n){
@@ -104,7 +114,7 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
     mutate(modname = factor(modname,levels = names(c))) %>%
     mutate_at(vars(ex,em,value),as.numeric)
   fill_max <- tab$value %>% max(na.rm=TRUE)
-  vals <- seq(from=0,to=fill_max,length.out = 51)
+  vals <- seq(from = 0, to = fill_max,length.out = length(colpal))
   vals <- (vals - min(vals))/diff(range(vals))
   if(type==2){
     plot <- tab %>%
@@ -143,7 +153,7 @@ eempf_plot_comps <- function(pfres,type=1,names=TRUE,contour = FALSE,...){
     }
 
     plot <- plot +
-      scale_fill_gradientn(colours=rainbow(75)[51:1],values=vals,limits = c(tab$value %>% min(na.rm=TRUE),fill_max), aesthetics = c("fill", "colour"))+
+      scale_fill_gradientn(colours = colpal, values = vals, limits = c(tab$value %>% min(na.rm=TRUE),fill_max), aesthetics = c("fill", "colour"))+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       labs(x = "Excitation (nm)", y = "Emission (nm)") +
       facet_grid(comp ~ modname)
@@ -284,9 +294,9 @@ eempf_load_plot <- function(pfmodel){
     data.frame() %>%
     rownames_to_column("sample") %>%
     #mutate(sample = names[[3]]) %>%
-    gather(comp,amount,-sample) %>%
+    gather(comp, amount, -sample) %>%
     ggplot()+
-    geom_bar(aes(x=sample,y=amount,fill=comp),stat="identity",width=0.8)+
+    geom_bar(aes(x = sample, y = amount, fill = comp), stat = "identity", width = 0.8)+
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 }
 
@@ -310,7 +320,7 @@ eempf_load_plot <- function(pfmodel){
 #'
 #' eempf_comps3D(pf4[[1]])
 #' }
-eempf_comps3D <- function(pfmodel,which=NULL){
+eempf_comps3D <- function(pfmodel, which = NULL){
   data <- pfmodel %>% eempf_comp_mat()
   z <- lapply(data,function(mat){
     mat %>%
@@ -380,8 +390,10 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #' @param residuals_only plot only residuals
 #' @param cores number of cores to use for parallel processing
 #' @param contour logical, states whether contours should be plotted
+#' @param colpal "default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.
 #'
 #' @details eem_list may contain samples not used for modelling. Calculation is done by \code{\link[staRdom]{A_missing}}. This especially interesting if outliers are excluded prior modelling and should be evaluated again afterwards.
+#' Usually, residuals contain negative values, while these is the exception in samples and PARAFAC components. Therefore, we decided to use a similar colour palette as in the other plot functions but adding a purple tone for negative values.
 #'
 #' @return several ggplot objects
 #' @export
@@ -397,13 +409,24 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' eempf_residuals_plot(pf4[[1]],eem_list)
+#' eem_list <- eem_extract(eem_list, 1:10)
+#'
+#' eem_list <- eem_rem_scat(eem_list, rep(TRUE, 4), c(15,10,16,12))
+#'
+#' eempf_residuals_plot(pf4[[1]], eem_list)
+#'
+#' # use other colour schemes:
+#' # eempf_residuals_plot(pf4[[1]], eem_list, colpal = c("blue",heat.colors(50)))
+#' # plots <- eempf_residuals_plot(pf4[[1]], eem_list)
+#' # lapply(plots, function(pl){
+#' #   pl +
+#' #     scale_fill_viridis_c() +
+#' #     scale_colour_viridis_c()
+#' # })
+#'
 #' }
 #'
-eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, select=NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE), contour = FALSE){
-  #pfmodel,eem_list,select=eem_names(eem_list)[10:19]
-  #pfmodel <- pf4[[1]]
-  #eem_list <- eem_ex
+eempf_residuals_plot <- function(pfmodel, eem_list, res_data = NULL, spp = 5, select = NULL, residuals_only = FALSE , cores = parallel::detectCores(logical = FALSE), contour = FALSE, colpal = "default"){
   if(is.null(res_data)){
     res_data <- eempf_residuals(pfmodel,eem_list,select=select,cores = cores)
   }
@@ -412,18 +435,21 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
   }
   res_data <- res_data %>%
     mutate_at(vars(ex,em,value),as.numeric)
-  #if(!is.numeric(fill_max)){
   if(residuals_only){
     res_data <- res_data %>%
       filter(type == "residual")
   }
+  if(colpal[1] == "default"){
+    colpal <- c(rainbow(70)[62], rainbow(70)[50:1])
+    # warning("using rainbow colour palette")
+  } else if(!is.vector(colpal)) {
+    stop("Please provide a vector of colours!")
+  }
   fill_max <- res_data$value %>% max(na.rm=TRUE)
-  #}
-  vals <- c(res_data$value %>% min(na.rm=TRUE),seq(from=0,to=fill_max,length.out = 50))
+  vals <- c(res_data$value %>% min(na.rm = TRUE), seq(from = 0, to = fill_max, length.out = length(colpal) - 1))
   vals <- (vals - min(vals))/diff(range(vals))
   ppp <- res_data$Sample %>% unique() %>% length() /spp
   ov_plot <- lapply(1:ceiling(ppp),function(pos){
-    #pos <- 1
     pl <- res_data %>%
       filter(Sample %in% (res_data$Sample %>% unique() %>% .[(spp*(pos-1)+1):(spp*pos)])) %>%
       ggplot(aes(x=ex,y=em,z=value))
@@ -443,7 +469,7 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
         #geom_raster(aes(fill = value), interpolate = interpolate)
         layer(mapping = aes(colour = value, fill = value),
               geom = "tile", stat = "identity", position = "identity") +
-        scale_colour_gradientn(colours=c(rainbow(70)[62],rainbow(70)[50:1]),values=vals,limits = c(res_data$value %>% min(na.rm=TRUE),fill_max))
+        scale_colour_gradientn(colours = colpal, values = vals, limits = c(res_data$value %>% min(na.rm = TRUE), fill_max))
     } else {
       pl <- pl +
         layer(mapping = aes(fill = value),
@@ -451,7 +477,7 @@ eempf_residuals_plot <- function(pfmodel,eem_list,res_data = NULL, spp = 5, sele
     }
     pl <- pl +
       #geom_raster(aes(fill=value))+ #,interpolate=TRUE
-      scale_fill_gradientn(colours=c(rainbow(70)[62],rainbow(70)[50:1]),values=vals,limits = c(res_data$value %>% min(na.rm=TRUE),fill_max))+
+      scale_fill_gradientn(colours = colpal, values = vals, limits = c(res_data$value %>% min(na.rm = TRUE), fill_max))+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))+
       labs(x = "Excitation (nm)", y = "Emission (nm)", fill = "fluorescence")
     if(contour){
@@ -516,10 +542,10 @@ splithalf_plot <- function(fits){
   pl1 <- table %>%
     mutate(selection = factor(selection,ordered=FALSE)) %>%
     ggplot()+
-    geom_line(data = . %>% filter(!is.na(ex)),aes(x=ex,y=value,colour=selection,group=selection),linetype=2)+
-    geom_line(data = . %>% filter(!is.na(em)),aes(x=em,y=value,colour=selection,group=selection),linetype=1)+
+    geom_line(data = . %>% filter(!is.na(ex)),aes(x = ex, y = value, colour = selection, group = selection), linetype = 2)+
+    geom_line(data = . %>% filter(!is.na(em)),aes(x = em, y = value, colour = selection, group = selection), linetype = 1)+
     labs(x="Wavelength (nm)",y="Loading") +
-    theme(legend.position="none", axis.text.x = element_text(angle = 90, hjust = 1))+
+    theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1))+
     facet_grid(. ~ comp)
   pl1 %>% print()
 }
@@ -618,9 +644,9 @@ eempf_plot_ssccheck <- function(ssccheck){
     group_by(comp, spectrum) %>%
     mutate(mean = mean(TCC), min = min(TCC), max = max(TCC)) %>%
     ggplot()+
-    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),y=mean, colour = comp, group = comp), shape = 21, size = 3)+
-    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),y=TCC, colour = comp, group = comp), alpha = 0.4)+
-    geom_errorbar(aes(x=comp + 0.1 * ifelse(spectrum == "excitation",1,-1),ymin = min, ymax = max, colour = comp, group = comp, linetype = spectrum))+
+    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation", 1, -1), y = mean, colour = comp, group = comp), shape = 21, size = 3)+
+    geom_point(aes(x=comp + 0.1 * ifelse(spectrum == "excitation", 1, -1), y = TCC, colour = comp, group = comp), alpha = 0.4)+
+    geom_errorbar(aes(x=comp + 0.1 * ifelse(spectrum == "excitation", 1, -1), ymin = min, ymax = max, colour = comp, group = comp, linetype = spectrum))+
     scale_color_viridis_c(guide = FALSE)+
     labs(x = "Component", y = attr(ssccheck,"method"), linetype = "", shape = "")+
     scale_x_continuous(breaks = c(1:max(ssccheck$comp)))
