@@ -27,7 +27,7 @@
 #' @examples
 #' absorbance_path <- system.file("extdata", "absorbance", package = "staRdom")
 #' absorbance <- absorbance_read(absorbance_path, verbose = TRUE, cores = 2)
-absorbance_read <- function(absorbance_path,order=TRUE,recursive=TRUE,dec=NULL,sep=NULL,verbose = FALSE,cores = parallel::detectCores(logical = FALSE),...){
+absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec = NULL, sep = NULL, verbose = FALSE, cores = parallel::detectCores(logical = FALSE), ...){
   #absorbance_path = absorbance_dir
   if(dir.exists(absorbance_path)){
     abs_data <- list.files(absorbance_path, full.names = TRUE, recursive = recursive, no.. = TRUE, include.dirs = FALSE, pattern = "*.txt|*.csv", ignore.case = TRUE)

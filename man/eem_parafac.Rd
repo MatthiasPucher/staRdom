@@ -67,6 +67,11 @@ ctol <- 10^-7 # tolerance for parafac
 pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 
+## with a defined number of converging models
+#pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol,
+#     output = "all", strictly_converging = TRUE, cores = cores, verbose = TRUE)
+
 pfres_comps2 <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, output = "all")
 }

@@ -34,7 +34,24 @@ Please refer to \code{\link[multiway]{parafac}} for input parameters and details
 }
 \examples{
 \donttest{
-# sorry, no example provided yet
+data(eem_list)
+
+dim_min <- 3 # minimum number of components
+dim_max <- 4 # maximum number of components
+nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
+cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+maxit = 2500
+ctol <- 10^-7 # tolerance for parafac
+
+pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+    normalise = TRUE, strictly_converging = TRUE, maxit = maxit, nstart = nstart,
+    ctol = ctol, cores = cores)
+
+# keep all calculated models for diagnostics
+pfres_comps_all <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+    normalise = TRUE, strictly_converging = TRUE, output = "all", maxit = maxit,
+    nstart = nstart, ctol = ctol, cores = cores)
+
 }
 }
 \seealso{

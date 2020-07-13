@@ -41,6 +41,11 @@
 #' pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
 #'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores)
 #'
+#' ## with a defined number of converging models
+#' #pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#' #     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol,
+#' #     output = "all", strictly_converging = TRUE, cores = cores, verbose = TRUE)
+#'
 #' pfres_comps2 <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
 #'     normalise = TRUE, maxit = maxit, nstart = nstart, ctol = ctol, cores = cores, output = "all")
 #' }
@@ -50,7 +55,7 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
     eem_array <- eem_array %>% norm_array()
   }
-  if(verbose) cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
+  if(verbose) cat(paste0(cores," core",ifelse(cores > 1,"s are", " is" )," used for the calculation."),fill=TRUE)
   res <- lapply(comps,function(comp){
     #comp <- 6
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
@@ -136,16 +141,34 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
 #'
 #' @examples
 #' \donttest{
-#' # sorry, no example provided yet
+#' data(eem_list)
+#'
+#' dim_min <- 3 # minimum number of components
+#' dim_max <- 4 # maximum number of components
+#' nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
+#' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' maxit = 2500
+#' ctol <- 10^-7 # tolerance for parafac
+#'
+#' pfres_comps <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#'     normalise = TRUE, strictly_converging = TRUE, maxit = maxit, nstart = nstart,
+#'     ctol = ctol, cores = cores)
+#'
+#' # keep all calculated models for diagnostics
+#' pfres_comps_all <- eem_parafac(eem_list, comps = seq(dim_min, dim_max),
+#'     normalise = TRUE, strictly_converging = TRUE, output = "all", maxit = maxit,
+#'     nstart = nstart, ctol = ctol, cores = cores)
+#'
 #' }
 parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), cl = NULL, ...){
   nmod <- 0
   ntot <- 0
   cpresult_all <- list()
+  cores <- max(1,length(cl))
   while(nmod < nstart & ntot <= 10 * nstart){
     pred_factor <- ifelse(ntot == 0, 1, ifelse(nmod == 0, 3, ntot/nmod/2))
     if(verbose) cat("Due to previous model calculations, pred_factor was set", pred_factor, fill = TRUE)
-    nmiss <- ceiling((nstart - nmod) * pred_factor / 8) * 8
+    nmiss <- ceiling((nstart - nmod) * pred_factor / cores) * cores
     if(verbose) cat("start run with",nmiss,"models...",fill = TRUE)
     if(!is.null(cl)){
       clusterExport(cl, c("nmiss"), envir = environment())
@@ -161,10 +184,10 @@ parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), 
   if(verbose) cat(nmod,"out of",ntot,"models converged!",fill=TRUE)
   if(output[1] == "best"){
     sses <- cpresult_all %>% lapply(`[[`,"SSE") %>% unlist()
-    cpresult_all <- cpresult_all[[which.min(sses)]]
+    cpresult_all <- cpresult_all[[which.min(sses)[1]]]
   } else if (output[1] == "all"){
     sses <- cpresult_all %>% lapply(`[[`,"SSE") %>% unlist()
-    cpresult_all <- cpresult_all[[sses[sort(order(-sses)[1:nstart])]]]
+    cpresult_all <- cpresult_all[sort(order(-sses)[1:nstart])]
   }
   if(ntot >= 10 * nstart) warning("Maximum number of starts reached without generating the desired number of valid models.")
   cpresult_all
@@ -291,10 +314,11 @@ eempf_comp_names <- function(pfmodel){
 #' @examples
 #' data(eem_list)
 #'
-#' eem2array(eem_list)
+#' X <- eem2array(eem_list)
 eem2array <- function(eem_list){
   eem_matrices <- eem_list %>%
-    sapply("[", "x")
+    sapply("[", "x") %>%
+    setNames(eem_names(eem_list))
   dv <- lapply(eem_matrices,dim) %>% bind_cols()
   if(all(dv[1,1] %>% unlist() == dv[1,]) & all(dv[2,1] %>% unlist() == dv[2,])) dim_eem <- c(dv[,1] %>% unlist(), eem_matrices %>% length()) else dim_eem <- NA
   if(is.na(dim_eem[1])) stop("dimensions mismatch!")
@@ -684,8 +708,11 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
 #' \donttest{
 #' data(eem_list)
 #'
-#' splithalf <- splithalf(eem_list, comps = 6)
+#' splithalf <- splithalf(eem_list, comps = 6, verbose = TRUE)
 #' splithalf_plot(splithalf)
+#'
+#' # Similarity of splits using SSCs
+#' sscs <- splithalf_tcc(splithalf)
 #' }
 splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 20, cores = parallel::detectCores(logical = FALSE), maxit = 2500, ctol = 10^(-7), rescale = TRUE, verbose = FALSE, ...){
   a <- seq(1,eem_list %>% length())
@@ -704,21 +731,24 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
   names(spl_eems) <- split_designations
 
   if(verbose){
-    cat(paste0(cores," cores are used for the calculation."),fill=TRUE)
+    cat(paste0(cores," core",ifelse(cores > 1,"s are", " is" )," used for the calculation."),fill=TRUE)
     if(normalise){
       if(verbose) cat("EEM matrices are normalised!",fill=TRUE)
     }
     cat(paste0("Calculating PARAFAC models with split-half data..."),fill=TRUE)
-    pb <- txtProgressBar(max = length(spl_eems), style=3)
+    pb <- txtProgressBar(max = length(spl_eems), style = 3)
   }
-  fits <- lapply(1:length(spl_eems),function(i){
+  fits <- lapply(1:length(spl_eems) %>% setNames(split_designations),function(i){
     # i <- 1
     mod <- eem_parafac(spl_eems[[i]], comps = comps, normalise = normalise, maxit = maxit, nstart = nstart, cores = cores,ctol = ctol, verbose = FALSE)#,...
-    if(rescale) mod <- lapply(mod,eempf_rescaleBC,newscale="Fmax")
+    if(rescale) mod <- lapply(mod, eempf_rescaleBC, newscale = "Fmax")
     if(verbose) setTxtProgressBar(pb, i)
     mod
-  }) #
+  })
+
   if(verbose) close(pb)
+
+  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
 
   sscs <- eempf_ssc(fits, tcc = TRUE)
 
@@ -748,7 +778,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
   attr(fits,"tcc_table") <- sscs2 %>%
     .[names(sel_comb)] %>%
     lapply(lapply,data.frame) %>%
-    lapply(bind_cols) %>%
+    lapply(do.call, what = "cbind") %>%
     lapply(setNames, c("tcc_ex", "tcc_em")) %>%
     lapply(mutate, component = paste0("Comp.",1:n())) %>%
     bind_rows(.id = "comb") %>%

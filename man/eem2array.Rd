@@ -18,5 +18,5 @@ Data matrices from EEM are combined to an array that is needed for a PARAFAC ana
 \examples{
 data(eem_list)
 
-eem2array(eem_list)
+X <- eem2array(eem_list)
 }
