@@ -77,8 +77,8 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     }
     cflags <- lapply(cpresult,`[[`,"cflag") %>% unlist()
     converged <- sum(cflags == 0)/nstart
-    if(converged <= 0.5){
-      warning("Calculating the ",comp," component",ifelse(comp > 1, "s","")," model, only ",sum(cflags == 0)," out of ",nstart," models converged! You might want to increase the number of initialisations (nstart) or iterations (maxit).")
+    if(converged <= 0.5 & sum(cflags == 0) < 20){
+      warning("Calculating the ",comp," component",ifelse(comp > 1, "s","")," model, ",sum(cflags == 0)," out of ",nstart," models converged! You might want to increase the number of initialisations (nstart) or iterations (maxit).")
     }
     if(cpresult1$cflag != 0){
       warning("The PARAFAC model with ",comp," component",ifelse(comp > 1, "s", "")," did not converge! Increasing the number of initialisations (nstart) or iterations (maxit) might solve the problem.")
@@ -748,7 +748,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
 
   if(verbose) close(pb)
 
-  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
+#  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
 
   sscs <- eempf_ssc(fits, tcc = TRUE)
 
@@ -1350,7 +1350,7 @@ eempf_bindxc <- function(components){
 #' lapply(sh_sscs, lapply, diag)
 #' }
 eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detectCores(logical = FALSE)){
-  classes <- unlist(lapply(unlist(pfmodels, recursive = FALSE),class))
+  classes <- unlist(lapply(unlist(pfmodels, recursive = FALSE),class) %>% lapply(`[[`,1))
   if(any(classes == "parafac") & !is.null(classes)){ ## Results from splithalf
     pfmodels %>%
       unlist(recursive = FALSE) %>%

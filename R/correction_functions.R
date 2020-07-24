@@ -228,7 +228,7 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 #' # correction by value
 #' eems_num <- eem_raman_normalisation2(eem_list,blank=168)
 eem_raman_normalisation2 <- function(data, blank="blank"){
-  if(blank == "blank"){
+  if((blank == "blank")[1]){
     res_list <- try(data %>% eem_raman_normalisation(),silent=TRUE)
     if (class(res_list) == "try-error") {
       warning(res_list)
