@@ -581,7 +581,7 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
     eem_list <- eem_extract(eem_list,sample = select ,keep=TRUE,verbose = FALSE)
   }
   if(!all(eem_names(eem_list) %in% rownames(pfmodel$A)) | length(eem_list) == 0){
-    pfmodel <- A_missing(eem_list,pfmodel,cores=cores)
+    pfmodel <- A_missing(eem_list, pfmodel, cores=cores)
   }
   what <- which(rownames(pfmodel$A) %in% (eem_list %>% eem_names()))
   pfmodel$A <- as.data.frame(pfmodel$A)[what,]
@@ -641,7 +641,7 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' A_missing(eem_list,pf4[[1]])
+#' A_missing(eem_list, pf4[[1]], cores = 2)
 #' }
 A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logical = FALSE),components = NULL, const = NULL, control = NULL, ...){
   eem_list <- eem_red2smallest(eem_list)
@@ -1364,7 +1364,6 @@ eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detect
     }) %>%
       eempf_ssc(pfmodels = ., tcc = tcc, m = m, cores = cores)
   } else if(all(classes == "matrix")){ ## matrices
-
     cl <- makePSOCKcluster(min(cores,length(pfmodels)))
     clusterExport(cl, c("pfmodels","tcc"), envir = environment())
     clusterEvalQ(cl,require(staRdom))
