@@ -348,12 +348,17 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
 #' @examples
 #' data(absorbance)
 #' abs_data_cor <- abs_blcor(absorbance)
+#'
+#' abs_data_cor1 <- abs_blcor(absorbance[1:2])
+#'
+#' abs_data <- absorbance[1:2]
+#'
 abs_blcor <- function(abs_data, wlrange = c(680,700)){
   ad <- abs_data %>%
     .[.$wavelength >= wlrange[1] & .$wavelength <= wlrange[2],] %>%
     apply(2,mean,na.rm=TRUE)
   ad2 <- sweep(data.matrix(abs_data),2,ad) %>%
     as.data.frame() %>%
-    .[,2:ncol(.)] %>%
-    cbind(wavelength = abs_data$wavelength,.)
+    select(-1) %>%
+    bind_cols(wavelength = abs_data$wavelength,.)
 }

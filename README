@@ -16,6 +16,16 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.14 to 1.1.15
+  abs_blcor can handle single samples now
+
+1.1.13 to 1.1.14
+  staRdom is fit for R 4.0 now
+
+1.1.11 to 1.1.13
+  parafac_conv bug fixed
+  splithalf bug fixed
+
 1.1.9 to 1.1.11
   the use of colour palettes in plots was changed slightly to be more intuitive and consistent over all staRdom functions
 

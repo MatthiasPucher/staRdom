@@ -43,6 +43,6 @@ This function can be used to calculate A modes (sample loadings) for samples tha
 data(eem_list)
 data(pf_models)
 
-A_missing(eem_list,pf4[[1]])
+A_missing(eem_list, pf4[[1]], cores = 2)
 }
 }
