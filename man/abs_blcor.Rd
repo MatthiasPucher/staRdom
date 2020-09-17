@@ -20,4 +20,7 @@ Baseline correction for absorbance data
 \examples{
 data(absorbance)
 abs_data_cor <- abs_blcor(absorbance)
+
+abs_data_cor1 <- abs_blcor(absorbance[1:2])
+
 }

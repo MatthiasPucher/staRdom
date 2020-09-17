@@ -351,8 +351,6 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
 #'
 #' abs_data_cor1 <- abs_blcor(absorbance[1:2])
 #'
-#' abs_data <- absorbance[1:2]
-#'
 abs_blcor <- function(abs_data, wlrange = c(680,700)){
   ad <- abs_data %>%
     .[.$wavelength >= wlrange[1] & .$wavelength <= wlrange[2],] %>%
