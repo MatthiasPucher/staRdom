@@ -40,7 +40,7 @@ staRdom is a package for R version `r R.Version()$major` [@r_development_core_te
     * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/) and the University of Natural Resources and Life Sciences, Vienna(http://www.boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(https://boku.ac.at/).
 
 staRdom comes with an Rmd template ([infos on Rmd](https://rmarkdown.rstudio.com/)) where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through the template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
 As an advanced user, you can just include the functions in whatever calculations you want to do (please see details in the [advanced vignetts](PARAFAC_analysis_of_EEM.html)). This vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` or in RStudio pressing F1 while the cursor is on the function name in the code.
@@ -61,7 +61,7 @@ The template is accessible with the command `file.edit(system.file("EEM_simple_a
 
 ## Output parameters
 
-On top of the template there are the header parameters necessary to create a report with knitr (https://yihui.name/knitr/). Parameters can be changed and just show up in the final report (e.g. author, title) or alter the appearance of the document. It is possible to create reports in other file formats. Please find details at https://rmarkdown.rstudio.com/lesson-9.html.
+On top of the template there are the header parameters necessary to create a report with knitr (https://yihui.org/knitr/). Parameters can be changed and just show up in the final report (e.g. author, title) or alter the appearance of the document. It is possible to create reports in other file formats. Please find details at https://rmarkdown.rstudio.com/lesson-9.html.
 
 The directory your generated files are saved in is set by output_dir at line 7. It is important that you keep the ";" at the end of the line. Folders are delimited by "/". In RStudio, pressing the tab key while the cursor is in the path can reveal possible folders on your drive.
 
@@ -444,7 +444,7 @@ You can run the script by clicking the "Knit" button in the toolbar of RStudio. 
 
 # Installation
 
-The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://www.rstudio.com/) can help beginners to get into it.
+The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://rstudio.com/) can help beginners to get into it.
 
 You can install staRdom via RStudio by klicking Tools -> Install Packages... or by entering the command `install.packages("staRdom")` in the command line.
 
@@ -463,7 +463,7 @@ https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and
 
 Download:
 
-https://www.rstudio.com/products/rstudio/download/#download
+https://rstudio.com/products/rstudio/download/
 
 Please choose the installer for your operating system, not the zip/tarballs.
 

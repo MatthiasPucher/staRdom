@@ -557,6 +557,7 @@ eem_matmult <- function(eem_list,matrix = NULL,value = 0){
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' library(dplyr)
 #' data(eem_list)
 #' eem_list <- eem_exclude(eem_list[1:5] %>%
@@ -566,6 +567,7 @@ eem_matmult <- function(eem_list,matrix = NULL,value = 0){
 #'
 #' eem_extend2largest(eem_list) %>%
 #'   ggeem()
+#' }
 eem_extend2largest <- function(eem_list, interpolation = FALSE,...){
   exs <- lapply(eem_list, function(eem) eem$ex) %>%
     unlist() %>%
