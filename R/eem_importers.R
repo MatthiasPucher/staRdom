@@ -128,7 +128,7 @@ eem_hitachi <- function(file) {
 
   return(l)},
   error = function(err){
-    error("No data was imported for file ",file,"! ",file," caused an error: ",err)
+    stop("No data was imported for file ",file,"! ",file," caused an error: ",err)
     l <- list(
       file = file,
       x = NA,
