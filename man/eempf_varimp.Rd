@@ -34,6 +34,6 @@ The importance of each variable is calculated by means of creating a model witho
 data(pfmodel)
 data(eem_list)
 
-eempf_varimp(pf4[[1]],eem_list)
+eempf_varimp(pf4[[1]], eem_list, cores = 2)
 }
 }

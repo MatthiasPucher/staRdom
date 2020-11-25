@@ -20,7 +20,7 @@ When running a splithalf analysis similar components are not necessarily on the 
 data(eem_list)
 
 # function currently only used from within splithalf
-splithalf(eem_list,6,nstart=2)
+splithalf(eem_list, 6, nstart = 2, cores = 2)
 }
 }
 \seealso{

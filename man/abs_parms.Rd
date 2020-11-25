@@ -81,8 +81,8 @@ For further details please refer to Helm et al. (2008).
 \donttest{
 data(absorbance)
 
-a1 <- abs_parms(absorbance, cuvle = 5, verbose = TRUE)
-a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
+a1 <- abs_parms(absorbance, cuvle = 5, verbose = TRUE, cores = 2)
+a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE, cores = 2) # fit lref as well
 }
 }
 \references{

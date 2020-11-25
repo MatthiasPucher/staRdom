@@ -23,11 +23,11 @@ Calculating EEMqual which is an indicator of a PARAFAC model's quality
 }
 \examples{
 \donttest{
-data(eem_list)
-data(pf_models)
+# data(eem_list)
+# data(pf_models)
 
-pfmodel <- pf4[[1]]
-eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
+# pfmodel <- pf4[[1]]
+# eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 }
 }
 \references{

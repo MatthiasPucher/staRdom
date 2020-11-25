@@ -39,7 +39,8 @@ data(eem_list)
 dim_min <- 3 # minimum number of components
 dim_max <- 4 # maximum number of components
 nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
-cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+# cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+cores <- 2 # package checks only run with 2 cores
 maxit = 2500
 ctol <- 10^-7 # tolerance for parafac
 

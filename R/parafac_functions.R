@@ -34,7 +34,8 @@
 #' dim_min <- 3 # minimum number of components
 #' dim_max <- 7 # maximum number of components
 #' nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
-#' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' # cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' cores <- 2 # package checks only run with 2 cores
 #' maxit = 2500
 #' ctol <- 10^-7 # tolerance for parafac
 #'
@@ -146,7 +147,8 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
 #' dim_min <- 3 # minimum number of components
 #' dim_max <- 4 # maximum number of components
 #' nstart <- 25 # random starts for PARAFAC analysis, models built simulanuously, best selected
-#' cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' # cores <- parallel::detectCores(logical=FALSE) # use all cores but do not use all threads
+#' cores <- 2 # package checks only run with 2 cores
 #' maxit = 2500
 #' ctol <- 10^-7 # tolerance for parafac
 #'
@@ -573,7 +575,7 @@ maxlines <- function(pfmodel){
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' eempf_residuals(pf4[[1]],eem_list)
+#' eempf_residuals(pf4[[1]], eem_list, cores = 2)
 #' }
 eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::detectCores(logical = FALSE)/2){
   pfmodel <- norm2A(pfmodel)
@@ -708,7 +710,7 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
 #' \donttest{
 #' data(eem_list)
 #'
-#' splithalf <- splithalf(eem_list, comps = 6, verbose = TRUE)
+#' splithalf <- splithalf(eem_list, comps = 6, verbose = TRUE, cores = 2)
 #' splithalf_plot(splithalf)
 #'
 #' # Similarity of splits using SSCs
@@ -750,7 +752,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
 
 #  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
 
-  sscs <- eempf_ssc(fits, tcc = TRUE)
+  sscs <- eempf_ssc(fits, tcc = TRUE, cores = cores)
 
   sscs2 <- sscs %>%
     lapply(lapply,ssc_max)
@@ -810,7 +812,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
 #' data(eem_list)
 #'
 #' # function currently only used from within splithalf
-#' splithalf(eem_list,6,nstart=2)
+#' splithalf(eem_list, 6, nstart = 2, cores = 2)
 #' }
 tcc_find_pairs <- function(fits){
   warning("This function is deprecated! Please use eempf_ssc and ssc_max.")
@@ -1032,6 +1034,7 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
 #' @param cuvl optional cuvette length of absorbance data in cm
 #' @param n optional size of moving window in nm for data smoothing in advance of peak picking
 #' @param export optional file path of csv or txt table where data is exported
+#' @param cores number of parallel calculations (e.g. number of physical cores in CPU)
 #' @param ... additional parameters passed to \code{\link[utils]{write.table}}
 #'
 #' @return data frame
@@ -1049,21 +1052,21 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
 #'
 #' results <- eempf4analysis(pfmodel = pf4[[1]],
 #'                           eem_list = eem_list,
-#'                           cuvl = 5, n = 4)
+#'                           cuvl = 5, n = 4, cores = 2)
 #'                           }
-eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NULL, n = 4, export = NULL,...){
+eempf4analysis <- function(pfmodel,eem_list = NULL, absorbance = NULL, cuvl = NULL, n = 4, export = NULL, cores = parallel::detectCores(logical = FALSE), ...){
   loadings <- pfmodel %>%
     norm2A() %>%
     .$A %>%
     data.frame() %>%
     tibble::rownames_to_column("sample")
   if(!is.null(eem_list)){
-    eem4peaks <- eem_list %>% eem_smooth(n=n)
+    eem4peaks <- eem_list %>% eem_smooth(n = n, cores = cores)
     indices_peaks <- eem4peaks %>% eem_biological_index() %>%
-      full_join(eem4peaks %>% eem_coble_peaks(), by="sample")  %>%
-      full_join(eem4peaks %>% eem_fluorescence_index(), by="sample") %>%
-      full_join(eem4peaks %>% eem_humification_index(scale=TRUE), by="sample")
-    loadings <- full_join(loadings,indices_peaks,by="sample")
+      full_join(eem4peaks %>% eem_coble_peaks(), by = "sample")  %>%
+      full_join(eem4peaks %>% eem_fluorescence_index(), by = "sample") %>%
+      full_join(eem4peaks %>% eem_humification_index(scale = TRUE), by = "sample")
+    loadings <- full_join(loadings, indices_peaks, by = "sample")
   }
   if(!is.null(absorbance)){
     if(is.null(cuvl)){
@@ -1152,7 +1155,9 @@ eempf_export<- function(pfmodel,export = NULL, Fmax = TRUE,...){
 #' }
 eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
   arr <- eem_list %>% eem2array()
-  if(!is.null(attr(eem_list,"norm_factors"))) arr <- arr %>% norm_array()
+  if(!is.null(attr(pfmodel,"norm_factors"))){
+    arr <- arr %>% norm_array()
+  }
   corcondia(arr,pfmodel,divisor=divisor)
 }
 
@@ -1174,11 +1179,11 @@ eempf_corcondia <- function(pfmodel,eem_list,divisor="core"){
 #'
 #' @examples
 #' \donttest{
-#' data(eem_list)
-#' data(pf_models)
+#' # data(eem_list)
+#' # data(pf_models)
 #'
-#' pfmodel <- pf4[[1]]
-#' eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
+#' # pfmodel <- pf4[[1]]
+#' # eempf_eemqual(eem_list,pfmodel) # insuficient example data to run!
 #' }
 eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
   corec <- eempf_corcondia(pfmodel,eem_list)
@@ -1214,7 +1219,7 @@ eempf_eemqual <- function(pfmodel,eem_list,splithalf = NULL, ...){
 #' data(pfmodel)
 #' data(eem_list)
 #'
-#' eempf_varimp(pf4[[1]],eem_list)
+#' eempf_varimp(pf4[[1]], eem_list, cores = 2)
 #' }
 eempf_varimp <- function(pfmodel, eem_list, cores = parallel::detectCores(logical=FALSE),...){
 
@@ -1249,7 +1254,7 @@ eempf_varimp <- function(pfmodel, eem_list, cores = parallel::detectCores(logica
 #' data(pf_models)
 #' ggeem(pf4[[1]])
 #'
-#' pf4r <- eempf_reorder(pf4[[1]],"ex")
+#' pf4r <- eempf_reorder(pf4[[1]], "ex")
 #' ggeem(pf4r)
 eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
   if(!(order[1] == "em" | order[1] == "ex" | is.vector(order))) stop("no valid data suppli ed for order!")

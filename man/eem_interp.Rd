@@ -46,23 +46,23 @@ class(eem_list) <- "eemlist"
 
 remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
 
-remove_scatter_width = c(15,10,16,12)
+remove_scatter_width = c(15, 10, 16, 12)
 
-eem_list <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
+eem_list <- eem_rem_scat(eem_list, remove_scatter, remove_scatter_width)
 
-eem_list <- eem_interp(eem_list)
+eem_list <- eem_interp(eem_list, cores = 2)
 
 ggeem(eem_list)
 
-eem_list2 <- eem_setNA(eem_list,ex=200:280,interpolate=FALSE)
+eem_list2 <- eem_setNA(eem_list, ex = 200:280, interpolate=FALSE)
 
 ggeem(eem_list2)
 
-eem_list3 <- eem_interp(eem_list2,type=1,extend = TRUE)
+eem_list3 <- eem_interp(eem_list2, type = 1, extend = TRUE, cores = 2)
 
 ggeem(eem_list3)
 
-eem_list3 <- eem_interp(eem_list2,type=1,extend = FALSE)
+eem_list3 <- eem_interp(eem_list2, type = 1, extend = FALSE, cores = 2)
 
 ggeem(eem_list3)
 

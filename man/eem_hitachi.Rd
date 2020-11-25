@@ -19,9 +19,9 @@ This function can be used to import txt files from Hitachi F-7000 containing EEM
 \donttest{
 ## no example data provided with the package
 ## below is an example how this could like like
-eems <- "C:/some/path/to/hitachi.TXT"
-eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_hitachi)
+# eems <- "C:/some/path/to/hitachi.TXT"
+# eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_hitachi)
 
-eem_list
+# eem_list
 }
 }

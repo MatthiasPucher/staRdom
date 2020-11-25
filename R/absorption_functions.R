@@ -155,8 +155,8 @@ absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec
 #' \donttest{
 #' data(absorbance)
 #'
-#' a1 <- abs_parms(absorbance, cuvle = 5, verbose = TRUE)
-#' a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE) # fit lref as well
+#' a1 <- abs_parms(absorbance, cuvle = 5, verbose = TRUE, cores = 2)
+#' a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE, cores = 2) # fit lref as well
 #' }
 abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption"), add_as = NULL, limits = list(c(275, 295), c(350, 400), c(300, 700)), l_ref = list(275, 350, 300), S = TRUE, lref = FALSE, p = FALSE, model = FALSE, Sint = FALSE, interval = 21, r2threshold = 0.8, cores = parallel::detectCores(logical = FALSE), verbose = FALSE){
   if(!unit[1] %in% c("absorbance","absorption")) stop("Unit must be either 'absorbance' or 'absorption'!")
@@ -350,8 +350,6 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
 #' abs_data_cor <- abs_blcor(absorbance)
 #'
 #' abs_data_cor1 <- abs_blcor(absorbance[1:2])
-#'
-#' abs_data <- absorbance[1:2]
 #'
 abs_blcor <- function(abs_data, wlrange = c(680,700)){
   ad <- abs_data %>%

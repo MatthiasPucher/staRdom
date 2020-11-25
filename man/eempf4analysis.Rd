@@ -11,6 +11,7 @@ eempf4analysis(
   cuvl = NULL,
   n = 4,
   export = NULL,
+  cores = parallel::detectCores(logical = FALSE),
   ...
 )
 }
@@ -27,6 +28,8 @@ eempf4analysis(
 
 \item{export}{optional file path of csv or txt table where data is exported}
 
+\item{cores}{number of parallel calculations (e.g. number of physical cores in CPU)}
+
 \item{...}{additional parameters passed to \code{\link[utils]{write.table}}}
 }
 \value{
@@ -42,6 +45,6 @@ data(pf_models)
 
 results <- eempf4analysis(pfmodel = pf4[[1]],
                           eem_list = eem_list,
-                          cuvl = 5, n = 4)
+                          cuvl = 5, n = 4, cores = 2)
                           }
 }

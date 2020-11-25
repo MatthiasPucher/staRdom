@@ -54,7 +54,7 @@ eem_list <- eem_extract(eem_list, 1:10)
 
 eem_list <- eem_rem_scat(eem_list, rep(TRUE, 4), c(15,10,16,12))
 
-eempf_residuals_plot(pf4[[1]], eem_list)
+eempf_residuals_plot(pf4[[1]], eem_list, cores = 2)
 
 # use other colour schemes:
 # eempf_residuals_plot(pf4[[1]], eem_list, colpal = c("blue",heat.colors(50)))

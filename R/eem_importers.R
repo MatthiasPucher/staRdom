@@ -29,10 +29,10 @@ eem_csv <- function(file) {
 #' \donttest{
 #' ## no example data provided with the package
 #' ## below is an example how this could like like
-#' eems <- "C:/some/path/to/eem.csv"
-#' eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv2)
+#' # eems <- "C:/some/path/to/eem.csv"
+#' # eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv2)
 #'
-#' eem_list
+#' # eem_list
 #' }
 eem_csv2 <- function(file) {
   .eem_csv(file, col ="em")
@@ -87,10 +87,10 @@ eem_csv2 <- function(file) {
 #' \donttest{
 #' ## no example data provided with the package
 #' ## below is an example how this could like like
-#' eems <- "C:/some/path/to/hitachi.TXT"
-#' eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_hitachi)
+#' # eems <- "C:/some/path/to/hitachi.TXT"
+#' # eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_hitachi)
 #'
-#' eem_list
+#' # eem_list
 #' }
 eem_hitachi <- function(file) {
   #file <- "~/AL/DOM/Anna/DOM_analysis_R/Fluorometer/Algae_1_End_With_Gamingbach.txt"

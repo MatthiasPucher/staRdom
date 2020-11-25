@@ -19,9 +19,9 @@ This function can be used to import generic csv files containing EEM data using 
 \donttest{
 ## no example data provided with the package
 ## below is an example how this could like like
-eems <- "C:/some/path/to/eem.csv"
-eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv2)
+# eems <- "C:/some/path/to/eem.csv"
+# eem_list <- eem_read(eems, recursive = TRUE, import_function = eem_csv2)
 
-eem_list
+# eem_list
 }
 }

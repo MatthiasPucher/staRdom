@@ -16,6 +16,7 @@ eempf_report(
   performance = FALSE,
   residuals = FALSE,
   spp = 5,
+  cores = parallel::detectCores(logical = FALSE),
   ...
 )
 }
@@ -42,6 +43,8 @@ eempf_report(
 
 \item{spp}{plots per page for loadgins and residuals plot}
 
+\item{cores}{cores to be used for the calculation}
+
 \item{...}{arguments to or from other functions}
 }
 \value{
@@ -56,7 +59,7 @@ folder <- system.file("extdata/EEMs", package = "staRdom") # load example data
 eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 
 abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
-absorbance <- absorbance_read(abs_folder)
+absorbance <- absorbance_read(abs_folder, cores = 2)
 
 metatable <- system.file("extdata/metatable_dreem.csv",package = "staRdom")
 meta <- read.table(metatable, header = TRUE, sep = ",", dec = ".", row.names = 1)
@@ -65,9 +68,9 @@ checked <- eem_checkdata(eem_list, absorbance, metadata = meta,
 metacolumns = "dilution", error = FALSE)
 
 eem_names(eem_list)
-pfm <- A_missing(eem_list,pf4[[1]])
+pfm <- A_missing(eem_list,pf4[[1]], cores = 2)
 eempf_report(pfm, export = "~/pf_report.html", eem_list = eem_list,
-             absorbance = absorbance, meta = metatable, metacolumns = "dilution")
+             absorbance = absorbance, meta = metatable, metacolumns = "dilution", cores = 2)
 
 }
 }

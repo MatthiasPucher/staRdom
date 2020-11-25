@@ -57,7 +57,7 @@ Split data sets can be split suboptimal and cause low TCCs. Therefore, subsample
 \donttest{
 data(eem_list)
 
-splithalf <- splithalf(eem_list, comps = 6, verbose = TRUE)
+splithalf <- splithalf(eem_list, comps = 6, verbose = TRUE, cores = 2)
 splithalf_plot(splithalf)
 
 # Similarity of splits using SSCs

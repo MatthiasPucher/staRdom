@@ -16,6 +16,9 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.15 to 1.1.16
+  eempf_corcondia bug fixed
+
 1.1.14 to 1.1.15
   abs_blcor can handle single samples now
 

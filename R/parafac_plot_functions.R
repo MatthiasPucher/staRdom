@@ -413,7 +413,7 @@ eempf_corplot <- function(pfmodel,normalisation=FALSE,lower=list(continuous="smo
 #'
 #' eem_list <- eem_rem_scat(eem_list, rep(TRUE, 4), c(15,10,16,12))
 #'
-#' eempf_residuals_plot(pf4[[1]], eem_list)
+#' eempf_residuals_plot(pf4[[1]], eem_list, cores = 2)
 #'
 #' # use other colour schemes:
 #' # eempf_residuals_plot(pf4[[1]], eem_list, colpal = c("blue",heat.colors(50)))
@@ -564,6 +564,7 @@ splithalf_plot <- function(fits){
 #' @param performance calculating model performance: \code{\link[staRdom]{eempf_eemqual}}
 #' @param residuals logical, whether residuals are plotted in the report
 #' @param spp plots per page for loadgins and residuals plot
+#' @param cores cores to be used for the calculation
 #' @param ... arguments to or from other functions
 #'
 #' @return TRUE if report was created
@@ -575,7 +576,7 @@ splithalf_plot <- function(fits){
 #' eem_list <- eem_read(folder, recursive = TRUE, import_function = eem_csv)
 #'
 #' abs_folder <- system.file("extdata/absorbance", package = "staRdom") # load example data
-#' absorbance <- absorbance_read(abs_folder)
+#' absorbance <- absorbance_read(abs_folder, cores = 2)
 #'
 #' metatable <- system.file("extdata/metatable_dreem.csv",package = "staRdom")
 #' meta <- read.table(metatable, header = TRUE, sep = ",", dec = ".", row.names = 1)
@@ -584,12 +585,12 @@ splithalf_plot <- function(fits){
 #' metacolumns = "dilution", error = FALSE)
 #'
 #' eem_names(eem_list)
-#' pfm <- A_missing(eem_list,pf4[[1]])
+#' pfm <- A_missing(eem_list,pf4[[1]], cores = 2)
 #' eempf_report(pfm, export = "~/pf_report.html", eem_list = eem_list,
-#'              absorbance = absorbance, meta = metatable, metacolumns = "dilution")
+#'              absorbance = absorbance, meta = metatable, metacolumns = "dilution", cores = 2)
 #'
 #' }
-eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, meta = NULL, metacolumns = NULL, splithalf = FALSE, shmodel = NULL, performance = FALSE, residuals = FALSE, spp = 5, ...){
+eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, meta = NULL, metacolumns = NULL, splithalf = FALSE, shmodel = NULL, performance = FALSE, residuals = FALSE, spp = 5, cores = parallel::detectCores(logical=FALSE), ...){
   #shmodel <- sh
   # rm(shmodel)
   #splithalf = TRUE
@@ -616,7 +617,7 @@ eempf_report <- function(pfmodel, export, eem_list = NULL, absorbance = NULL, me
     }
   }
   imgwidth <- nrow(pfmodel$A)/8
-  rmarkdown::render(rmdfile, output_file = file, output_dir = dir, params = list(pfmodel = pfmodel, eem_list = eem_list, absorbance = absorbance, meta = meta, tcc = tcc, metacolumns = metacolumns, splithalf = splithalf, performance = performance, residuals = residuals, spp = spp, imgwidth = imgwidth))
+  rmarkdown::render(rmdfile, output_file = file, output_dir = dir, params = list(pfmodel = pfmodel, eem_list = eem_list, absorbance = absorbance, meta = meta, tcc = tcc, metacolumns = metacolumns, splithalf = splithalf, performance = performance, residuals = residuals, spp = spp, imgwidth = imgwidth, cores = cores))
   TRUE
 }
 

@@ -31,6 +31,6 @@ Calculate residuals of EEM data according to a certain model
 data(eem_list)
 data(pf_models)
 
-eempf_residuals(pf4[[1]],eem_list)
+eempf_residuals(pf4[[1]], eem_list, cores = 2)
 }
 }
