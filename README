@@ -16,6 +16,12 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.18 to 1.1.19
+  PARAFAC models can be uploaded to openfluor.org directly
+
+1.1.17 to 1.1.18
+ PARAFAC models are automatically scaled when exported to openfluor
+
 1.1.16 to 1.1.17
   corrected links in the manual
 

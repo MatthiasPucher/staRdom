@@ -2,7 +2,7 @@
 % Please edit documentation in R/parafac_functions.R
 \name{eempf_convergence}
 \alias{eempf_convergence}
-\title{Extract modelling imformation from a PARAFAC model.}
+\title{Extract modelling information from a PARAFAC model.}
 \usage{
 eempf_convergence(pfmodel, print = TRUE)
 }

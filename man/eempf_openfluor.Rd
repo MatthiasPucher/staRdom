@@ -4,7 +4,14 @@
 \alias{eempf_openfluor}
 \title{Write out PARAFAC components to submit to openfluor.org.}
 \usage{
-eempf_openfluor(pfmodel, file, Fmax = TRUE)
+eempf_openfluor(
+  pfmodel,
+  file,
+  Fmax = TRUE,
+  upload = FALSE,
+  email = NULL,
+  model_details = list()
+)
 }
 \arguments{
 \item{pfmodel}{PARAFAC model}
@@ -12,6 +19,12 @@ eempf_openfluor(pfmodel, file, Fmax = TRUE)
 \item{file}{string, path to outputfile. The directory must exist, the file will be created or overwritten if already present.}
 
 \item{Fmax}{rescale modes so the A mode shows the maximum fluorescence. As openfluor does not accept values above 1, this is a way of scaling the B and C modes to a range between 0 and 1.}
+
+\item{upload}{logical, whether model is directly uploaded to openfluor.org}
+
+\item{email}{optional email address to log into openfluor.org}
+
+\item{model_details}{optional named list with strings to be added in the openfluor file in the fields corresponding to the list names}
 }
 \value{
 txt file
@@ -21,5 +34,9 @@ openfluor.org offers the possibility to compare your results to others, that wer
 }
 \examples{
   data(pf_models)
-  eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"))
+
+  model_details <- list(name = "River", creator = "Helena Glory",
+  constraints = "non-negative", validation = "split-half", unit= "RU")
+  eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"),
+  upload = FALSE, email = "helena.glory@rur.play", model_details = model_details)
 }

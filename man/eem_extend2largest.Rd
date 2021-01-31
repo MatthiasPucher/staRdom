@@ -20,6 +20,7 @@ eemlist
 Compared to the whole sample set, wavelengths missing in some samples are added and set NA or interpolated. This can be especially helpful, if you want to combine data measured with different wavelength intervals in a given range.
 }
 \examples{
+\donttest{
 library(dplyr)
 data(eem_list)
 eem_list <- eem_exclude(eem_list[1:5] \%>\%
@@ -29,4 +30,5 @@ ggeem(eem_list)
 
 eem_extend2largest(eem_list) \%>\%
   ggeem()
+}
 }

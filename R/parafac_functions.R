@@ -997,6 +997,9 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #' @param pfmodel PARAFAC model
 #' @param file string, path to outputfile. The directory must exist, the file will be created or overwritten if already present.
 #' @param Fmax rescale modes so the A mode shows the maximum fluorescence. As openfluor does not accept values above 1, this is a way of scaling the B and C modes to a range between 0 and 1.
+#' @param upload logical, whether model is directly uploaded to openfluor.org
+#' @param email optional email address to log into openfluor.org
+#' @param model_details optional named list with strings to be added in the openfluor file in the fields corresponding to the list names
 #'
 #' @return txt file
 #' @export
@@ -1005,22 +1008,108 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'
 #' @examples
 #'   data(pf_models)
-#'   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"))
-eempf_openfluor <- function(pfmodel, file, Fmax = TRUE){
+#'
+#'   model_details <- list(name = "River", creator = "Helena Glory",
+#'   constraints = "non-negative", validation = "split-half", unit= "RU")
+#'   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"),
+#'   upload = FALSE, email = "helena.glory@@rur.play", model_details = model_details)
+eempf_openfluor <- function(pfmodel, file, Fmax = TRUE, upload = FALSE, email = NULL, model_details = list()){
   if(!dir.exists(dirname(file.path(file)))){
     stop("The path to your file does not contain an existing directory. Please enter a correct path!")
+  }
+  if(!is.null(email) & !grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
+            as.character(email), ignore.case = TRUE)){
+    warning("The email address does not correspond to the expected pattern!")
+  }
+  if(Fmax){
+    pfmodel <- eempf_rescaleBC(pfmodel)
   }
   factors <- rbind(pfmodel$C %>%
                      data.frame(mode = "Ex", wl = rownames(.),.),
                    pfmodel$B %>%
                      data.frame(mode = "Em", wl = rownames(.),.))
-  template <- system.file("openfluor_template.txt",package="staRdom")
+  template <- system.file("openfluor_template.txt", package="staRdom")
   template <- readLines(template)
+  template <- stringr::str_replace_all(template,"email",paste0("email\t",email))
   template <- stringr::str_replace_all(template,"toolbox","toolbox\tstaRdom")
   template <- stringr::str_replace_all(template,"nSample",paste0("nSample\t",pfmodel$A %>% nrow()))
+  for(field in names(model_details)){
+    template <- stringr::str_replace_all(template,field,paste0(field,"\t",model_details[field]))
+  }
   write(template,file)
   write.table(factors,file=file,append=TRUE,col.names=FALSE,row.names=FALSE,sep="\t",quote=FALSE)
   message("An openfluor file has been successfully written. Please fill in missing header fields manually!")
+  if(upload){
+    eempf_OF_upload(email,file)
+  }
+}
+
+#' Upload PARAFAC models to openfluor.org
+#'
+#' @description This function uploads a PARAFAC model to openfluor.org from within R. You need to have an account at openfluor.org and supply the email used for the account to the function. Your password is then asked in a secure way and only used within one execution of this function.
+#'
+#' @param email email address you use to login at openfluor.org as string
+#' @param file the file containing a PARAFAC model in openfluor format
+#'
+#' @import httr
+#'
+#' @return HTTP status code from the upload POST
+#' @export
+#'
+#' @examples
+#' ## due to the need of a valid account, this function cannot be
+#' ## tested with generic data.
+#' ## Please use your own account to do so.
+#' \dontrun{
+#' data(pf_models)
+#'
+#' file <- file.path(tempdir(),"openfluor_example.txt")
+#' eempf_openfluor(pf4[[1]],file)
+#' eempf_OF_upload("helena.glory@@rur.play", file)
+#' }
+eempf_OF_upload <- function(email, file){
+  if(!grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
+            as.character(email), ignore.case = TRUE)){
+    warning("The email address does not correspond to the expected pattern!")
+  }
+
+  if(!file.exists(file)){
+    stop("The given file does not exist!")
+  }
+
+  password <- askpass::askpass("Please enter your openfluor.org password:")
+
+  html <- content(GET('https://openfluor.lablicate.com/login'), "text")
+
+  token <- as.character(sub('.*name="_token" value="([0-9a-zA-Z+/=]*).*', '\\1', html))
+
+  params <- list(
+    'email' = email,
+    'password' = password,
+    'remember' = 'TRUE',
+    '_token' = token
+  )
+
+  login <- POST('https://openfluor.lablicate.com/login', body = params)
+
+  if(login$status_code == 422){
+    stop("Email or password are incorrect. Please run the function again to complete your upload!")
+  }
+
+  par_upload <- list(
+    '_token' = token,
+    'model_file' = upload_file(file)
+  )
+
+  upload <- POST('https://openfluor.lablicate.com/of/measurement/upload', body = par_upload, encode = "multipart")
+
+  GET('https://openfluor.lablicate.com/logout')
+
+  if(upload$status_code != 200){
+    warning("Something went wrong during the upload! HTTP status code was ",upload$status_code,".")
+  } else {
+    message("Upload complete!")
+  }
 }
 
 
@@ -1552,7 +1641,7 @@ ssc_max <- function(mat){
   res
 }
 
-#' Extract modelling imformation from a PARAFAC model.
+#' Extract modelling information from a PARAFAC model.
 #'
 #' @description The convergence behaviour of all initialisations in a PARAFAC model is shown by printing the numbers
 #'
