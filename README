@@ -16,6 +16,11 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.19 to 1.1.20
+  eempf_res_analysis: function added to calculate residual metrics
+  Fixed example of eempf_report writing to home directory
+  Fixed generation of openfluor exort demands email
+
 1.1.18 to 1.1.19
   PARAFAC models can be uploaded to openfluor.org directly
 

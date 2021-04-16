@@ -575,7 +575,7 @@ maxlines <- function(pfmodel){
 #' data(eem_list)
 #' data(pf_models)
 #'
-#' eempf_residuals(pf4[[1]], eem_list, cores = 2)
+#' residuals <- eempf_residuals(pf4[[1]], eem_list, cores = 2)
 #' }
 eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::detectCores(logical = FALSE)/2){
   pfmodel <- norm2A(pfmodel)
@@ -611,12 +611,89 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
     res <- res %>% data.frame() %>% mutate(type = "residual", em = rownames(pfmodel$B)) %>%
       gather(ex,value,-em,-type) %>% mutate(ex = substr(ex,2,4))
     bind_rows(list(comps,samp,res)) %>%
-      mutate(Sample = sample)
+      mutate(sample = sample)
   }) %>%
     bind_rows()
 }
 
-#' Calculate the amount of each component for samples not involved in model building
+#' Calculate residual metrics from a PARAFAC model
+#'
+#' @description The metrics calculated with this function are:
+#' * RSS: residual sum of squares
+#' * MAE: mean absolute error
+#' * SAE: sum of absolute errors
+#' * RSAE: sum of absolute error in relation to the sum of fluorescence and
+#' * LEV: the leverage as described in \code{\link[staRdom]{eempf_leverage}}
+#' The example contains a way to plot these numbers.
+#'
+#' @md
+#' @param residuals data.frame as derived from \code{\link[staRdom]{eempf_residuals}}
+#' @param leverage list of data.frames as derived from \code{\link[staRdom]{eempf_leverage}}
+#'
+#' @return a list of data.frames containing residuals metrics for each sample, emission and excitation wavelength
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+#' \donttest{
+#' data(eem_list)
+#' data(pf_models)
+#'
+#' residuals <- eempf_residuals(pf4[[1]], eem_list, cores = 2)
+#' leverage <- eempf_leverage(pf4[[1]])
+#'
+#' metrics <- eempf_residuals_metrics(residuals, leverage)
+#'
+#' metrics$sample
+#'
+#' ## plot different residual metrics
+#' require(dplyr)
+#' require(tidyr)
+#' require(ggplot2)
+#'
+#' lapply(names(metrics), function(name){
+#'   metrics[[name]] %>%
+#'   mutate(mode = name, element = !!sym(name))
+#' }) %>%
+#'   bind_rows() %>%
+#'   pivot_longer(cols = RSS:LEV, names_to = "metric", values_to = "value") %>%
+#'   # uncomment the following line to select certain metrics
+#'   # filter(metric %in% c("RSS","LEV")) %>%
+#'   ggplot(aes(x = element, y = value, colour = metric))+
+#'   geom_point()+
+#'   facet_wrap(mode ~ ., ncol = 3, scales = "free")+
+#'   theme(axis.text.x = element_text(angle = 90))+
+#'   scale_y_continuous(trans="log")
+#' }
+eempf_residuals_metrics <- function(residuals, leverage){
+  if(class(residuals) != "data.frame"){
+    stop("residuals has to be q data.frame, preferablycreated by eempf_residuals.")
+  }
+  if(class(leverage) != "list" & all(lapply(leverage,class) == "data.frame")){
+    stop("leverage has to be a list of data.frames, preferably a created by eempf_leverage.")
+  }
+  groups <- c(sample = "sample", em = "em", ex = "ex")
+  #group <- groups[1]
+  leverage <- leverage %>%
+    setNames(names(groups))
+  res_metrics <- lapply(groups, function(group){
+    residuals %>%
+      filter(type %in% c("sample","residual")) %>%
+      group_by(across(all_of(group))) %>%
+      group_by(type, .add = TRUE) %>%
+      summarise(RSS = sum(value^2), MAE = mean(abs(value)), SAE = sum(abs(value)), .groups = "drop") %>%
+      group_by(across(all_of(group))) %>%
+      arrange(type) %>%
+      mutate(RSAE = SAE[1]/SAE[2]) %>%
+      filter(type == "residual") %>%
+      select(-type) %>%
+      mutate(LEV = leverage[[group]][!!sym(group)])
+  })
+}
+
+#' Calculate the sample loadings for samples not involved in model building
 #'
 #' @description Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm. B and C modes can be provided via a previously calculated model or as matrices manually.
 #'
@@ -1012,14 +1089,16 @@ tcc <- function(maxl_table,na.action="na.omit"){
 #'   model_details <- list(name = "River", creator = "Helena Glory",
 #'   constraints = "non-negative", validation = "split-half", unit= "RU")
 #'   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"),
-#'   upload = FALSE, email = "helena.glory@@rur.play", model_details = model_details)
+#'   upload = FALSE, model_details = model_details)
 eempf_openfluor <- function(pfmodel, file, Fmax = TRUE, upload = FALSE, email = NULL, model_details = list()){
   if(!dir.exists(dirname(file.path(file)))){
     stop("The path to your file does not contain an existing directory. Please enter a correct path!")
   }
-  if(!is.null(email) & !grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
-            as.character(email), ignore.case = TRUE)){
-    warning("The email address does not correspond to the expected pattern!")
+  if(!is.null(email)){
+    if(!grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
+           as.character(email), ignore.case = TRUE)){
+             warning("The email address does not correspond to the expected pattern!")
+  }
   }
   if(Fmax){
     pfmodel <- eempf_rescaleBC(pfmodel)

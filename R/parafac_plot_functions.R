@@ -431,7 +431,7 @@ eempf_residuals_plot <- function(pfmodel, eem_list, res_data = NULL, spp = 5, se
     res_data <- eempf_residuals(pfmodel,eem_list,select=select,cores = cores)
   }
   if (!is.null(select)){
-    res_data <- res_data %>% filter(Sample %in% select)
+    res_data <- res_data %>% filter(sample %in% select)
   }
   res_data <- res_data %>%
     mutate_at(vars(ex,em,value),as.numeric)
@@ -448,16 +448,16 @@ eempf_residuals_plot <- function(pfmodel, eem_list, res_data = NULL, spp = 5, se
   fill_max <- res_data$value %>% max(na.rm=TRUE)
   vals <- c(res_data$value %>% min(na.rm = TRUE), seq(from = 0, to = fill_max, length.out = length(colpal) - 1))
   vals <- (vals - min(vals))/diff(range(vals))
-  ppp <- res_data$Sample %>% unique() %>% length() /spp
+  ppp <- res_data$sample %>% unique() %>% length() /spp
   ov_plot <- lapply(1:ceiling(ppp),function(pos){
     pl <- res_data %>%
-      filter(Sample %in% (res_data$Sample %>% unique() %>% .[(spp*(pos-1)+1):(spp*pos)])) %>%
+      filter(sample %in% (res_data$sample %>% unique() %>% .[(spp*(pos-1)+1):(spp*pos)])) %>%
       ggplot(aes(x=ex,y=em,z=value))
 
     diffs <- res_data %>%
       select(-value, -type) %>%
-      gather("spec","wl", -Sample) %>%
-      group_by(Sample,spec) %>%
+      gather("spec","wl", -sample) %>%
+      group_by(sample,spec) %>%
       unique() %>%
       #arrange(sample,spec,wl) %>%
       #mutate(diffs = wl - lag(wl))
@@ -486,10 +486,10 @@ eempf_residuals_plot <- function(pfmodel, eem_list, res_data = NULL, spp = 5, se
     }
     if(residuals_only){
       pl <- pl +
-        facet_wrap(~ Sample)
+        facet_wrap(~ sample)
     } else {
       pl <- pl +
-        facet_grid(type ~ Sample)
+        facet_grid(type ~ sample)
     }
     pl
   })
@@ -586,7 +586,7 @@ splithalf_plot <- function(fits){
 #'
 #' eem_names(eem_list)
 #' pfm <- A_missing(eem_list,pf4[[1]], cores = 2)
-#' eempf_report(pfm, export = "~/pf_report.html", eem_list = eem_list,
+#' eempf_report(pfm, export = file.path(tempdir(),"pf_report.html"), eem_list = eem_list,
 #'              absorbance = absorbance, meta = metatable, metacolumns = "dilution", cores = 2)
 #'
 #' }

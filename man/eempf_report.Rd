@@ -69,7 +69,7 @@ metacolumns = "dilution", error = FALSE)
 
 eem_names(eem_list)
 pfm <- A_missing(eem_list,pf4[[1]], cores = 2)
-eempf_report(pfm, export = "~/pf_report.html", eem_list = eem_list,
+eempf_report(pfm, export = file.path(tempdir(),"pf_report.html"), eem_list = eem_list,
              absorbance = absorbance, meta = metatable, metacolumns = "dilution", cores = 2)
 
 }

@@ -38,5 +38,5 @@ openfluor.org offers the possibility to compare your results to others, that wer
   model_details <- list(name = "River", creator = "Helena Glory",
   constraints = "non-negative", validation = "split-half", unit= "RU")
   eempf_openfluor(pf4[[1]],file.path(tempdir(),"openfluor_example.txt"),
-  upload = FALSE, email = "helena.glory@rur.play", model_details = model_details)
+  upload = FALSE, model_details = model_details)
 }

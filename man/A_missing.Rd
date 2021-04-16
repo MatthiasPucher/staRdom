@@ -2,7 +2,7 @@
 % Please edit documentation in R/parafac_functions.R
 \name{A_missing}
 \alias{A_missing}
-\title{Calculate the amount of each component for samples not involved in model building}
+\title{Calculate the sample loadings for samples not involved in model building}
 \usage{
 A_missing(
   eem_list,
