@@ -444,7 +444,7 @@ You can run the script by clicking the "Knit" button in the toolbar of RStudio. 
 
 # Installation
 
-The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://rstudio.com/) can help beginners to get into it.
+The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://www.rstudio.com/) can help beginners to get into it.
 
 You can install staRdom via RStudio by klicking Tools -> Install Packages... or by entering the command `install.packages("staRdom")` in the command line.
 
@@ -463,11 +463,9 @@ https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and
 
 Download:
 
-https://rstudio.com/products/rstudio/download/
+https://www.rstudio.com/
 
-Please choose the installer for your operating system, not the zip/tarballs.
-
-Install RStudio by running the setup.
+Please find the installer for your specific operating system there.
 
 ## Optional software
 
