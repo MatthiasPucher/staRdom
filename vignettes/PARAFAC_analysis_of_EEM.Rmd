@@ -53,7 +53,7 @@ staRdom is a package for R version [@r_development_core_team_r:_2019] to analyse
     * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(https://boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
 
 A comparison in quality of results and performance of the PARAFAC algorithms in staRdom and drEEM can be found in Pucher et al. [-@pucher_stardom_2019]. The analysis process was developed and discussed in other papers and tutorials [e.g. @murphy_fluorescence_2013]. The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of Murphy et al. [-@murphy_fluorescence_2013]. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
 
@@ -83,7 +83,7 @@ install.packages("devtools") # Run this only, if devtools is not installed alrea
 devtools::install_github("MatthiasPucher/staRdom")
 ```
 staRdom can then be loaded:
-```{r eval=TRUE, include=TRUE}
+```{r eval=TRUE, message=FALSE, warning=FALSE, include=TRUE}
 library("staRdom")
 ```
 
@@ -148,7 +148,7 @@ eem_list <- eem_read(folder, import_function = "cary")
 If your instrument is not amongst the mentioned ones, eemR offers the opportunity to create custom import functions ([see according vignette](https://cran.r-project.org/package=eemR)).
 
 To have a look at your data, you can plot the samples in several plots using `eem_overview_plot`. `ggeem` is another function that plots EEMs, but it produces only one plot, which can be overloaded in case of many samples. `spp` defines the number of samples per plot. Not present data is not shown (light greyish), NAs are dark grey. `contour = TRUE` adds contour lines to the EEM plots.
-```{r eval=TRUE, fig.width = 6, fig.height = 5, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+```{r eval=TRUE, fig.height=5, fig.width=6, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
 eem_overview_plot(eem_list, spp=9, contour = TRUE)
 ```
 
@@ -209,6 +209,8 @@ The above mentioned absence of absorbance data for the blank samples can be just
 # Data preparation and correction
 
 If you have used the template for the peak picking ([vignette for basic analysis](Basic_analysis_of_DOM_samples.html)), the correction is already done and you can start a PARAFAC analysis with the `eem_list` resulting from this template.
+
+If either of the correction steps was already done (e.g. by the instrument), the specific correction step can just be skipped. In this case R might still tell you about missing correction steps and warnings might appear, but these can be ignored as long as the whole correction was done as desired.
 
 ## Sample names
 
@@ -716,14 +718,14 @@ eem_list %>%
 
 ## Recalculating the model with increased accuracy
 
-Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step. Just the model with 6 components is recalculated. Check the ratio of converging models to be sure, the best is chosen from a reasonable number.
+Due to long calculation times with higher accuracy in the model calculation, the tolerance is only increased in the last step. Just the model with 6 components is recalculated. We use `strictly_converging = TRUE` here to derive a meaningful number of truly converging models. If you set this argument to `FALSE`, please check the ratio of converging models to be sure, the best is chosen from a reasonably high number.
 
 ```{r eval=FALSE, include=TRUE}
 ctol <- 10^-8 # decrease tolerance in PARAFAC analysis
-nstart = 50 # increase number of random starts
+nstart = 20 # number of random starts
 maxit = 10000 # increase number of maximum interations
 
-pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores)
+pf4 <- eem_parafac(eem_list_ex, comps = 6, normalise = TRUE, const = c("nonneg", "nonneg", "nonneg"), maxit = maxit, nstart = nstart, ctol = ctol, output = "all", cores = cores, strictly_converging = TRUE)
 
 pf4 <- lapply(pf4, eempf_rescaleBC, newscale = "Fmax")
 ```
@@ -782,7 +784,7 @@ It is possible to view the components in 3D using `eempf_comps3D`.
 
 The plots show samples in columns and the rows show the components (6 in that case), the residuals and the whole sample.
 
-```{r eval=TRUE, include=TRUE, fig.width=6, fig.height=7}
+```{r eval=TRUE, fig.height=7, fig.width=6, warning=FALSE, include=TRUE}
 # plot components in each sample, residual and whole sample
 eempf_residuals_plot(pf4[[1]], eem_list, select = eem_names(eem_list)[10:14], cores = cores, contour = TRUE)
 ```
@@ -793,7 +795,7 @@ The split-half analysis is intended to show the stability of your model. The dat
 
 ```{r eval=FALSE, include=TRUE}
 #calculate split_half analysis
-sh <- splithalf(eem_list_ex, 6, normalise = TRUE, rand = FALSE, cores = cores, nstart = nstart, maxit = maxit, ctol = ctol)
+sh <- splithalf(eem_list_ex, 6, normalise = TRUE, rand = FALSE, cores = cores, nstart = nstart, strictly_converging = TRUE, maxit = maxit, ctol = ctol)
 ```
 
 Split-half analysis takes some time, so the results are included in the package.
@@ -894,7 +896,7 @@ Components within a PARAFAC model can be reordered using `eempf_reorder`.
 
 ## Comparing your data using openfluor.org
 
-You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org [@murphy_openfluor_2014]. Please check the file header manually after export as some values are not set automatically. Openfluor offers ways to compare your components with those found in other publications. This is a very important step in interpreting the results and coming to ecological sound conclusions.
+You can use `eempf_openfluor` to export a file that can be uploaded to openfluor.org [@murphy_openfluor_2014]. Please check the file header manually after export as some values are not set automatically. Openfluor offers ways to compare your components with those found in other publications. This is a very important step in interpreting the results and coming to ecological sound conclusions. Models can be directly uploaded to openfluor.org. Please see the help of `eempf_openfluor` for details.
 
 ```{r eval=FALSE, include = TRUE}
 eempf_openfluor(pf4[[1]], file = "my_model_openfluor.txt")

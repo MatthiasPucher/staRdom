@@ -259,15 +259,21 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
     lapply(`[[`,"y") %>%
     bind_cols(wavelength=as_vec,.)
 
-  res <- as %>%
+  res1 <- as %>%
     t() %>%
     data.frame() %>%
     setNames(paste0("a",.[1,])) %>%
     tibble::rownames_to_column(var="sample") %>%
     filter(sample != "wavelength") %>%
     mutate(E2_E3 = a250/a365, E4_E6 = a465/a665) %>%
-    select(-one_of(paste0("a",c(250,365,465,665) %>% .[!(. %in% add_as)]))) %>%
+    select(-one_of(paste0("a",c(250,365,465,665) %>% .[!(. %in% add_as)])))
+
+  if(exists("res")){
+    res <- res1 %>%
     full_join(res,by="sample")
+  } else {
+    res <- res1
+  }
 
   res
 }

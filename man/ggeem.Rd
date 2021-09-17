@@ -38,7 +38,7 @@ ggeem(data, fill_max = FALSE, ...)
 
 \item{eemlist_order}{logical, in case of an eemlist, the order of samples in the plot is the same as in the eemlist, alphabetically otherwise}
 
-\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
+\item{colpal}{"default" to use the viridis colour palette, "rainbow" to use a subset of the rainbow palette, any custom vector of colors or a colour palette. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
 
 \item{contour}{logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}}
 

@@ -16,13 +16,18 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.21 to 1.1.22
+  The default colour palette was changed to viridis to improve the readability for people with color vision deficiency.
+  The default ggplot theme of the plots was changed to theme_minimal()
+  splithalf_plot shows a legend to identify the subsets
+
 1.1.20 to 1.1.21
   fixed links in vignettes and help
 
 1.1.19 to 1.1.20
   eempf_res_analysis: function added to calculate residual metrics
   Fixed example of eempf_report writing to home directory
-  Fixed generation of openfluor exort demands email
+  Fixed generation of openfluor export demands email
 
 1.1.18 to 1.1.19
   PARAFAC models can be uploaded to openfluor.org directly

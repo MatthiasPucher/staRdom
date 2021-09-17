@@ -93,7 +93,6 @@ eem_csv2 <- function(file) {
 #' # eem_list
 #' }
 eem_hitachi <- function(file) {
-  #file <- "~/AL/DOM/Anna/DOM_analysis_R/Fluorometer/Algae_1_End_With_Gamingbach.txt"
   read <- tryCatch({data <- read_lines(file)
 
   data <- str_split(data, "\t")

@@ -5,7 +5,7 @@
 #'
 #' @param data eem, eemlist, parafac or data.frame. The details are given under 'Details'.
 #' @param fill_max sets the maximum fluorescence value for the colour scale. This is mainly used by other functions, and makes different plots visually comparable.
-#' @param colpal "default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.
+#' @param colpal  "default" to use the viridis colour palette, "rainbow" to use a subset of the rainbow palette, any custom vector of colors or a colour palette. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.
 #' @param contour logical, whether contours should be plotted (default FALSE), see \code{\link[ggplot2]{geom_contour}}
 #' @param interpolate logical, whether fluorescence should be interpolated, see \code{\link[ggplot2]{geom_raster}}
 #' @param redneg deprecated! logical, whether negative values should be coloured discreet.
@@ -32,7 +32,7 @@
 #'
 #' @export
 #' @import ggplot2 dplyr tidyr eemR
-#' @importFrom grDevices rainbow
+#' @importFrom grDevices rainbow col2rgb
 #'
 #' @examples
 #' ## plotting two distinct samples
@@ -104,11 +104,18 @@ ggeem.data.frame <- function(data, fill_max=FALSE, colpal = "default", contour =
   if(!is.null(redneg)){
     warning("redneg is deprecated and will be ignored! Please use the argument 'colpal = c(rainbow(75)[58],rainbow(75)[51:1])' to produce similar behaviour.")
   }
-  if(colpal[1] == "default"){
-    colpal <- rainbow(75)[53:1]
+  if(is.vector(colpal)){
+    if(colpal[1] == "rainbow"){
+      colpal <- rainbow(75)[53:1]
+      # warning("using rainbow colour palette")
+    } else if (colpal[1] == "default"){
+      colpal <- viridisLite::viridis(50)
+    }
+  } else if(is.function(colpal) & class(try(col2rgb(colpal(1)),silent=TRUE))[1] != "try-error"){
+    colpal <- colpal(50)
     # warning("using rainbow colour palette")
-  } else if(!is.vector(colpal)) {
-    stop("Please provide a vector of colours!")
+  } else {
+    stop("Please provide a palette or a vector of colours as argument colpal!")
   }
   table <- data %>%
     mutate_at(vars(ex,em,value),as.numeric)
@@ -145,6 +152,7 @@ ggeem.data.frame <- function(data, fill_max=FALSE, colpal = "default", contour =
   plot <- plot +
     #geom_tile(aes(fill = value, colour = value))+
     #scale_fill_gradient2(low="blue",mid="yellow",high="red")
+    theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))+
     facet_wrap(~ sample)
   if(contour){

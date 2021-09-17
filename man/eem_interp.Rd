@@ -71,7 +71,7 @@ ggeem(eem_list3)
 }
 \references{
 Elcoroaristizabal, S., Bro, R., García, J., Alonso, L. 2015. PARAFAC models of fluorescence data with scattering: A comparative study. Chemometrics and Intelligent Laboratory Systems, 142, 124-130
-\url{https://doi.org/10.1016/j.chemolab.2015.01.017}
+\doi{10.1016/j.chemolab.2015.01.017}
 }
 \seealso{
 \code{\link[pracma]{pchip}}, \code{\link[MBA]{mba.points}}, \code{\link[zoo]{na.approx}}

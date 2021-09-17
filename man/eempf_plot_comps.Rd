@@ -22,7 +22,7 @@ eempf_plot_comps(
 
 \item{contour}{in case of 3 dimensional component plots, contours are added}
 
-\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
+\item{colpal}{"default" to use the viridis colour palette, "rainbow" to use a subset of the rainbow palette, any custom vector of colors or a colour palette. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
 
 \item{...}{arguments passed on to other functions, e.g.}
 }

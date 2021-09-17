@@ -15,6 +15,7 @@ splithalf(
   maxit = 2500,
   ctol = 10^(-7),
   rescale = TRUE,
+  strictly_converging = FALSE,
   verbose = FALSE,
   ...
 )
@@ -39,6 +40,8 @@ splithalf(
 \item{ctol}{Convergence tolerance (R^2 change)}
 
 \item{rescale}{rescale splithalf models to Fmax, see \code{\link[staRdom]{eempf_rescaleBC}}}
+
+\item{strictly_converging}{calculate nstart converging models and take the best. Please see \code{\link[staRdom]{eem_parafac}}.}
 
 \item{verbose}{states whether you want additional information during calculation}
 

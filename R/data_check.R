@@ -149,7 +149,7 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
     if(any(nas > 0.12)){
       cat(paste0("One or more samples have a NA ratio of ",round(max(nas),2)," a meaningful PARAFAC model might be difficult to produce. We suggest to interpolate the data or using a very high number of starts."), fill = TRUE)
     } else {
-      cat("Please think about interpolating the data, this might give more stable and meaningful PARAFAC models!")
+      cat("Please consider interpolating the data. It is highly recommended, due to more stable and meaningful PARAFAC models!")
     }
     problem = TRUE
   }

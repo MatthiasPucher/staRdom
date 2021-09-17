@@ -7,3 +7,5 @@ stardom.Rproj
 staRdom.Rproj
 .RData
 .gitignore
+/doc/
+/Meta/

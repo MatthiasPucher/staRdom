@@ -167,7 +167,7 @@ parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), 
   ntot <- 0
   cpresult_all <- list()
   cores <- max(1,length(cl))
-  while(nmod < nstart & ntot <= 10 * nstart){
+  while(nmod < nstart & ntot <= 20 * nstart){
     pred_factor <- ifelse(ntot == 0, 1, ifelse(nmod == 0, 3, ntot/nmod/2))
     if(verbose) cat("Due to previous model calculations, pred_factor was set", pred_factor, fill = TRUE)
     nmiss <- ceiling((nstart - nmod) * pred_factor / cores) * cores
@@ -191,7 +191,7 @@ parafac_conv <- function(X, nstart, verbose = FALSE, output = c("best", "all"), 
     sses <- cpresult_all %>% lapply(`[[`,"SSE") %>% unlist()
     cpresult_all <- cpresult_all[sort(order(-sses)[1:nstart])]
   }
-  if(ntot >= 10 * nstart) warning("Maximum number of starts reached without generating the desired number of valid models.")
+  if(ntot >= 20 * nstart) warning("Maximum number of starts reached without generating the desired number of valid models.")
   cpresult_all
 }
 
@@ -769,6 +769,7 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
 #' @param maxit maximum iterations for PARAFAC algorithm
 #' @param ctol Convergence tolerance (R^2 change)
 #' @param rescale rescale splithalf models to Fmax, see \code{\link[staRdom]{eempf_rescaleBC}}
+#' @param strictly_converging calculate nstart converging models and take the best. Please see \code{\link[staRdom]{eem_parafac}}.
 #' @param verbose states whether you want additional information during calculation
 #' @param ... additional parameters that are passed on to \code{\link[multiway]{parafac}}
 #'
@@ -793,7 +794,7 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
 #' # Similarity of splits using SSCs
 #' sscs <- splithalf_tcc(splithalf)
 #' }
-splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 20, cores = parallel::detectCores(logical = FALSE), maxit = 2500, ctol = 10^(-7), rescale = TRUE, verbose = FALSE, ...){
+splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TRUE, nstart = 20, cores = parallel::detectCores(logical = FALSE), maxit = 2500, ctol = 10^(-7), rescale = TRUE, strictly_converging = FALSE, verbose = FALSE, ...){
   a <- seq(1,eem_list %>% length())
   if(rand){
     a <- a %>% sample()
@@ -819,7 +820,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
   }
   fits <- lapply(1:length(spl_eems) %>% setNames(split_designations),function(i){
     # i <- 1
-    mod <- eem_parafac(spl_eems[[i]], comps = comps, normalise = normalise, maxit = maxit, nstart = nstart, cores = cores,ctol = ctol, verbose = FALSE)#,...
+    mod <- eem_parafac(spl_eems[[i]], comps = comps, normalise = normalise, maxit = maxit, nstart = nstart, cores = cores,ctol = ctol, strictly_converging = strictly_converging, verbose = FALSE, ...)
     if(rescale) mod <- lapply(mod, eempf_rescaleBC, newscale = "Fmax")
     if(verbose) setTxtProgressBar(pb, i)
     mod
@@ -839,7 +840,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
     lapply(`[[`,2) %>%
     lapply(attr, "order")
 
-  fits <- lapply(1:length(spl_eems),function(sel){
+  fits <- lapply(1:length(spl_eems) %>% setNames(split_designations),function(sel){
     lapply(fits[[sel]],function(f){
       f$A <- f$A[,C_sort[[sel]]]
       f$B <- f$B[,C_sort[[sel]]]
@@ -1130,8 +1131,6 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE, upload = FALSE, email = 
 #' @param email email address you use to login at openfluor.org as string
 #' @param file the file containing a PARAFAC model in openfluor format
 #'
-#' @import httr
-#'
 #' @return HTTP status code from the upload POST
 #' @export
 #'
@@ -1147,6 +1146,7 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE, upload = FALSE, email = 
 #' eempf_OF_upload("helena.glory@@rur.play", file)
 #' }
 eempf_OF_upload <- function(email, file){
+  stopifnot("The packages askpass and httr must be installed to use eempf_OF_upload()" = all(c("askpass","httr") %in% rownames(installed.packages())))
   if(!grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
             as.character(email), ignore.case = TRUE)){
     warning("The email address does not correspond to the expected pattern!")
@@ -1158,7 +1158,7 @@ eempf_OF_upload <- function(email, file){
 
   password <- askpass::askpass("Please enter your openfluor.org password:")
 
-  html <- content(GET('https://openfluor.lablicate.com/login'), "text")
+  html <- httr::content(httr::GET('https://openfluor.lablicate.com/login'), "text")
 
   token <- as.character(sub('.*name="_token" value="([0-9a-zA-Z+/=]*).*', '\\1', html))
 
@@ -1169,7 +1169,7 @@ eempf_OF_upload <- function(email, file){
     '_token' = token
   )
 
-  login <- POST('https://openfluor.lablicate.com/login', body = params)
+  login <- httr::POST('https://openfluor.lablicate.com/login', body = params)
 
   if(login$status_code == 422){
     stop("Email or password are incorrect. Please run the function again to complete your upload!")
@@ -1177,12 +1177,12 @@ eempf_OF_upload <- function(email, file){
 
   par_upload <- list(
     '_token' = token,
-    'model_file' = upload_file(file)
+    'model_file' = httr::upload_file(file)
   )
 
-  upload <- POST('https://openfluor.lablicate.com/of/measurement/upload', body = par_upload, encode = "multipart")
+  upload <- httr::POST('https://openfluor.lablicate.com/of/measurement/upload', body = par_upload, encode = "multipart")
 
-  GET('https://openfluor.lablicate.com/logout')
+  httr::GET('https://openfluor.lablicate.com/logout')
 
   if(upload$status_code != 200){
     warning("Something went wrong during the upload! HTTP status code was ",upload$status_code,".")

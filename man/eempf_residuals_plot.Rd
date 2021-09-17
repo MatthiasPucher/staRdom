@@ -33,7 +33,7 @@ eempf_residuals_plot(
 
 \item{contour}{logical, states whether contours should be plotted}
 
-\item{colpal}{"default" to use a subset of the rainbow palette or any custom vector of colors. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
+\item{colpal}{"default" to use the viridis colour palette, "rainbow" to use a subset of the rainbow palette, any custom vector of colors or a colour palette. A gradient will be produced from this vector. Larger vectors (e.g. 50 elements) can produce smoother gradients.}
 }
 \value{
 several ggplot objects

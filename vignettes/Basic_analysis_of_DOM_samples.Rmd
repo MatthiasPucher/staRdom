@@ -40,10 +40,10 @@ staRdom is a package for R version `r R.Version()$major` [@r_development_core_te
     * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna(https://boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
 
 staRdom comes with an Rmd template ([infos on Rmd](https://rmarkdown.rstudio.com/)) where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through the template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
-As an advanced user, you can just include the functions in whatever calculations you want to do (please see details in the [advanced vignetts](PARAFAC_analysis_of_EEM.html)). This vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` or in RStudio pressing F1 while the cursor is on the function name in the code.
+As an advanced user, you can just include the functions in whatever calculations you want to do (please see details in the [advanced vignette](PARAFAC_analysis_of_EEM.html)). This vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` or in RStudio pressing F1 while the cursor is on the function name in the code.
 
 Later in the vignette there is also a chapter about troubleshooting. If you experience problems you may find a useful solution there.
 
@@ -57,7 +57,7 @@ The package is available on CRAN and can be installed via `install.packages("sta
 
 # Starting the analysis using the template
 
-The template is accessible with the command `file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))`. You can and should save this file if you want to preserve it. The example data is saved within the package structure and you can find the containing folders with the commands `system.file(package = "staRdom")`. Raw data is in the sub-folder "extdata". The original settings in the template refer to sample data and you can do full featured test runs with that.
+The template is accessible with the command `file.edit(system.file("EEM_simple_analysis.Rmd", package = "staRdom"))`. You can and should save this file if you want to preserve it. The example data is saved within the package structure and you can find the containing folders with the commands `system.file(package = "staRdom")`. Raw data is in the sub-folder "extdata". The original settings in the template refer to sample data and you can do full featured test runs with that. In case of any problems, it can help to run the code chunk-wise (https://rmarkdown.rstudio.com/lesson-3.html).
 
 ## Output parameters
 
@@ -78,7 +78,7 @@ knit: (function(inputFile, encoding) {
                         })
 ```
 
-In case you want to run the code chunk-wise (https://rmarkdown.rstudio.com/lesson-3.html), you need to specify the output folder on line 61.
+You need to specify the output folder on line 61 as well.
 
 ```{r eval=FALSE}
 # Set the directory where all output files are put in.
@@ -258,7 +258,7 @@ eem_name = "eem_list"
 
 ## Data correction
 
-Raw data from fluorometers and photometers bear several shortcomings. Murphy et al. [-@murphy_fluorescence_2013] addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be applied. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. Bro and Smilde [-@bro_centering_2003] offer additional information on correction of EEM data.
+Raw data from fluorometers and photometers bear several shortcomings. Murphy et al. [-@murphy_fluorescence_2013] addressed several ways of EEM data correction that are used in the staRdom template. Some correction methods need specific data (e.g. absorbance ) to be applied. Corrections can be necessary and can help you focus on certain aspects and information covered by noise otherwise. But depending on your aim they might not be necessary. Bro and Smilde [-@bro_centering_2003] offer additional information on correction of EEM data. If either of the correction steps was already done (e.g. by the instrument), the specific correction step can just be skipped. In this case R might still tell you about missing correction steps and warnings might appear, but these can be ignored as long as the whole correction was done as desired.
 
 ### Absorbance baseline correction
 

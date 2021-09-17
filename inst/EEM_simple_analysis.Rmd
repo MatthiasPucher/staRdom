@@ -51,14 +51,14 @@ library(staRdom)
 #     .      
 #   .:;:.     Please look at the top of the file!
 # .:;;;;;:.   If you want to write a protocol with knitr,
-#   ;;;;;     you need to specify the output directory aobve (line 7):
+#   ;;;;;     you need to specify the output directory above (line 7):
 #   ;;;;;     output_dir = 'C:/some_folder/output/';
 #   ;;;;;
 #
 # Set the directory where all output files are put in.
 # The directory is automatically created if it does not exist.
 # Folder delimiters can be / or \\. \ , as it is usually used in Windows, will not work!
-output_dir = "~/output/" # e.g. output_dir = "C:/some_folder/output/"
+output_dir = paste0(tempdir(),"/output/") # e.g. output_dir = "C:/some_folder/output/"
 
 ```
 
