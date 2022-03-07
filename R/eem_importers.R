@@ -56,7 +56,7 @@ eem_csv2 <- function(file) {
       ex <- x[[1]]
     }
     x <- x[,-1] %>% as.matrix() %>% unname()
-    x <- x[!is.na(em),!is.na(ex)]
+    x <- x[!is.na(get(ifelse(col == "ex","em","ex"))),!is.na(get(col))]
     ex <- ex[!is.na(ex)]
     em <- em[!is.na(em)]
     if(col == "em") x <- t(x)

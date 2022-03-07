@@ -35,6 +35,7 @@ absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec
   } else if(file.exists(absorbance_path)){
     abs_data <- absorbance_path
   } else stop("Absorbance data was not found!")
+  if(length(abs_data) < 1) stop("No valid files found in absorbance_path!")
 
   cl <- makeCluster(min(cores, length(abs_data)), type="PSOCK")
   clusterExport(cl, c("dec","sep","verbose"), envir=environment())

@@ -14,8 +14,11 @@ staRdom was developed and is maintained at WasserCluster Lunz (http://www.wcl.ac
 The analysis process was already discussed in other papers and tutorials. The aim of this package was to bring a familiar way of using PARAFAC analysis for DOM to the R platform. The offered functions follow the concept of doi:10.1039/c3ay41160e. Reading it is recommended and can help your understanding!
 
 
-
 Changelog:
+1.1.22 to 1.1.24
+  Fixed function eem_csv2
+  minor changes in warnings and errors
+
 1.1.21 to 1.1.22
   The default colour palette was changed to viridis to improve the readability for people with color vision deficiency.
   The default ggplot theme of the plots was changed to theme_minimal()
