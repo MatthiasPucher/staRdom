@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Correcting raw data, calculating peaks and indices in EEMS and absorbance (slope) parameters</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Correcting raw data, calculating peaks and
+indices in EEMS and absorbance (slope) parameters</h1>
+<h3 class="subtitle">staRdom: spectroscopic analysis of dissolved
+organic matter in R</h3>
+<h4 class="author"></h4>
+<h4 class="date">March 10 2022</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction"><span class="toc-section-number">1</span>
+Introduction</a>
+<ul>
+<li><a href="#aim-of-this-document"><span class="toc-section-number">1.1</span> Aim of this document</a></li>
+<li><a href="#hint-for-beginners-in-r"><span class="toc-section-number">1.2</span> Hint for beginners in R</a></li>
+</ul></li>
+<li><a href="#starting-the-analysis-using-the-template"><span class="toc-section-number">2</span> Starting the analysis using the
+template</a>
+<ul>
+<li><a href="#output-parameters"><span class="toc-section-number">2.1</span> Output parameters</a></li>
+<li><a href="#input-parameters"><span class="toc-section-number">2.2</span> Input parameters</a>
+<ul>
+<li><a href="#fluorometer-data-eem"><span class="toc-section-number">2.2.1</span> Fluorometer data (EEM)</a></li>
+<li><a href="#photometer-data-absorbance"><span class="toc-section-number">2.2.2</span> Photometer data
+(absorbance)</a></li>
+<li><a href="#meta-data"><span class="toc-section-number">2.2.3</span>
+Meta data</a></li>
+<li><a href="#spectral-correction"><span class="toc-section-number">2.2.4</span> Spectral correction</a></li>
+</ul></li>
+<li><a href="#write-out-results-and-plots"><span class="toc-section-number">2.3</span> Write out results and plots</a>
+<ul>
+<li><a href="#results-table"><span class="toc-section-number">2.3.1</span> Results table</a></li>
+<li><a href="#plots"><span class="toc-section-number">2.3.2</span>
+Plots</a></li>
+<li><a href="#save-data-to-rdata-file"><span class="toc-section-number">2.3.3</span> Save data to RData file</a></li>
+</ul></li>
+<li><a href="#data-correction"><span class="toc-section-number">2.4</span> Data correction</a>
+<ul>
+<li><a href="#absorbance-baseline-correction"><span class="toc-section-number">2.4.1</span> Absorbance baseline
+correction</a></li>
+<li><a href="#dilution"><span class="toc-section-number">2.4.2</span>
+Dilution</a></li>
+<li><a href="#spectral-correction-1"><span class="toc-section-number">2.4.3</span> Spectral correction</a></li>
+<li><a href="#eem-range-reduction"><span class="toc-section-number">2.4.4</span> EEM range reduction</a></li>
+<li><a href="#blank-correction"><span class="toc-section-number">2.4.5</span> Blank correction</a></li>
+<li><a href="#correct-inner-filter-effects"><span class="toc-section-number">2.4.6</span> Correct inner filter
+effects</a></li>
+<li><a href="#remove-and-interpolate-scattering"><span class="toc-section-number">2.4.7</span> Remove and interpolate
+scattering</a></li>
+<li><a href="#raman-normalisation"><span class="toc-section-number">2.4.8</span> Raman normalisation</a></li>
+<li><a href="#smoothing"><span class="toc-section-number">2.4.9</span>
+Smoothing</a></li>
+</ul></li>
+<li><a href="#running-the-analysis"><span class="toc-section-number">2.5</span> Running the analysis</a></li>
+</ul></li>
+<li><a href="#installation"><span class="toc-section-number">3</span>
+Installation</a>
+<ul>
+<li><a href="#r"><span class="toc-section-number">3.1</span> R</a></li>
+<li><a href="#rstudio"><span class="toc-section-number">3.2</span>
+RStudio</a></li>
+<li><a href="#optional-software"><span class="toc-section-number">3.3</span> Optional software</a></li>
+</ul></li>
+<li><a href="#troubleshooting"><span class="toc-section-number">4</span>
+Troubleshooting</a>
+<ul>
+<li><a href="#peaks-table-shows-nas"><span class="toc-section-number">4.1</span> Peaks table shows NAs</a></li>
+<li><a href="#only-some-sample-plots-show-peaks"><span class="toc-section-number">4.2</span> Only some sample plots show
+peaks</a></li>
+<li><a href="#i-cannot-read-csv-files-in-ms-excel"><span class="toc-section-number">4.3</span> I cannot read csv files in MS
+Excel</a></li>
+<li><a href="#i-get-error-messages-concerning-my-output-directory"><span class="toc-section-number">4.4</span> I get error messages concerning my
+output directory</a></li>
+</ul></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhUAAAGACAYAAAAap5ATAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXEgAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAACAASURBVHic7N13eFzlmTbw+zkzGsm2JEtylQvuNp0AhtBBtmQDAULvJWWzu2kbkiUJSUjWWVJIsgmw++1mN5uQELqpoRhsjSwDBgIYCKHacm/qxbIljaac5/tDDpuAbM97Zt6ZOTP377q+6/oW65lzxx5Jz5zzPu8rIMpBqjoewNkAZgIIJVlWAmBEmqOMBuCk8fVCAEal8fUAoAxAMInrjgBQlMTrBTD0d5msZP5+Qntf1wvZx38rTrI+BqALwLsA3tj7f/9FMn93XjkYev+kSwTAOgD3isjGNL4uUdoM981KlDWq6gD4HoAbkfwvDaJC4gL4BYBvi0jsQF9MlElsKiinqOqvAHwu2zmIfOC3IvKZbIcg+mtsKihnqOplAO7Pdg4iH7lSRO7Ldgiiv2BTQTlBVUcAeB/AQdnOQuQjOwDME5G+bAchAtK7AI0oFd8GGwoiU5MxtP6IKCfwTgVlnapOxdBdipHZzkLkQxEAh4rIpmwHIeKdCsoFvwAbCiKvSgD8LNshiADeqaAsU9VTADwHvheJUrVYRFZkOwQVNv4gp6xR1QCA1wAcle0sRHngXQBHiUg820GocPHxB2XT34MNBVG6HIqh7ymirOGdCsoKVa3E0JbDY03qBqLtANT4eq7G4bqDxnX7EncjUHXT9Gou4omBlF5hZHE1SkumGtX0xhIYSHj/36AK9MXT9XfwtyIJFwk1/3c+kKiriLrpf11XNaW/y+E4IqiZUA7H7Kd0J4C5ItKV1jBESbK15z3RgSyBYUPR3vsa/rz1NjtpfCwULMeJc8zW6Q26iq+/thUdg7xTnstcVdRVGx0fMgbA9wF82U4iov3j4w/KOFU9BMDnTWpcjWN9CzfbHM6sCZcgGDAbnnlkaxcbCh+4Z1Mn9sQTpmWfV9UjbeQhOhA2FZQNv0Byp2V+YGvHMvRHWyzF8a/SkoNQXXGaUU3nYBxPbOu2lIjSaXcsgQe3GD/JCAC41UIcogNiU0EZparnATjTpCYa34Ut7U9aSuRvcyZeCRGzb+Pfb+zAoIV1BWTH0zt2YWtf1LRsgapeYCMP0f6wqaCMUdUQPGzS09RyH+JuagsZ89H48uNQVXqYUc3a3gheaNttKRHZkFDFbze0eyn9uaqWpDsP0f6wqaBM+iqAuSYFu/rXo6XnRUtx/MuRIGZNvNSoRgH8dn27h9kZyrY/d/djTafxmWEzAPyzhThE+8SmgjJCVScA+JZRDRTrmu+GlxHSfDd17JkYGZpoVPNsay+adkcsJSLbfruhHTHzx1bfVlUe1EcZw6aCMuUWAEazcc3dz6F3YIOlOP4VCpZj+thzjWoGXcV9mzotJaJMaBmI4akdPaZlIwH80EIcomGxqSDrVPUYANea1CTcCDa2PmQpkb9xhLRwPbSlC91R43/Hq1T1VBt5iD6MTQVZpaoC4HYYvtc2tj2Kwbjxp7K8xxHSwjaQcHGP+R0nAXCbqvLnPVnHNxnZdhWAU0wKBqKt2N7JwxaH42WE9M4NHCHNJ6taPK2NOQbAp9Kfhuhvsakga1TV0/Pctc13wVXeqv+w8eXzPY2QvtjOEdJ8ogDu8DbF82NVNVrXRGSKTQXZ9G0ARivPu/a8jc7db1qK419DI6SXGdVwhDR/reuN4LlW42ZxPICbLMQh+gCbCrJi7xjbV81qEljb/HtLifyNI6T0Yb/f2I5+85NR/0lV59nIQwSwqSB7bsXQOFvStnUuR/9gs6U4/sURUhpOTzSBR7caL8ANAfi5hThEANhUkAWqWgPgQpOaaLwXm9r/YCmRv3GElPbl8W3daB6ImZZ9QlXPspGHiE0FpZWqBgDcZlq3oXUp4ol+C4n8zcsIaQdHSAtGXBW/39jhpfTfVbU43XmI2FRQuv0DgCNNCnZHtqC5+zlLcfzN0ymkHCEtKK907MGfuowb8tkAvmghDhU4NhWUNqpaCeD7hlVY13wXlDMKH8ERUkrWbze0I6HG30NLVNVs9S/RAbCpoHT6PoCxJgUtPS+hp2+tpTj+xRFSMrG9P4rlO3eZlpUBuNlCHCpgbCooLVT1EAD/aFKTcKPY0LrUUiJ/8zJC6nGnRcoTD2zuRG8sYVr2GVU9zkYeKkxsKihdbgVQZFKwuf0PiMQ49vhhXkZIIwkX93KEtKDtibu4f7Pxe8ABcPveM3qIUsamglKmqucDWGxSMxBtx9aOpy0l8reZEy72MELajS7z0yspz9Q378LmPYOmZScCuNxCHCpAbCooJaoaAvBT07qmlnvhqvF8fd4rLTkIkypON6rpGIzjye0cISXAVeDX3tbV/ExVR6U/ERUaNhWUqq8BmGNS0N33Ltp711iK428cIaVUvbdrAH9s32NaNhnANy3EoQLDpoI8U9UJAL5lVuNiXfPdlhL5G0dIKV1+t6HdS6P5dVWdYSMPFQ42FZSKnwAoNynY3hXGnsg2S3H8y+sIqccjsCnPdQzG8bj5rqol8PAok+ivsakgT1T1WADXmNTEEnuwqe1RS4n8beqYxZ5GSNdzhJT24ZGtXWiPGK9bulhV62zkocLApoKM7R0/uw2G75+NrQ8hljB+1pv3QsFyTB93nlENR0jpQKKu4m5v75FbVTWY7jxUGNhUkBfXADjFpKBvcAd2dK+yk8bnOEJKtqxu2413dw2Ylh0G4O8txKECwKaCjKhqKYAfm9at3XknVI13+8t7HCEl2+5Y3w4Pw0E3q+oYC3Eoz7GpIFPfAjDJpKBt1yvo7nvPUhx/mzPxCo6QklWb9gxiZYvxuSBVAP7FQhzKc2wqKGmqOhND+1IkzXWjaGq9z1IifxtXPh9VpYcb1XCElLy4d1Mn+uKuadkXVPUIG3kof7GpIBP/hqGxs6Rt6XgKkWiHpTj+5UgQszlCShmyK5bAg1u6TMsCGFqQTZQ0NhWUFFVdAOACk5rBWBe2dDxlKZG/cYSUMm3Zjh5s64uali1QVaPveypsbCrogFQ1gKFTSI00tdyHhGt8uFHe4wgpZUNCFXdsaPdS+m+qanSHkgoXmwpKxucBHGlSsKu/Ca27XrYUx984QkrZ8ufufrzW2WdaZryWigoXmwraL1WthOEqcIViXfNdAJ/+fwRHSCnb7tjQjpj59NB3VPUgG3kov7CpoAP5VwBjTQp2dq1C78AmS3H8zcsI6Z3eDociGlbLQAzLdvSYlo0E8EMLcSjPsKmgfVLVQwH8g0lN3B3AxraHLSXyN68jpC+ZH2NNtF8PbulCt/njtKtU1WgnXSo8bCpof24FUGRSsLH1EUTjxhvt5D2OkFIuGfC28FcA3K6q/L1B+8Q3Bw1r7xjZIpOavsGd2N5VbymRv3GElHJNY0svmszfX8cAuM5CHMoTbCroI1Q1BOAnpnVNzffwfI9hcISUcpEC+K23O2G3qOrotAeivMCmgoZzA4A5JgUdu19H554/W4rjbzPHc4SUctPa3giebzXe9n08gO9YiEN5gE0F/Q1VnQDgmyY1rsbR1MLzPYZTWnIQJlVyhJRy112bOhBJGJ8L8hVVnWcjD/kbmwr6sJ8CKDcp2NbxDPoHWyzF8TeOkFKu6xqM45Gtxk1sCENnARH9DTYV9AFVPRbA1SY10fgubG5/3FIif+MIKfnF49u70TwQMy07R1XPspGH/ItNBQEAVFUA/CcM3xPrW+5H3B2wE8rHOEJKfhJzFXdt9HSa8L/vXdhNBIBNBf2fawF83KRg98AmtPS8YCmOv3kZIW3kCCll0csde/Bmd79p2WwAX7QQh3yKTQVBVUsB/MiwCu/vvBPKz9Uf4XWE9D6OkFKW3bG+HQk1/p5eoqpmHTTlLTYVBAyNh00yKWjuWY3egQ2W4vgbR0jJr7b3R7Fip/GOuOUYOiOIiE1FoVPVmQCuN6lJuBFsaHnQUiJ/G1U8GZMqTzOq4Qgp5ZL7N3eiN2a8id1nVfU4G3nIX9hU0M8BlJgUbGp7DINx/hIcztzqqyESMKrhCCnlkj1xFw9sNn4U5wC4be+CbypgbCoKmKouAHC+Sc1AtA3bOpdbSuRvHCGlfLGieRe29A2alp0E4HILcchH2FQUKFUNALjNtG5d891wlc/+P4wjpJRPXB16b3rwU1Udle485B9sKgrXFwAcYVLQtecddOx+w1Icf+MIKeWbt3sG8Efzu2hTAHzDQhzyCTYVBUhVqwD8i1lNAk0td1tK5G8cIaV89Vtv632+rqrTLcQhH2BTUZhuBjDGpGBbZz32RLZbiuNvHCGlfNUxGMcT24wXZY8A8DMLccgH2FQUGFU9FMDfm9RE47uxqf1RS4n8jSOklO8e3tqFjkHjBvhiVa2zkYdyG5uKwnMrgKBJwcbWBxFPGG/fWxA4Qkr5Luoq7vZ2Lsitqmr0s4b8j01FAVHVCwEsMqnZHdmCnT3PWkrkb+PKj+UIKRWE1W278d4u44MDDwPwOQtxKIexqSgQqloM4Cemdeua74aqayGRvw2NkJqN5HOElPxKAfzG23v3B6pqtH6L/I1NReG4AUMnCiatdddL6Ol731Icf+MIKRWaTXsGsbKl17TMeNKM/I1NRQFQ1ckAbjSpcd0o1rcstZTI30LBMo6QUkG6Z2MH+uPGdy6/oKpGe+KQf7GpKAy3ACg1Kdjc8QQiMU+Ls/LezPGXcISUCtKuWAIPbukyLfO0ey/5E5uKPKeqJwC4yqQmEuvE1o5llhL5G0dIqdA9taMHO/ujpmULVNXonCHyJzYVeWzviYG3AzA6ObCp+R4kXOMfGgWBI6RU6BKq+LW3c0F+rqpGJyKT/7CpyG/XATjepKCnfx3aetdYiuNvHCElGvJmdz9e7+ozLZsJ4KsW4lAOYVORp1S1DMCPzGpcrN15J8Chx49wJIjZEzhCSvQXv1nfjpj5Hbhv7104TnmKTUX++g6AapOCHd0rsSey1VIcf5syZhFGFnOElOgvWgZieHpnj2lZKYAfW4hDOYJNRR5S1VkArjepiSf6sLH1EUuJ/C0ULMOMcZ80qokkXNzLEVLKc0s3d6HbfKrpalU9xUYeyj42FfnpFwCKTQo2tD2MWGK3pTj+5vUUUg8/bIl8ZcDb/isC4HZV5e+fPMR/1DyjqgsBGO3M1De4Azu6VlpK5G9DI6SnG9VwhJQKycqWXjSZP+Y7BsC1FuJQlrGpyCN7TwS81bRuXfM9UE1YSOR/c6uv4ggp0X4ogN96W5B8i6qOTnsgyio2FfnlCwCMtsNt612Drj1vWYrjb0MjpGa7C3OElArR2t4IVrcZPz6dAODbFuJQFrGpyBOqWgXgeyY1rsaxvuV+S4n8jSOkRGZ+v7EDgwnjc0GuV9W5NvJQdrCpyB8/AGB0xPCWjqcwEG21FMffOEJKZKZrMI5HthmvJQoB+LmFOJQlbCrygKoeBuBzJjWDsW5saX/SUiJ/4wgpkTd/2NaNtkjMtOwcVT3LRh7KPDYV+eFWAEGTgvWt9yPh8lP1cLyMkD7MEVIixFzFnRs9nW78C1UtSnceyjw2FT6nqhcDqDOp2dW/Hi09L1lK5G9eR0if4ggpEQDgj+178GZ3v2nZwQC+ZCEOZRibCh/be+LfT41qoFjXfBd4vsfwOEJKlLo71rcjocbfE0tU1WwhE+UcNhX+dgOAGSYFzd3PoXdgo6U4/jau/BiOkBKlwfb+KOqbe03LygH8q4U4lEFsKnxq70l/N5rUJNwINrY+ZCmRvw2NkF5hVKMYOqmR9yiIPuq+TR3ojRlvqvdZVZ1vIw9lBpsK//oJgFEmBRvbHsFg3PhUwYLgdYR0A0dIiYa1J+5i6ZYu0zIHQ+eCiIVIlAFsKnxIVU8EcKVJzUC0Fds76y0l8jeOkBLZsXxnD7b0DZqWnQTgMgtxKAPYVPjM3pP9bsPQSX9JW9t8F1zlyONwOEJKZIerwG/Xexox/ZmqGt2JpdzApsJ/PgXgeJOCjt1/QufuN+2k8TkvI6RtkRie4AgpUVLe6unHyx3Gi5mnAPiGhThkGZsKH1HVMgxtx500V+NoarnXUiL/m1t9jfEI6V0bOxDjCClR0u7c4Ol75gZVHWsjD9nDpsJfvgug2qRgW+dy9A82W4rjbxUj56Kq9DCjmvd2DXCElMhQaySGx83v7o0EcJ2FOGQRmwqfUNVZAP7JpCYa78Xm9sctJfK/6spTjb5eAfx2A0dIibx4ZGs3uszXIZltHENZx6bCP24FUGxSsL71AcQTxtvlFowRofFGX//n7n5s2G28kp2IABQ5gpBjPCnK1dA+w6bCB1R1IYBzTWp2D2xGS/fzlhLlh5hhw3VYxQhMGhGylIYov102rQqlQbP1SwBes5GF7GFTkeNUNYihEVKTKqxrvgvKG/X71dP3vtHXB0XwqVlcN0ZkasrIEBZNGm1a1g3gbgtxyCI2FbnvSwAONylo6XkRPf3rLMXJHzu7n0Ussduo5tgxo3BMFcfniUx8atY4BMT40cfNImL2DUpZx6Yih6lqFYCbTGoSbgTrWx6wlCi/DJ2F8rBx3Wdnj0OR+bNhooJ07JhROLrKbHM5AOsB/KeFOGQZm4rc9iMAY0wKNrc/jsE4N2ZK1o7uRuyJbDWqmTiiCGdOqrCUiCh/BERwzQxPjwy/KiLRdOch+9hU5ChVPQzAZ01qBqJt2NrxjKVE+UnVxdqddwKG608unV6FipDxojOignLW5NGYOsp4cXODiDxpIw/Zx6Yid/0/AEGTgqaWe+BqzFKc/NXTvw5tva8a1YwMOLhiutFNJKKCUhp0cPFBVaZlCQBftRCHMoRNRQ5S1UsAnGFS0933Ltp7X7cTqAA0Nd+LhGt2t3Vh9WjMLiuxlIjI3y6fPgZlRcZ38/5bRN6ykYcyg01FjlHVEQB+alaTwLpmTl6lIhLrxNaOp4xqBMBnZo8zOy6WqACkMEK6JP1pKJPYVOSerwOYblKwvasBeyLb7KQpIJs7nkQkZnZM87zyEpw8vsxSIiJ/8jhC+n0R8XROOuUOo2f2ZJeqTobhcb+xxB5sanvUUqLC4rpRrG95AIdP/aJR3bUzx+LVzj4MJlxLyXJHZSiIylAA5r8vgJDjpDSKKwBGBVP7HJRqBmBorYAX3dEE3tnVj/ZIfu887XGEdC2A/7IQhzKMTUVu+RkAo52VNrQ+iFiCp2amS+uuP2JK1UJUjDo46ZoxxUFcMLUS92/utJgse0YEHFw8rQoLJpaj3PwZOf0VBbC6bTf+t6kNffH8a0JTGCH9mohwlXke4OOPHKGqJwK43KSmb3AHdnY/aylR4VrXfDdUzX7gnz+1EuNLiiwlyp6KUAA/OWYqzp9ayYYiDQTAqePL8KOjp6Z81yUXpTBCusxGHsq8/HtX+5CqOgBuB8zW/K3deSdUE3ZCFbDdkS3Y2WPWrBU5gmtn5te5IALgnw6eiMkjeYhauk0ZGcIX5k7Idoy08jhCGgdwvYU4lCVsKnLDpwEcZ1LQuutldPe9ZykObWx9yPjY+BPHleKoSuNnyTnrpHFlefW/J9ecMK4UHzNfe5CzLp/haYT0lyLyto08lB1sKrJMVcsA3GxS47pRrG+931IiAoBovNfTAthPe1v1nnOKHMHVM7m5l2358n6ZMjKERdWeRkj/1UIcyiI2Fdn3PQDVJgVbOp5CJMrJK9u2ddWjb3CHUc3UUSHUVpdbSpQ5n8zTNSK5ZsrIEBab7+eQczyOkC7hCGn+YVORRao6C8CXTWoGY13YYrhJE3kztKnYXcZ1V3q7DZwzKkIBfHJqZbZjFIzLpo/x9SJYjyOk7wP4pYU4lGVsKrLrdgDFJgVNLfci4Q5aikMf1rXnHXTsfsOopjQYwKXTjBes5YyrZ4zFyAB/NGRKadDBZT49R4YjpPRh/MmRJapaC+ATJjU9/evQuusVS4loX9Y13w1XzTYsOnNSBaaNMuoXc8KM0mKcMdH/j2/8ZlH1aF++XzyOkIZF5GkbeSj72FRkgaoGAdxmVAPde76H2RHdlLqBaBu2dS43qnEE+PRs/42Y8iyT7HBk6O/eT0qDAY6Q0kdwR83s+DKAw0wKdnY1YvfAJktx6EA2tT2GiRUnozhYkXTNERUjcfzYUrzS4Y8dT08aV4pDR4/IdozhuS40anaK7AdUoYPeHxlqJOKpTkaNglOW/Lkwh1eMwAnjSvHHdn+8Xy6fUeVl7dB/icg7NvJQbmBTkWGqOg5DEx9Jiyf6sLHtIUuJKBkJN4INrQ/i0MmfM6r71KyxeKOrDzE3t+8wFTmCazxs3jXw1JOIN61L7osTCWiscB6jOxWVKP3c3wOB5H/xXjdzLF7rzP33C0dIaV/4+CPzbgaQ/MddABvbHkU0vttSHEpWS/fz6B3YYFQzoaQI507J/UmK86aYj5AmduxA7K0/QyOR5P5fATUUAOD2dGPwlZeNasaXFPli8sbjCOn3RCQ/D8ihD7CpyCBVnQPg70xq+gZ3YHtX2FIiMuF1XctFB1WiKpS7NwUrQgGcf5D5L7JIuN5CmvwSfelF6B6zxxkXHlSFscW5+36Z722E9D0A/2MhDuUYNhWZ9XkARg8h1zXfw/M9csiu/vVo6XnRqKYk4ODqHD4XxMsIaeytt5Bo3mkpUf7QaBSRVSuNaoodwVU5+n4JiOBqjpDSfrCpyCyj8z06dr+Orj1v2cpCHjW13Ie4O2BUc9qEMhySg4sgvYyQaiyGwed5Om6yYm+/jcT2bUY1p47PzfeLxxHSZSLyjI08lHvYVGSW0U/vwdguWzkoBdH4Lmxpf9KoRpCb45peMkVfehFub6+VPPkqEq4HNPnHZrn4fklhhPQbFuJQjmJTkVlJLpMfMqnydJSVTLOVhVKwtWMZ+qMtRjUzc2xjKS8jpG5vL6KvcgM2U4mWFsTeNrvrOLO0GDU59H7xOEL6nxwhLSxsKjLrdyZfLOJg3qTrgJz6vEIA4Goc61seMK67esZYjAxm/9vO6wjp4MqGgpviSJfIqkbj/TKunpkb75cURkiNTmAm/8v+u7WwLAPwkknB6JFzMLHiJEtxKBXtvWvQabjmpSIUwEXmt5DTztsI6XbE3n/PUqL8p319GHzpBaOa0UW58X7xeET7dzlCWnjYVGSQiCiALwEwGueYM/EKBJ3cW7RFQJOH6ZxzplRg0gjjxW5p42mEVJUjpGkQffVVuF1dRjXZfr/MHzMKH/M2QvorC3Eox7GpyDAReR3AHSY1oeBoTB//SUuJKBVD+4g0GNUERXDdrOyNDF7leYS02VKiApJIILLSbN+ZbL5fAiK4ztt4K0dICxSbiuy4EYDRbcGpYxZjZHG1pTiUio1tjyCWMNvxdP6YUTimapSlRPs2w8PiP41GEXlulZ1ABSi+fj3iG812Zs3W++XsyaMxaaTxXZInOUJauNhUZIGIdAFYYlLjSBDzqq+1E4hSEk/0YWPrw8Z1n5o11stz6pR4HSE13RWS9i/SEAZc16gm0++X0qCn9RwxADdYiEM+waYie34J4E2TgqrSwzG27GhLcSgVO7obsSey1ahm8sgQzppsvKLeM08jpD09GOQIadq5nZ2IvrbGqCbT7xePI6T/T0TW2shD/sCmIktEJIGhRZtGB0nMrb4ajpit2if7VF2s3XknTM8FuWz6GFSEjH9wGytyBFd52F55sHElEI9bSESDq5+H9vUZ1WTq/eJxhLQLwA8txCEfYVORRSKyGoDRZgcjQuNx0NizLSWiVPT0r0Nb76tGNSMDDi6fPsZSov9z3pRKTBxhOEK6fTtia9+3lIh0cNB4u/ORAQeXZeD9whFS8opNRfbdAMDogfWMceehpCg3DxwqdE3N9yLhRo1qaqtHY1ZZiaVEHCHNZdE33zSeqqmrHo1ZZcWWEnkeIX0XHCElsKnIOhHZAeBHJjWOE8LsiZdZSkSpiMQ6sbVjmVGNAPisxXMePI2Q/vlNJFo4Qmqdh+ZNAHxmlp33S4ojpHxORmwqcsTPYXguyITRJ6By1KGW4lAqNnc8gUisw6hmXnkJThpXlvYsnkdIn38u7VloeIkd2xF7712jmoNHj8CJ40rTnsXjCOkTIrI87WHIl9hU5AARiQL4smndvEnXQsT+oi0y47pRrG9Zalx33ayxKDa8o3AgXkZIB19czRHSDPNypsp1s8ah2Enf/QqOkFI6sKnIESKyAsBTJjWjiidjStVCS4koFa27XkJPn9kixzHFQZw/1XDtw354HSGNvmq22JRS5+7ejegfjY4FwtjiIM5L4/vlihljvIyQ/oeIGN1lpfzGpiK3fAVAxKRg5vgLEQqm/7Y5pW5d891QNdvg6Pyp5gd9DcfrCGlkZQOQMDvLhNJj8OU/wt21y6jmwoOqMK4kmPK1p4wMoa7a+Jh1jpDSR7CpyCEisgHArSY1wcAozJxwiaVElIrdkS1o7jFbmxDyeCT5h3kZIY1v2YL4Ou5blDXxOAYbzc6RCTmCqz00jx/mcYT0pr27AxN9gE1F7vkBgC0mBZMqz0D5iFmW4lAqNrQ+iHii36jmpHGlOKzC+6m0XkdITX+hUfrF3n8f8c2bjGpOGV9m/Jjrr6UwQvq/ni9KeYtNRY4RkX4MHTiWfA0Ec6uvBqwNJZJX0XgvNrU/Zlz3udnjPZ/z4GWENPrmn5BoafF0PUqvSNj8XJDPzB4HL2s2Uxgh/SpHSGk4bCpykIjcD2CVSc3okbNRXXGynUCUkm2dK9A3uMOoZuqoEGrNn3F7HiEd5AhpznA72hF9809GNTNKi7Fgovm5IB5HSB/fu7Cc6CPYVOSuLwEw+iQwe+LlCAaMb2OSZaoJrGu+y7juSg+r8T2NkL5gfgYF2TX47LPQgQGjmitnjMGoYPI/0j2OkEYBfN20iAoHm4ocJSLvAPhvk5pQcDRmjPukpUSUiq4976Bjt9mnz9JgAJdMS/6HvrcR0m5E15idlkn2aWQAg6ufN6oZXRTAxQbvF46Qkg1sKnLb9wC0mxRMHbMYpSVTLMWhVKxrvguuDPJv3wAAIABJREFUmj2GPnPSaEwbdeBzHoLicYS0gSOkuSr6+mtw29uMaj4xuSKpxxkeR0jbMbSQnGif2FTkMBHpBvAds5oA5ky82lIiSsVAtA3bOs12Mw6I4NOzDtwsnDfVywjpZsSb+KEzZ6kOLdo0EBDB380ed8CvS+EU0h7TIiosbCpy328AvGJSUFV6GMaVH2spDqViU9tjGIyb/Vw+onIkjh87ap9/XhEK4AIvI6QNZr+wKPPiWzYjvs6s8TuqciSOqdr3+yWFEdLfmBZR4WFTkeNExAVwPQA1qZtbfQ0CjvGqbrIs4UawsfUh47pPzRqHon3MDHoaIf3TG0i0md1ap+yIrAwDcbPHZp+dPfz7hSOkZBubCh8QkZcAGI0PlBSNwUFjz7aUiFLR3P0cegc2GNVMKCnCOVMqPvLfPY2QRiIcIfURt6cHg68a3azExBFFOGvSR98vHkdIH+MIKSWLTYV/fAOA0cEA08eei5JQ6lv4UnopFOua74bhzSdcfFAVqkJ/e87Dp2d5GSFdDe032+WTsiv64gtwe3uNai6dXoXKv3q/lAbNpkP+cmkA3zQtosLFpsInRKQVwM0mNY4TwpyJV1hKRKnY1b8eLT0vGtWUBBxcNXPMB//3iR6283Z7uhF9/TWjGso+jcUw+Owqo5oRAQeXT/+/JuKKGWNQGjQeIb2dI6Rkgk2Fv9wO4G2TgvHlx6Oq9AhLcSgV61sfQMI1OpQWp08ox5zyEgTF20FSkXA9R0h9KvbO20hs32ZUs7B6NGaXlXgdIW0DTyElQ2wqfGTvQqnrTevmVl8FEeNPKGTZYKwbm9ufMKoRDJ0L8kmvI6Tr1xvVUG6JhOsBTf6xmWBol9UURkjNzmKngsemwmdEpAHAoyY1o4onY0pVraVElIqtHcvQHzU7yGtWWbH5s3EPex5Q7km0tCD21ltGNfPKS7yMkL4D4A7TIiI2Ff50PQCjlXYzJ1yE4uBHV4NTdrkax/qWB4zrQoZHUkbfeN14d0bKTZFVjdDBQduX4QgpecKmwodEZCuAn5nUBJ0RmDnhYkuJKBXtvWvQtcfs06eJoRFSs3MkKHdpfx8GX3zB5iUeFZF6mxeg/MWmwr9+AmCTSUF15WkoHzHLUhxKxbrme6BqZwHl4OrnoQMcIc0n0TWvwu3qtPLS4AgppYBNhU+JyACAG4xqIDh40nUQ450NyLa+wR3Y0bUy7a/rdnZyhDQfJRJDh8Gl320i0mTjhakwsKnwMRF5BMAzJjVlI2ZgYuWplhJRKja0PYxYYndaXzOyMgy4blpfk3JDfMN6xDea7cx6AG0AfpTOF6TCw6bC/74GIGZSMHvCZQgGjFeDk2XxRB82tj6SvtfbvAnxDWn9pUM5JlK/Ip37jtzEEVJKFZsKnxOR9wD8h0lNKFiOGeMusJSIUrGjeyX2RLam/kKuiwhPIc17bnc3oq+tScdLvQmOkFIasKnID0sANJsUTB1Th9KSqXbSkGeqLtY135Py60Rffw1ue3saElGuG1z9PLSvL9WXuUFEuNUqpYxNRR4Qkd0AvmVWE8Dc6qstJaJUdPe9i7beVz3XaySCwRdWpzER5TKNRhF57tlUXuIREeFtLUoLNhX54/cAjDYjqBx1KMaXz7cUh1LR1HwPEm7UU+3g889BBwbSnIhyWezPbyLRbHSz8oNSADemOQ4VMDYVeUJEFEM7bRrdwpxTfTUCTrGdUORZJNaJzj1vGte5nR2IvvG6hUSU01QRCa/wUrmTI6SUTmwq8oiIvA7DxVYlRWMwbewnLCUirxwJoqxkmnFdpIEjpIUqsWMHYu++Y1o2TVXPtZGHChObivxzIwCjrfamjf0ERoTGWYpDXhw09iyMCI03qhnat2CjpUTkB5HGldCY0YQ5ANyqqrxdSWnBpiLPiEgXhqZBkuY4IcyeeKWdQGQsFCzHtLHnmBW5LiKNjXYCkW/o7t2I/vEl07JZAL5iIQ4VIDYV+emXGJo7T9r48vkYU3qkpThkYtaES403J4u+tgZuB0dICRh8+Y9we3pMy25S1WobeaiwsKnIQ3vnzb8EQE3q5lRfBZGAnVCUlLKSaaiuMNtGXSMDtk+tJD+JxzHYaHyOTBmAH1pIQwWGTUWeEpHVAB4wqRlVPAlTxyyylIiSMXviFRAx+7YcfI4jpPS3YmvfR3yz0SHGAHCdqh5vIw8VDjYV+e0GAHtMCmaOvxDFwQpLcWh/xpcfh6rSw4xq3I4ORP/0hqVE5GeRsPEkkAPgNlXlMcbkGZuKPCYiO2B46mDAKcGsCZdaSkT74kgQsyaa/71zhJT2xe1o99JwngjgKgtxqECwqch/PwewzqSguvIUjB4521IcGs7UsWdiZGiiUU18fRPimzhCSvs2+NyzXh6N3aKqpTbyUP5jU5HnRCQK4MuGVZhXfS0EvAuaCaFgOaaPO8+sKJFAZGWDnUCUNzQSweBqo937AWAygK9ZiEMFgE1FARCRFQCeMqkpGzED1ZWnWUpEf+2gMWch6Iwwqom+/hrcri5LiSifRN943cuJtV/ihljkBZuKwvEVABGTAi/7JZC5iRUnG3299vfzFFJKnusi0lBvWjUOwDwLaSjPsakoECKyAcCtJjWhYDlmjr/QUiICAEeKUFxkNm0TfeVlaMSoP6QC5/H9Up7uHJT/2FQUlh8A2GJSMKWqFqUlUy3FIVdjSLiDRjXBOXMtpaF8VbKwzrTEheECbyKATUVBEZF+AN8yqwlgXvV1ABdtWtPd967R1wcmT0bRYYdbSkP5pujgQxCYavzB4CkRabORh/Ibm4oCIyL3AVhlUlMxah7Gjz7OTiDC5najNbQAgJIzaiChkIU0lFeCQRTXLDCtcgF830IaKgBsKgrTlwDETQrmTrwKAYeLwW3Y1b8ObbteMaqRsjKETjzJUiLKF8XHfxzO6NGmZb8Tkdds5KH8x6aiAInIOwD+x6SmuKjK/DhuSlpTy71IuFGjmuLjPw6nsspSIvI7GTUKoRNONC3bA+AmC3GoQLCpKFzfBWA0vD5t3DnGuz5SciKxTmztMHwMEgigpKbGTiDyvZKaBV4ekf1YRJpt5KHCwKaiQIlINww/kTgSxOyJl1tKRJs7nkQk1mFUE5w7D8EZMy0lIr8KTJzoZTHvNgC3WYhDBYRNRWH7NQCjh/njyo/FmLKjLMUpbK4bxfqWpcZ1JQtrAYffyvR/ShbWAWI8sfXPeyfEiDzjT6ICJiIugOsBqEnd3Oqr4UjQTqgC17rrJfT0vW9U44wdi9DRx1hKRH5TdOhhXkZIXwTwkIU4VGDYVBQ4EXkJwF0mNSNDEzFlzCJLiWhd891QNTvOvPjU0yAjuKV6wQsGUXz6GaZVLoDrRcTowwXRcNhUEAB8A8Auk4KZ4y9AcbDSUpzCtjuyBc09zxnVSEkJik/jAXCFrvjjJ3gZIb1TRF61kYcKD5sKgoi0ArjZpCbglGDWxEstJaINrQ8injB7vB362NEIjB9vKRHlOikr8zpC+h0LcahAsamgv7gdwNsmBdUVJ6NiFA8ytCEa78Wm9j+YFYmgZNFiO4Eo55WcUQMpKjIt4wgppRWbCgIAiEgcQ4s2Taowt/oaiPBtZMO2zuXoHzT7eR+YMhVFBx9sKRHlqsCkSRwhpZzA3wb0ARFpAPCoSU1ZyTRMqjzdUqLCpppAU8u9xnXFC2q9fGIlHytZUOuljCOklHZsKujDrgdg9INm1oRLURQotRSnsHXs/hM6d79pVOOUlyN0/MctJaJcU3TY4QhMmWJaxhFSsoJNBf0NEdkK4GcmNUWBUswcf6GlRLS2+S64anT+G4pPPMnLFAD5DUdIKcewqaDh/ATAJpOCyVULUVpykKU4hW0g2ortnfVmRd5+2ZDPFJ9wIpzyctMyjpCSNWwq6CNEZADADWY1DuZNug6A8dbAlISNbY8gGjfaSmTvzops9PKVU1aG0MdPMC3jKaRkFZsKGpaIPALgGZOaipFzMWE0n+XbkHAj2Nj6sHFdSa2nMyDIB4prFngdId1pIw8RwKaC9u9rAGImBXMmXoGAU2IpTmHb2b0KvQMbjWoCEyYgdBQPgMs3gUmTUXToYaZlHCEl69hU0D6JyHsA/sOkprioCtPHnWspUWFTKNY13w3D899QfNoZkBI2evmkpK7OS9kNHCEl29hU0IEsAWC0A9NBY8/GyOKJdtIUuF39TWjd9bJRjYwcieKTT7GUiDKt6PAjEKieZFr2IoAHLcQh+htsKmi/RGQ3gG+Z1DgSxJyJV1pKRE0t9yHhDhrVhI6dD2fcOEuJKFOkqAjFpxlvNscRUsoYNhWUjN8DeN6kYGzZ0RhTxmf5NgzGurCl4ymzIsdByUJPuy5SDgmdeBJHSCmnsamgA9r7Ced6AAmTunnV18CRoJ1QBW5Lx1OIRDuMaoLTZyA4e7alRGSbU1aG0HHHm5ZxhJQyik0FJUVEXgdwh0nNiNAETB3DUzNtcN0o1rfeb1xXUlsHBAIWEpFtxQsWcoSUch6bCjJxI4BOk4IZ489HcVGlpTiFrXXXy+jue9+oxqmoROi44ywlIlsCkyej6JBDTcs4QkoZx6aCkiYiXRiaBklawCnB7AmX2wlEaGq+G6quUU3xSadASnkAnG+IDN1hMscRUso4NhVk6pcAjI7NnFhxIipGHWwpTmHbHdmCnd3PGtVIKIQSngviGx5HSF8CR0gpC9hUkBERSQD4Eox2YBLMrb4aIny72bChdSliiT1GNUVHHOnlFxVlmMcG0AXwFY6QUjbwpzwZE5HVAB4wqSkrmYZJlWfYCVTgYok92NT2B+M6j7syUgaFTjzJy6Oq33OElLKFTQV5dQOGxtWSNmvCJSgKlFmKU9i2d9VjT2S7UU1g0mQUHX64pUSUKqe8HKH5xotq9wD4joU4RElhU0GeiMgOAD82qSkKlGLmhAstJSpsqgk0tdxtXFdSsxBSXGwhEaXK4wjpLRwhpWxiU0Gp+DcA60wKJlcuQFnJNEtxClvXnnfQsfsNoxoZNQqhE060lIi8CkyegqKDDzEt2wbgVgtxiJLGpoI8E5EogH82q3Ewd9K1AMROqAK3rvluuBo3qik+/uNwKqssJSJjIjyFlHyLTQWlRESeBGB0EEXFyLmYWMFPxzYMRNuwrXO5WVEggJIFC+wEImNFRxyJwMRq0zKOkFJOYFNB6fAVAEbHZs6ZeCWCzghLcQrbprbHMBjvMaoJzpmL4IyZlhJRsiQUQom3U0g5Qko5gU0FpUxENsDwWW4oOBrTxp1rKVFhS7gRbGx9yLiupLYWcPgjIZtCJ53MEVLyNf4EoXS5GcBWk4KDxp6FkcXGt3kpCc3dz6F3YINRjTNmLELHHGspER2IU1GBYo6Qks+xqaC02LtA7EaTGkeCmFd9jaVEhU2hWNd8N4w2PgVQfMqpkBEj7YSi/SquWQAEg6ZlHCGlnMKmgtJGRO4DsMqkpqr0CIwt+5idQAVuV/96tPS8ZFQjJSUoPu00S4loXwJTpqBonvH5OBwhpZzDpoLS7UsAjGYa51ZfA0eMN/mhJKxvvR8JN2JUE/rY0QhMnGgpEX2ECEpqF3mp/DpHSCnXsKmgtBKRdwD8j0nNiNB4HDT2TEuJCttgrBtb2p80K/L+S448CB11lJcm7iUASy3EIUoJmwqy4bsA2k0Kpo87HyVFYyzFKWxbOpZhIGr0zzF0O958R0cyJKEQik8xftzEEVLKWWwqKO1EpBvATSY1ASeE2RMvs5SosLkaw/qW+4zrPJ49QQaKTz6FI6SUV9hUkC2/BvCKScGE0SeichQ/HdvQ1vsquva8bVTjlJcj9PETLCUip6KCp5BS3mFTQVaIiAvgehjONM6bdB1EAnZCFbh1zXdDNWFUU3zCiXBGj7aUqLCVLKgFAsbvdY6QUk5jU0HWiMhLAO4yqRlVPBmTK2ssJSpsfYM7sKN7lVlRMIjiM/jvkW7BadMQnDvXtIwjpJTz2FSQbd8AsMukYNaEi1EUKLMUp7BtbH0IscQeo5qiQw5F4KCDLCUqQCIoXujpFFKOkFLOY1NBVolIK4a28E5aMDAKsyZcbClRYYsl9mBT26PGdSUL6wDhcfXpEDrqYwiMH29axhFS8gU2FZQJtwMwWiU4qaoG5SN4aqYN27sasCeyzagmMGECQkdx59NUSSiE4lM9jZBezxFS8gM2FWSdiMQxtGgz+RoI5lZfA4CfjtNNNbH3XBAzxWecARnB4+pTUXzKqZBRo0zLfi8iRpNURNnCpoIyQkQaABjddx89cjYmVpxkKVFh6+57F+29rxnVSMkIFJ90sqVE+c+pqETo2PmmZRwhJV9hU0GZdD0Ao4VmcyZegWCAp2ba0NRyL1yNGdWEjp0PZ9w4S4nyW8lCTyOkP+EIKfkJmwrKGBHZCuBnJjWh4GhMH3eepUSFbSDahq0dz5gVOc7Qok0yEpw2HcE5c0zLtgH4hYU4RNawqaBM+wmATSYFU8csxsjiaktxCtvm9scxGO82qglO9/QLsnCJoKS21kslR0jJd9hUUEaJyACAG0xqHAliXvW1lhIVtoQbwYaWB43rPN7KL0ihjx0NZxxHSKkwsKmgjBORRwAY3XevKj0cY8uOsZSosDX3rEbvwAajGqeiEsXHHW8pUf6QkhIUn2Y8QqrgCCn5FJsKypavATBaJTi3+io4wlMz00/x/s47oWbHtCB00sleTtgsKMUnnwIZYbzQmCOk5FvcBICyRlV/jqHmImlbOp5C666XPV0v6BSn8bAySetUiiNFCDihtL1ewBkBEbPPDBNGfxxlJdONamJvvYWBp56AhEKA4/EzSlERxOujlGAQEgx6qw0EIEUe/84dgYSK9/81RUUYceZZpo+J+gDME5Ed3oIRZRebCsoaVS0DsBYAV2ESDfmuiPwg2yGIvGJTQVmlqtcB+F22cxDlgO0YukvBiQ/yLa6poGz7PYDnsx2CKAfcwIaC/I53KijrVPUYAK8A4IwiFaqXAJzMiQ/yO96poKwTkdcB3JHtHERZwhFSyhu8U0E5QVXHYGjR5phsZyHKsDtF5FPZDkGUDrxTQTlBRDoBfD/bOYgyrB/Ad7Mdgihd2FRQLvklgD9nOwRRBv1YRLZlOwRRuvDxB+UUVT0ZwLPgok3Kf+8CmL/3PByivMA7FZRTROQFAN8ADPeMJvKXLQAuYkNB+YZ3KignqeonACwBMD/LUfKFC2BXCvXFAErADyKpcDHUTNwH4Oci0pXlPERpx6aCcpqqTgAwGel9r+4GEE/j68X3vmY69YlINM2vmRJVLQJwPIBZGGow/toghhYdpmIXhn7xehXF0NkZqegFkLCUIef+TYmIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIgoZTz7g3zl4lVrT3Uh38t2jgzoF2BQgW6IRKG6DSobXZVNkMCGx2pm9GQ7IBHRhwWzHYDIhKvOBIjWZjtHJnxw9rvu/f+JwhEF4OLCVU3rAPdlwPmjqLvy4Zp572cpJhHRB3ingnzlwsamiyH6YLZz5BoF1jqKxwD3oYdrDl6T7TxEVJjYVJCvsKk4MBG85kL/vdvdee+qmpp0HvFORLRfTrYDEFF6qeJYUbmzSia/d9HKdRdlOw8RFQ42FUT5a7Y6eOjCVeuevfC5pmOyHYaI8h+bCqL8dxpcffmixnW3XPLOO6FshyGi/MWmgqgwBFXwzUR76IVLGtfPznYYIspPbCqICorOT4j78sUr1y7MdhIiyj9sKogKT5XryNMXNq79u2wHIaL8wqaCqDAVQeRXbCyIKJ3YVBAVLoHIf1/Y2HRxtoMQUX5gU0FU2AIQvYsjp0SUDjz7g4hK4OoDl9RvmP9g3axd2Q7jJ8uXL58qQblyuD9z1Pl1bW1tZ6YzEWUTmwoiAoDZiaLEfwG4KttB/EREZorKLcP9WSKR+AMANhVUUPj4g4j+4kqOmhJRKthUJKGxsbF0RcOKS7Kdg8i2hCP/edaypuJs5yAif2JTcQDPND4zO+7GX3LUOTvbWYhsE2DeiFH6qWznICJ/YlOxH+Fw+MxgIvgKFIdnOwtRxii+eUZjI9dbEZExNhXDUFVZ0bDimwp9UqGV2c5DlGEzxmDK5dkOQUT+w08jH9LY2Fha31D/W4FwQ6AcNCra/3T/yBGzkvnahOpYx5WXLcb5nSju8VSpGO06KHcE5aooB2S2AEcr9BDkwPelCj4N4O5s5yAif8n6D69cE3fjP2VDkbvuWnxUH4CNyXzteeGNfU4wbi+MYsPDNXPD6XzJTzVuKtkj0eNU5EooLlMgS3fK9IxLGtZOfnDhvB3ZuT4R+REff3yYgivfKWt+VzMj8tAZ855/+PS5n+/vl2pRuQZJNlFp5sQDzqVZuC4R+RibCqIc9fTZcwYfrplz90C/HKqQXwDQTF5fRLlnBREZYVNBlOOePnvO4KNnzPlnBa7P6IUVp1yyVAMZvSYR+RqbCiKfePSMuf8uKt/K4CVHx8Y1HZHB6xGRz7GpIPKRh2vm3KLQpZm6nuPovExdi4j8j00Fkc+Ik7geQH9GLqYyNyPXIaK8wKaCyGceOe3QZgF+naHLzcjQdYgoD7CpIPIhdeTODF2qIkPXIaI8wKaCyIceOXX2GwDaMnCp0gxcg4jyBJsKIj8SUQjesH8hHWX/GkSUL9hUEPmUAJtsX0MhUdvXIKL8waaCyKdU0Wv7Gg5kwPY1iCh/sKkg8inRTGzbrXvsX4OI8gWbCiKfUkG5/WtIq+1rEFH+YFNB5FeCmdavoW6z9WsQUd5gU0HkR6oCxcesX0ewwfo1iChvsKkg8qELn19/NIAJtq+TgPuu7WsQUf5gU0HkQ+LqdRm4zGC0L7guA9chojzBpoLIZy559v0ZCnzG+oVE1jx99pxB69chorwRTOeLhcPhMap6hIhMc+FOduCUu3ArBCIAdim0B8AuB86ORCLx2uLFi7el8/p0YEuXLg1VVlbOE5FDAUxw4ZY6cMpVdTQEDoBdAom5cNtEZbOqbikqKnq/pqYmku3sBCxRdd58tulOycT22aovWL9GGtTX1492HOcw13UPU0erHHUqFVoGIKjQHlHZrY5ucdRZn0gk/rx48eK+bGfONY2NjaWxWOxgBDFJElIqIqUu3DIHzm5V7dGA7gkiuKWjo6Pp0ksvLegN0RobG0ujbvQYx3XmqaNVAqmAiwoRGVTVHhXtFpVuEflTV1fXO5deemkiW1lVVcLh8MEicpSKjlXVKlGphGAkFL0qOiAqzSLSlEgk1qbjd7KkUrx69eqygYGBcyFYDOAMAAcZvkQbgFdV9LFoKPrwOaee051KnuEsXbo0UFVVdV+yX6/Q+RjmZEaBbAbwajoyuXATi2oXXZGO1zqQxsbGEtd1axKa+KRATgMwG0CR4cvEALwJwUui8nggEFhVU1MTT3/a9DovvHFCMBhvsXYBxXcfqZn7A2uvP4wLn236F6guycS1VPXUR2vmrc7EtUwsX758lBTJQrg4WyCLYHaSakIgbwN4xnXdJ+rq6l4UEc/7faxYseJ0cWTVcH/mJtxDFi9e/L7X17Zp+fLlBwcCgUUKrQNwBIBpSZbGAWyA4hUVXeHAqa+trc3JseNwOHwqgC9/+L+raEfdwrovmLzW8pXLP+4knKshWADgYCR/l3+PQF5X0ZVu3H0gE++H5cuXj5eAXANgoQPnBIVWGpRvAdCgjv6hp6PnKS8NkaemoqGh4fiEJr4qkE8CGOHlNYYxCOBpKG6vq6tblabXRGNjYzCeiMfS9XppEq+rrTP9xW5k+crlxzoJ558hOBfp/1TbCcG9DpzbFy5cmLPTAXnVVKjKRc+u/65Cv5+R6wHNR54+Z8oSETdD1zug5cuXH+44zhchuBrpek8r1gP4DYBf1tXV7TIt91NT0dDQMFlVP6PQTyN9R9orgJcF8utAIPBATU1NzmyWtiK84mqB3DXMH22tq607YBO1dOnSUEVVxecF8gUAc9MUq1EgP62trX0mTa/3geUNyxcENPCPCv0kgFCqr6fQ7Q6c/xoYGLj93HPP7U+2zqipCIfDR7pw/00gdeYRjSx3xPn2woULX0/1hQqtqQiHwzUu3G9l4N8IAFwIHoo78W+eVXPW5gxcz0i+NBUXvLB+vBNP/EpVPmn7Wn+horc8evq8b2XqevuzfPnywyUgPxXIWRYv0yuQ2xKJxE9NHo/4oakIh8NHAlii0PMABCxeajcUv3Fd98eLFy/OxAm6+5VKU1FfX38RgFsgmG0nHcKOOP+Yjg9le/99b1XogjTkGs4OFf36ooWLkrrjn9QtnDVr1hTVN9T/WKGvZ+iX1WJX3TX1DfX/vmzZsuIMXM/3Ghsbx9Y31N+j0JUZ+jcCAAeKS4OJ4LvhcPi7jY2NaV2jU+g+8fyWyosam26UmPteJhsKAAnHkf/N4PWG9cwzz1TVN9T/ygk4f7LcUABAuUK/JwF5v76+PpN/19aEw+GZ9fX19yr0DYVeALsNBQCUQXC9E3A21DfU37x69eoyy9dLu8bGxtL6hvoHIHjIYkMBALWuum/W19df6/UFlixZ4tTX19+k0FctNhQAMFlU7q0P19/Z2Nh4wDuEB2wqli9fPr67p/s5KG6E+ZtyAECzQrcDMF0cJVB8uShU9FI4HE7Xrae8FA6HL4u78XehuDJLEUYo9F/jbjz8zDPPVGcpg+9d0vhO6UWN78+/cFXTFy5c1fRocWKwWUV/DKAqs0n03odPnbsxs9f8W/X19Wc4QedNKD4H+78MPyCQKRA8Vl9ff8cTTzwxMlPXTae9i/P+XqFvQnAFMj/lVwrFTQORgbdWrFixMMPX9uyZxmdmx934S1BcmqFLjoLgznA4/EPTwsbGxoqTTzn5KQhuRhoedSTp2ngi3vjMM8/s9+fRfj9Z1tfXHwRBI3DA7YBVoS85cJ5X1VcqsWcBAAAgAElEQVQdx1njOE7rhycGli5dGqqqqpriivtxKE4QkUVQHHyA1z5aoWuWNyw/Z/HCxc8d4GuHJZCkF4D+ZdX4MH8UFUhaVo2raFoWOaqqhFeGf6SqNxocLdUGxZ9U9E+i8o4GtMdxnd0JJ9ELABKXkkAgUK6qk1y40wRyJID5ACYfOBBOd4LOKytXrqxdsGDBWq//u/xCBYsualzn7dm+aEjhlAl0tELHApiZgOy9JZuBc8L2LSoSvDlbF9/7nv4eFN8TiOkvwz4A7wnkfYX2CmS3qkZEpHTv9/U0AIcgmQXlgk+XjCj5WENDwwULFy7cYv6/JDsaGxsnhhvC9wKoMSgbAPAOgHehaFLRbgfOHgARAKNVtFxVq0XlcAgOQzI/C4ZME0fq6+vr/7O7u/ufc3lqpKGhYZabcFcj+Q3ldghkw9732QAA7J2gmwhgFoBRyV5bod8Oh8OB2traG5P5+mXLlo2LJ+LLARyd5CX6AaxTaLsDp2fvNUcCGI2hhfsTk80KYH4wGFz55PNP1uxrsGKfayrC4fAYFV19gF/6bRD8yoHzO6/PhhoaGk5KaOIzArkG+++4+qA4J52LOIezIrziBYGc9OH/LpDf1dbWftrmtU28+OKLI/r7++9U6CVJfPk2gSxV1Ydqa2tf9rLaPRwOH6qiF0DxaQx90+xPi0AW1tbWZnU3RutrKvKS/OiRM+Z8JxtXXrNmTVF3d/f/QJDs95kL4DkolgF4pra29u1k3ttPPv9kZclgyUIX7pkCOR/AmP18+Q4o6urq6t4b7g9zaU3FihUrPiaOPA5gahJf3grFfero00VO0XMmI+MrVqyY4zjOWXsfqZyO5NbmPR+Lxi46++yz25O9TqqSXVOxfPny8Y7jvHCAxx07FXo/HDTEI/HVZ599du++vlBVpaGh4RBVPR2CSwGchiTuFgnkH2tra/9nf1+zbNmy8qJQ0Srsv6FIKHQFBI9rXFctWrRo7f6+L558/snKUCx06t5pqssx1GwcyPLuru5PDDcdMuybQVUl3BB+HMA5+3hBF4pfDZYMfjtdY6ArVqyYI478DMD+nmf2u+Ke5fWORVI5fNBUvPjiiyP6BvqehuL0A3zpFih+WFlZ+bv58+enZbHqkiVLnJNPPvl8CG4BMGdfXyeQzYFA4LiampqOdFzXCzYVxv4cKy098Yn5k5Je6Z0uS5cuDVVWVT4C4BNJfHmvQP43Hoj/95k1Z65P5bqNjY0lMTd2iaPOVxR67LBfJGiHi9OHayxypamor6//BAQP4MCfkN9Q0Z/1dPY8nI47B/X19YeIyBcV+ncADrT+bVPACZyVqbuYyTQVjY2NwVgi9oJAjt/Hy6yB4gfd3d1Pet1vYm8T9j2FXon9NxdRKE6oq6t7Y7g/XLJkiXPyKSc/BeDMfdT3C+SXInLrwoULd3jJ+sQTT4wsKSn5Bwi+g/0324Dih3V1dTd9+D8P21SEw+HPKvTX+3ip3erqBYsWLWowTpyE+vr6iyC4A9jnsc6t6uoxixYt2mnj+rneVDQ2NgYTicQjCj13P18WE8jNXV1dP7F1y3HZsmXFRUVF34Xg29j3J5VV3V3dtdna/IVNRfIE6E4k5LjHFs7J+IjwkiVLnJNOOemevZ+S9icmkF9Fo9Hvp/sT795Pl5cp9EcYftxyWzAQPKmmpmb7X//HXGgq6uvrF0PwB+z/l/o2hX77xdUv3rtkyZK0jwk/3fj09KAb/CEUV2D/dy52qqtnLFq0qCndGT4smaYiHA5/a++/+Yd1QPGV2tra+1LZx+SvhcPhUxX6O+x/OcFbwUDwmOH2Aaqvr79p7xqK4Tymrn4xXb8XGxsbx8YT8d9h/01+POEk5p+54Mw3//o/fqRramxsLFXovoJ3OeLU2mooAKCuru7hgBM4HoJ9fTNOkIDcW4iTBqoq8Xj8jv02FIL31dWTamtrb7b5DPPss88erKuru0kdPR9Dz2SHc0ZlZeU/2cpAaeMmoFdlo6EAgFNOOeUXB2woBO874pxQW1v7JRu30EVEa2tr748MRA5X6HC3oKfGE/FHGxsbS9J97VSEw+EaCB7F/huKe6A4YlHtorttNBQAcFbNWZvrFtZdpY6eA2B/m2FNgoOV4XD4QOv0rAuHw3MV+r2P/IHgWTfhHlZXV3dvuhoKAKitrX1eIMdDsb+dao+IJWL/MEzWIyH4aFYgqqKfq6utuyCdH7Rramo6ahfWngvBrfv5smDADfy3qv5NE/mRpiIej38awPAr+BWfWbhw4SsppU3CggUL1orKGQCGv02mOD2RSHzXdo5cEw6HvwPBNfv5kueDTvDERYsWrclUpkULFj0ukAsxtHnZRwlufrrx6emZykPGVEX/6bEz5j2djYuHw+GrFPqVA3zZPZH+yLHp2LfmQM4999z+RbWL/hGKi/DRibX5sUTsNtsZkrVixYo5Cn0E+96AMAbFZ+tq6672srGXF4sWLFrmJtwjATy/r68RyBSFPpntkVOF3g7gb5pEgdxdObqyztY+G7W1tZ2u6y5W6D5/jwr+f3vnHh9HWf3/z3lmN2lCS7MpIsilIi2Vm0CJlF5o2ezMbgxUpdAo9VYRQS4iKCg/xa+L/H4qCl4QBVEBFbks0qIpIbszmwWahlu5qdBCuQj4VSg0Kb3k0uw85/dH0pLLPJtssjO7CfN+vfpH5zw7z9nN7syZ5znnc+h/2tra9vxNmZkYfCOGKyFvJ5AejURVuwrjgojYiBhfB/DrHMNOtCyrfuCB4fs7hK84z4DbDcP463iczAdd198UJCIAXnGyM/ibyWSyUKpwJU8ynawFIa4cwPjbXpV7xcLh8FbvvOpD1/VmMC5RmPcK2sHveeqQz2iRxHzR6iVzflWMyftvirkuWGDwdeta130+H0W/QmAYxioChdHXSmAPBDo3nU67rZkxIplMZipptApAlWLIDkHiE4Zh3OylXwAQi8U29+7qNcDIJZZ0eFdX123xeLwoTS1N0zwaQGzQQUKivb19ZaHyz1TEYrGdbPNSAP9VDNl3R9eOPV2ILcs6DcD8IWO6WPJSXdeVwVuhCFWFLh5hdWXQA/6gP2i/HsQRTq/SSPv++N3Lj0gk8r/92dlOmclTSKMfe+1TMWhubt5fsLgd6nr9TEdHx/IFCxaotiFcxzCMGwA4Bp0M/mxzptlNIRmf/NlOzKffE55zfTEmTyQSGgm6E+rcKYDx3age/ZpbS/Yjoev64/2BRfvA45LljcXWsMja2RvBOEph7iZQfSQSKcrqE9C3Pbpu3brPgnC7chDh4wtOWnCZh24N5BIMzv1YHxCBL3iV/xWLxTaz4LNVdsHi3Yd7wnBlW8ZXotHog+54N5iamppeIjoLgPN2OmFesiW5J8l5UFAhIZ2VGBmPFkt3QNf1vxPoW042Ap3R3NJ8jNc+eQ0FqQaKMh8GPxvQAstKoQZc2vISOAeAAU1qfm5F6fAIkXb8PeE59xbLgdCM0HkA5ioHMK43DMPTZm1O6Lr+HBinYPBWyMFTKqcU62aIZDq5FMBnFGabiVd48QQ7EvF4XIamh1YyWBncENOVpmke7qVfAKaDBgkFbhckzvC6E3O0NtoEYI2TjcHHNLc0H5NOp+eiTydoIDcbhvFH1x0cgK7rL4BxncquSW1PEcOgoKJf6Gg4Ao0F824MRCKRXw5dfmHws2DUDc08nYzEIrFGKeSi/k6peyBQh0baKcXY8nAiFou9AoKzvDNjhS+5XnSyYL5S2zx70T1LDnU9+16FZVnvByuz2EGglo6Ojou99CkXhmE8wuDB28KMy5LJ5L5e+9LU1LQ3MSm3jBj8/WgkutpLn3JRU1PTG9SCDTkS78sB3JJIJDxTTUXfA9qeaxGBriiWwBlLVuYGaqx90mb7nCGH37SzdlEC2kAgcC2cHxrB4E/v/hsO3s8izFG84LVCO5gPRMRSk99An9TgZiY+L6gFjzUMI1lMv7wkVht7IpvNHj8w6mfmr5Sa2p8t7OvQJ0o0lBnBYHA0GgQ+7vCIZHx0VXhO/O4GKkqJ726Y+QqocwE2Syk/V6wyZBVRPXobGLcMOLSXpmkjJZgWnGBZ8AoCHehkI1BLW2tb0Vd3hhIOh3ewzWdCcUMCYV51dfVKT516l+fb29uLklMEANFo9GmokloZpxNoxZBjV9bV1bU7jneZcDj8BoPvUphnzJgxYx4wNKhgOPZdFyz+7XTcS2K1sUeZ+DO9u3pnRyPRG53qeCc7dXV17W2tbaeCEGfw7w3DSBTbp6H0ixE57/XRqISNfAoKvUDAilVLZi+4N3zY08X2JpPJ7AfCl1R2Jv6KWxo046WiouJrAPaICjH4fE3TPMutSKVSHwBwocLcSURnFSv/ZCSi0ejTTBxX2Rn8vWKU6xLoqmIHsEysSqY9GsDACpnXOzo6fu+BS0oExJ9VNpvtOmB4jwvHPgbMXNRmBLsZbevVyUz/RePKobXBpQSD7+lPcBt6PFoMf96rEOFG8easC4u9MjEQ27YvhaIEksH3l9LS/VAWLVq03bKsbzD4zv5DVczsVfMpkEZXgBXlo4QflNqq5VCCInht1s6uAOC0zX6QbdvnA/iphy69WVVVVfQHM8GikcFZjNCLC4TfFDt3rr29vSVUHWqHQ5NDIloMDC8pddYaGEmu08dzCinKUmgEhGNiFoEOTKfTI/UN8SkQzDjX3nfTbz/eurEkWlC3tbVV9Ms5O2ELiJLJo1Ch6/pdDG7b/f9R9t4ZN5lMZh8wzlKYX+/t6b3GCz/GQzgczhLoUpWdwZeuX79+qBaDezD+5Hb56GjQdX0LGE+MMEwGROAPnjiUg4aGBhuEBxyNjLnxeFyIwcd4u+NggWML7p3PpEXX9ZehqMFm5tF21vMZPwTgi4GsaPtkelPRg7nOzs5lUFQxEegOXddf8NilMaGRNjBvYdTdKMeDbdtnQaGaSaBr6uvrVQ+EJYWu6yaAVoV5/46OjtO88kUIUTqrYgJtI4x4bKhEfBHJKI5PW7hw4Zyh1R+vOw6VcC419fFR46gYx8STvgS4BDlKaNy2/KFNjho0XsHglUoT8EMPXRkXtbW1zQAcmz65QTweFwweWgXQB+Gtrq4uVxQV3UKQcOq1AQAgogs8cqN9y5Ytj3o014gQU86VilxluV7DNuf67h8xNKh41nEYYV5/vayPz6ggkGMJGTE5Vhj5uM6+tmRr+YMbi6JC29TU9D4AtY5GwkO6rj/nrUdjh4iYiW/yar6FCxcuAKBaabrNa7XR8dIflL3sZGPwYo/6gjxc7ATNIeRcpWNi1eqO52Sz2X+g70FgGER06GDxK5JKKU5m/lkpJwf6lBZM7CiWJiEP8NoXnz3sb7O4b7n5kuMWhJsEygN1ULR97u/cOKEgSXdA3UivsHMRfVJls8ku+j57vhARE+jWHEOU77dQMNj1PjJ54hhk9cO9Zb2erYyNRH19/TYAjt2fGTw4qMj2ZB8EsEMxeHE6nY4X3EOfSQkxOe7/EcgPKorL4dmgfYPXk5IkVb+Mnsryyns8daYA9DfoavJiLgZ/XGHaMFHF/4hIqQjJYNeDCgFRUitjmqa9A8XTP4A3Tj3p1A4v/RkFqkqjDwwKKvqTfXL9sb9rmuYVhfTMZ3LCzG8rTPt46ojPMAg4c9mDm1Q3KrcmdczLYvBDixYtck4QL3EI5Po+dyqVmg1gtmJ+T4IaN4hEIq+C8E+FecGatWscNZMKhZTSOX+wSPTrLjluYzG4pHwFcuRfAjOG1cUKEj+VLM8GUOZ8Llxlps3jAiJwbjgcVt04fHy2KI6r2jRPPJiWrwrP/kuuIR9r2lQuppVVVlJ2WjYrDyDiQ1jiBBI4EYy5GN7O2BtYXrf82Web7z7ySNfr3vu7CTsGk8Tu35jdQtO0ZNbOMgY3piooQogFrHyARbNb83oC437AsSmaNqVnyjy4+P6YuRQF1rbBoZqIQKpupkVDQm4j56/9PsP2OCORyEtg/CTnGRnLbNt+IWWlvtHa2loSNfA+pUVvb69qv1kkEgmngHVScn/97J77TprZcfeiQ19bffLsh1ctOez21eHDLl615LAT9+bg3kz0WQaKsBRLM+XbZZ/1YiYhhDLJWwjhSadFN+gv8XvF5Wk+qjhud3V1jVSGWNIQqEVlY+J5Lk+/c+QhHkN4R3G89HxVf37THROnent7rxoo8OIEg0MEuqaru+vfZtq8rqWlxc/q9xmIsm5+6tSpnsvxliK3hg/pXr1k9p+PWTL7aDAtB9hTRUTJ/M04s+M1oJAQkSqo2NXT0+NccTZBcDvhj8EnKI5vnGhVH0PZtWuXuoyScaKbc++1116eJNnmBTsn/jJz6fmqDirKHS8o9fX1PUEteHqOznID2RuMr9rS3mha5hOmaV7R0tJy5Nh99ZkMVFRUKJfVg8GgX0U0gDiRXBWe/ZeuKeIjAHJupxQSAuY8k3nxJLfnYeJZCtOzE0W0SYWAcLuKwPFhjUBF7+MyXurr698C4NiskkAfdnPujo6OUion3Y1qn6vk+lwRUX5BBdDXkUxm5RIGO4oYKZgLwlW2tP9pWdYrpmX+PmWlPtvfCMfHxycH9584e9tHlsz+FDF51jVRCHzG9UkkZjoe51E9tJQ0zOyaCqhlWTMA7O1kI5BjyfYEZIPTQQYf6Klkt0++qIKKspwNTGKx2OampqbFgbLAjwl0IRR15k4w+IMAziLQWRCAmTY3AsgQU4umaQ/4SZ7e0dTU9L5gMDiHiGZKyJkA3k9MIRCq0Sf9O5VABf0BZ+2s68vqk5E4kQTzV5c9sKkK5MENH3zGyZnM+Q+42fWXcLDjzFR6We35IoR4XbI7jUFtYX9QSOefkaTSql4YM4TXFM/ngS1bthwI93NWfMYAMXUpEohF7q5o2FNm+jXTNO8A4WfAGPe6GB8G8GEGn5e1s9K0zKdBSBFTateuXW0TfRm0VEgkElpVVdVx0BAhpkUAjgNwAAAwGHsydodsQOTIMPfxGiLeK/nMuTvLKz8K8GFuTsVAaB9x0AnAiL0HxkQ8HhcA3u9kU2mZTCR6e3tf1wKaK+fOpekiWEz4zw4AiOl15bUngIPgBxUTjhGDit0YhvEIgPmmaZ4CwoUAoshj5WIIAsBcMOYy+PJgWXC7mTYbIZEIBALJcDjcPcbzvmdJp9MLmHkFEzeA8T4/RpjY/Cl2zM7TMi9+jch9zX9m1uFSUDF//vwKqK8TqrLjCUN5eXlH1nZnkYdsmqoqVmXmCf/Z9aN8H0Q01UtHfApD3kGBYRj3GbrxMQLNBuFHAAqxDDcNjBUg3Ju1s2+aafMmy7KK2vxoIhCPx4VlWZ+yLGu9ZLmOwReA8b5i++VTGFaHZzWD4HrJpQTrbp3btu1KlY1FSWa150X/A5ArSX8sWPnZSSkn/GcHAJKkuoKFvekA61NYxrzvrev6y0bE+D+GbhwsSBwPxpXo69w33mfkvcH4MoP/aVrm/cl00rkJ0XucZEty3sJFCx9h8J0MPr7Y/vi4AzFd6/ocwLyl6/+jvIGNh2AwqBQ7EywmxY0RgDsrqzluqoFAYFJ8diQpV1msH1RMQEa9/ZGLSCTyJIAnAcSTyeS+QoiTmbiWQLVQSMyOAgJQJ1jUpazU/QLiYl3XXcu0nigkEgmturr6f1jyFRhbULgZfWJLLwPYQqAuSbJTsOiQJLtQwAskgX7lr5yMD7F5VpO976Y3ochLKBBlgZ3bTgSgFCPyyYk7mZrvAYhIqnIqCOSXnk9AChJUDCQWi20GkOj/h2QyeZAQIjwgyDgo33MS6GMMXmJZ1mW6rv+6wC5PGBobGyunVExZxeDYKF/SCaCFwRYk1kspN9TV1bW76eNALMv6MYP9oGIc3N1A9ukPbPobg7/s5jwkaTFcCCp6e3u7gmXOhUWS5GSRbHdllYeYOlU5FUQ0WQTk1KsRsiSVJH1GoOBBxVBisdjr6GtS9kcAaM40z9KyWpiJawVEjMGjbRxTyeBfmZZ5fKgq9JWamppe15wuQdra2ip2du1sAmPJKIY/Dsb1gUBgVTgcduw66zNxsCFXC5CrQQUTjeZ7lTcVFRVdqkRGkjThg4qmpqZyAO6Uf+SQks5msxP+swP6Akti5YKEH1RMQFwPKoZSF657EcCLAH6bSCTKqvap0iHRQKBPAKgaxSnOat/avncikfh0Q0NDKaqiuUJnZ+dNwIgBxQYmvjgaiaa88MnHG3o6RUtFJW8H4FqfHQJOXJl5Zcqt4UMKmh/w1ltvdYWqQ45Nt5hG/UBRspSVlVW5WI6tvKkKISb8ZwcAgkUox+fnBxUTkKIKFDU0NOyK1kabonp0ZUALHATCJVDItg6EQGdUVVf91AMXSwLLsr7E4FzNnxiMazraO471A4rJx/31s3sAetzlaaZsE72OfSbGQ3/gv9nJJiDy3gotNaSUrr0HIYSyO6UkeaBb83oJMzsKowGAHbAnhRbHe42SUT0Mh8M7jIjx81BVaBaBzgbhrVzjCXSRZVmf9Mq/YrFm7ZoQE/8wxxAbjJWGYVzW0NDgehtrnyLBeMqDOVzZAoHiQSHXDWWiIIRw7ebe09OjFn7i/HPTShJSvg8puyaJauh7jJIJKnZTU1PTq+v674npcAD35RrL4F+0tbVNir1FFeW7yr+eq4KCQBcYhvFHL33y8R4W7gcVTN4GFaAxV4aVEh9y68T9Dbccc6KISdWkbaLh+D4Y/B9fZXliUnJBxW50Xd+iR/SlYFyfY9jBnZ2d53nmlMc0NTWVg3GOyk6g23Rd/42XPvkUhwC5H1QQY/7yZ58tc+HULyuOHzUJmkYd5/L5X3Q8SjjW5Xldp7W1dRoUkgMC4j0vHzBRKdmgAgCIiHVdvwiMP6nGMPN5/f0FJh2BKYEYgH0V5m0ALvXQHZ9i8sas5+GWyNK7VNpvah8t9EmZWBUQTWlvbz+y0PN5CYPnujoBQZVLc2QikXAjAPSMzs7OuVDcgyTkox6741MgSv5mTEQspTwPrIzYZy1cuLDgCWalADHVqWwM/p2u62966Y9P8bi7gWyonloLiSh8aWmAAk+qbKTRokLP5xVr1q4JAZjj5hwMfkxhKquurp7YSroCC9UmoXrfPiVOyQcVABCLxXay4G8rBwiMVgxqQsHMi1W2gAjc7KUv+dK/rD292H5MJgjY4PYcjMIHFQ899NAm9K2sDUfiY4WezyvKdpXpcE+jAgBAkpRP7MyjFsErSQjqhyZN0x7x0hefwjEhggoA2Lpl6yoA/3E0MuZ76437ZDKZAIEc9xsZ/O/a2tpnvfYpHzo6OpbmIWzmMwoY2Oj2HAQsOKfAeQ7xeFyC8YBiwpMnarK1YBF1ew5d1/8J1XUPUN6USx3TNKcDOFFhfjocDr/hpT8+hWPCBBUNDQ02GKsU5g976owHSClnAnDcMyXQeo/dyRsmPrvYPkw2vFipADD17e3TC76szkLZwr2ys7Pz44Wez20SiUQZg10vaSciZnCjsxEnJJPJQ9z2wQ1Y8HIAzsEr4V5vvfEpJJ4rao4TVdLSQfF4XMTj8UnT2CdL2SrBiphPlV9SIpimeTAwObekigrRRrBr6o0D5uGHlz2QO/meJZ28unb2qNuyc5bvI81ZjpnBXwRwV14+FpmqGVWngLGPJ5MJ/A0S5zpYSAjxGQD/1xM/CghJWqnqa8I2/9Vbb3wKyYQKKohok0LSVZxwwglTodq3LQyeflaUpanKdSSBrV76ki9E9CWGKiIaH8se2jQXkp0usA70VjioQxcO4nOWPfCCMeI4kY2vWnyEUh1xtOzaa6/ngzt2SJTACiMJysuHWCz2ummZ6wHUOJj1ZDJ5SCwWU4s9lRjEdJZXc2W7s+lgefAthV7NF+Lx+A8m0gOVZVlHMHiBwrzBMIxnPHXIp6AMu1E2NjZWlpeXV0WjUdU+XtFg5q2qe4QQYi8UIKggkKqfiLqbngsIIUQOTfySFYVpbm6uBvBV1yaw8SGQWrtjMK53Th45oACgIfgLAOMOKhprPtC57IEXXgPwwfGea7wIaecd2DD4VgI5BRWaEOKbACaE5oxpmocDqPdqvvr6+h7TMm8FcNkwI2HWokWLlgH4i1f+jBdmvhyk+HEybiAiD5bjfNxiz4Uhk8nsZ5pmfErFlFdJUEn21ZBS5vqyFeZGy9juODfk1IKcf5QQkbKZDnHpdncMBALf9hM03YRdT9YcDXaeKxUAILPyDqh+p4QvZjKZCdHPgoi+jXevne94Macg8RsAqtWIy73woRAkk8lDQDhTYd6J/m7WPhMXkWxJHm9a5m1ZO/saCN8DsA+AZalU6gPFdm4YQXWJ4rZt2wrV4tvxIkEgr4MK5cWKwft56ctoMU3zYAZfUGw/JjMeJWuOiJD5BxV1dXXtDL5TYS7PyuzV43TLddLp9FwGD7wp/tmLeSORyEtgrHGyMfh4y7I+5YUf40XTtKuh2Epm8O8Nw/AkSPNxDyGkuBnAZzA4EzdIROcXySclmtRUmc7thWqmxcSqLZQDCnH+0dLd3f0vqJ5MyF3BnbFCRP8PwJRi+zGpISqRlQo5prwOtvlHUH2vGWdalhUej19uwswkWV6Pd7UpJEv+rYcuXAHFZychr8lkMp4++OSLZVk6g5crzF2QKPmg0mdkBIH+4GghXFJq5UrMrCp1K6ROvCpSPiiTyVQVcJ6c1NfX9xDIuRETY14mkympJFvLsk4d0p59CxQtr33GDjGXxEqFptoTH4FYLLYRpNz/Jwb/pr8nRMlhtVgXAIM0cVb39PR41qPCMIx/ALjbyUagA23bLtkqkNbW1mnMfIPKTqDrSjGPzyd/RHd59y2AYx5BpRAiVzMv7yFFmSLhHwWcRfXFpt7eXk/7FDDzwwrT1F7ZW+ulL7lobm7enzHkiY1xJfoCC58CQkKUxEqFHMP2x7svRhxAr8I6u6urq+Sa5DW3NB8Dxk8GHiPQ1R8ggF0AAA1YSURBVPvvv7/qfbiCIPEdAJ1ONgZfZJrmKV76M1q6urtuADl3JAXwRnd5t79KMUkQp550ageBfu1oJdSbpvl5j31ypLml+RgARzvZGJwp1DzE6uVl0shT5U4iUuoAEOhLXvqiIpFIlGmadjeAgXkeGwKBwA1wvwHWe467F89+C8DbxfYj35LSgRiGsQHAz9Unx5kpK/WNsZ6/0DQ1Nb1Pk9rdGLi1R1il6/rjxx9/fNZLX/pzK+IKM4Fwq2VZrrVjHwuWZZ2Pvi12ZxgXnnrSqR3eeeTjJgIANE37EQhvOY4g3GRZ1kmeeuWAZmvfUpiy2Z6sVah5AoGAukaa4WkylKZpfwXgXOLKOL2/tK1oxONxEQqFbgUNbgzEgi8Nh8NZ+EGFWxR9tYLk2HIqdhPQAt8H8L/K84N+kkqnPjeeOQpBJpOZGiwL3ofBLbp72ObLgT7FS6h+oy4RCAR+RqAnFOZ9GNzc1NTkpGnhOZZlncHg63IMuccwjHs8c8jHdQQAhMPhrQz+pmJMOYNXW5Z1mId+DcKyrJNAzjd0At1fX1/vHBCNgX7NedU+aU0qlXLsx+EG/b6YCrNGRDcWq+17IpHQFixacNOw8jDC7dHaaFP//0pWT2MiQ6Ci51XIcaxUAEA4HN5BoJVQl0kSMd2cSqdWjmee8bBm7ZpQ1s42ARjUDp7BP4hGo5sGHPJ0C6Q/YF8Bdf7X7GBZsDmZTO7roVvDSKVTpzH4Nqibrr1KoFEK2flMFPZcGKKR6K2AUnN9BoMfTLYk53ni1QAymcw+DP4DFCqCRKRM/hkrBFLdyEEaxQs9Xy4Ias0QBi9eeNLCK730BwAymcyUquqqO4dtwRA2BkRg4EXCX6lwBVkCKxXjCyoAQNd1i0A/yjEkQEw3W5b1XWZ2XclsIOl0emZ5T3krgKGrtE9vbd861GdPt0AAQNf1F1jw5wGlQt5cIcS6dDp9qJd+7cY0zfOI6W4A5Yoh3VLI03Vd9/OuJhmDLgwEOhvAy4qx+wkpMl7WQ5umOT1rZxsBOFehMNZFIhFVo6IxY5OdUBoZK5LppGdJkrqumwxuy+HPd8y0ebFX/jRnmmdl7Wwbgc4YYuqUWbk8HA4P1AvxVyrcgIq//cFjrP4YiqZp3yNQS44hxODvW2nr/ubm5v0LMedIpNKp5cz8FIAjhpjesTV7uUP5uudBBQBEa6N/I9D3lAMIsyTLx1Lp1Gle+dTa2jrNsqxbQPg11CsUzMTnxGpjqi0cnwnMoKBC1/UtBFoK9bJaBYPvsCzrFreX1izL+hAID0DdHjfLzK7cTB9e+3ArgOdVdsHiVi/V/6SQ50N94SIwfpayUr9IJBKOXU0LQSKR0FJW6muarT0J4LihLjLx2bFY7J9DjvsrFS4gUPyyUqLx5VTsJhwOZ5l5GYCnRxga0wLa3y3LOtetcup0Oj0zZaXuIKaEgyqsLUl+ri5cN7yZH3m7/TEQXdevItC1OYZUE9OqlJX6XSaTcbUBmmVZRld311MMXpljGBPowmgk+ic3ffEpHsMuDLquPwdGHdR9NIjBK4UmnjfT5oVNTU2q5a0xkUgkNDNtXsjgJwEcqxrH4B9Go1FXWoDH43GZa9sBwEFZO9tqmubQm6sr1NXWPQPK3YmQQBeFZoSeKLR4EDNTKp06LVQdeopAPwcwVEPABuOL0Uj0jmGvBftBhQscuXjOq1CUFXoF8fi3P3ZjGMY7dtauB/DSCEP3YfCNWTv7jGmaKwoVRCeTyUNSVupayXIjgT7tNIaJL4xFYs4tyLk4KxW7iUQil4Hwy1xjCPSlrJ190bKsbxZaBySVSh1rmuZ9DE4ByLXdwiB8Xdd152pDn0mB44XBMIxHBAkDwJs5XlsFxi+DZcF/p6zUtS0tLeNSeWxqatrbsqxzQ9WhDWD8ElBLchOocWv7VldzCaqqqm4B8FyOITNBeDRlpX6Rj0hYMpk8yLKsL+Trz7q1664ikPNFbTeMoxjcYlnWg5ZlfSqTyYxZ3dI0zYPNtHmplbY2EtMqOJfz2gxeaRiGo14/gfztDxeIE0kqrOBb3kgqXFABAHV1df+1s/ZJGHnFAgCOAOHPoerQ66Zp/iSVSi3Jd/Uik8nsl0qnVpqmeZ/QxIsE+jqc1WAZjIuikeiNOU5X1KCCiNiIGBcx8eVQJ74CwHQGX93V3fVvy7KuT7Ykjx9rrsqatWtCqXTqcykrtY4EPQUascFaN4E+Z0QMdSmxz6RA+UOMRCKPJZPJ+UIT9wL4SI5z7EOgr9vSvsSyrL8zeB2DH9ZIe3j69Omv1dTUOC4Nrlm7JlTWVTZXCLFAQs4n0BIGV47oMeFBO2uf2dDQ4GoZV01NTa9pmueCkIH6cwoS6CLS6CLTMjcQKMXML7HgtwWLtwGUS5LTSNJMEGYDWATgMAYjkUjcls97iMfjsrGx8dMVFRWNDM6Z08HgxQAWZ+1sp5k2HyemdQAeFkK8smvXrvby8vKOcDi8ZxWhubl5fyqjg4Ut5gD4KBGdxOBj1E1SAQDvgHFW1IiuyuFHd4G23n2GwH1lpcqVPLchLnz79bq6uv82NTUtCZYF7wGgj+Il+4JwKRFdmrWz2yzLWs/Mz0HgeQZvIUnbiKiHmaez4Gkk6UAmPpKIjsra2SMJNNLXcxcTnxvVo7eO4EdRg4rdRCPRq03T3ATCH5G7q/LeDL5ASHGBlbbesCyrWUKuFxDPaZq2YceOHduWLl3aCfSVjddEaqZX9lZ+wLbtI5n4KAKdjB7MR477xxA2CxKnRSIRdW6Yz6Qh55ciFou9kslk5mXt7LXoa0uc6ydIDD4GwDEEOl+yRMfWDpiWuZ1AWxjcDqACQDWAavQgCNH3GDDaGw+BVmtCWxGOhT1ZVjcMo9U0zW+D8ONRDD+cwYeDAGLC7rblxOT4qR144IFlALry8Wfp0qWdjY2NSysqKm5j8GiSryrBWMLgJQBgSxtaQEPWzsK0zE70JVL1bV9J7PEzR8v13awn0Kd0Q1cl9e7G3/5wC6KN4OJ1iC5UTsVQ6uvrtyUSibrQjNAVYFyB0d+49mZwLQi14D4VKFD/d5ne/R1S38HR8AYYy6N6tHUUY4uWUzEUwzBWNWea/65ltWH6MQr2Y/BKAq1kMLJ2FlMqpsC0zN06M1PRA9iw3/388oHxNyI6JxKJ5Fr19plEjHhhCIfD3YZuXMCSwxhbh8RpDP4ggLkADgfwfgxuXjYaekC4JBKJnD7wCdsLDMP4CYNHE1TkRU9Pz5hyUZYuXdoZiUROJ9C3AYyniVol1OVeKnrBuKajvWOhro8YUAB+9YdrFLtbKUtybQmqoaHBNiLGlWCEUYxtHsKqgBY42jCM0QQUQImsVOymLlz3YkdHxxIQLoNzC4bREAAwngZlbxNopWEYn9B13Q8o3kOM+mkjGo0+GKoKHcPEXwbg3OjKHe6zNfsoI2L8vF+9znOievRbDL4QBXwi2bVr15iTzIiIdV3/oSa0uQR6qFA+5UCCcYet2UcYhnFZHh1h/ZUKtyC7qGWl45HpHi2GYbSGqkJHgXAJgbyQcd5EoKVGxDg9HA7nI4VeUkEFsCcwu4ZAhxDoanj3W9xJoKvBmKXrunOzSp9JTV4Xhpqamt5oJPq7UFVoFoE+3X9Dc+NGnyXQajDmG7pxqmMZl8dE9eivpC3nAlhboFOOu2qmtrb2WV3XlxAoCkIahf9b7CTQbWDUGIaxIt+/g4DwgwqXmGaXvwCP5aEHwuOU6R4tNTU1vUbE+Hl3efehBPoWgf7lwjQbCLQyVBU6Utf1Nfm+mEAls/0xFF3Xt+i6fjkYcwj0AwD/dWmqV8H4LoEO1XX9csMwVLIEPpOcMdV79ydf3gXgLtM0DyaiMxgcRV8iYq4EoVx0AlhLoCbbtu+MxWIl1za7X4dhcSqVWkIanQ/GqejbRsiHLIMfKysryyufIhe6rpsAzHQ6fSgzr2BwPfqkhVXiM7nYzuBWALezzatjsdjOsfolSW4TLIY9Ye7q3TX24EfDy5C4acyvLwI2egv+lH1r+JDuZQ+8cBeA4kgxM7l1c3Kkv+HUjxOJxLXV1dUf688pOgV926ljYTOANZLkH6K10bXjWQVlcIfTSgoRFS3oG4phGK8B+M769evjW7duPYXBSwHEABwwjtO+BqBZkLh37dq1yXg8nqvyxGcSIUn2OF3bgdyJl3mzfv364DvvvHO0DfsjgsWHARzA4P0IFGJwsG9C6mXwNgD/AeO/RLRRSvlMNpv9R319/YTag29sbKysqKiYB+BEZp4NgYOJqUpCThEQ3QzuBKODif8F4GVIPF1ZWfnkokWLxrrPOWpM05yOPpGq4yBwCCRmAphBRFOYuByM7WB0gNABxlsAngLw+Lp16573Lw4+E4F4PC7mL55/nLDFXAAfAeFI9HXLrQIQAhAg0HYA7zDxq2C8RKAnbGE/+vBDDz/lf88B0zSPJqK5EvIIYjoKhAPR9/lNBzCdQB0M3g7CNjD+xeDnBMRzzPxYf7fZkiWRSJRV7l/p+JB7yqJTthZrO11FU1PT3nKaHPYgyFu5Z3c1zkTg/wMsO2giSpRNnAAAAABJRU5ErkJggg==" width="180" /></p>
+<div id="introduction" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>staRdom is a package for R version 4 <span class="citation">(R
+Development Core Team 2019)</span> to analyse fluorescence and
+absorbance data of dissolved organic matter (DOM). The important
+features are:</p>
+<ul>
+<li>separating the components of the EEMs via PARAFAC/CANDECOMP <span class="citation">(Murphy et al. 2013; Bro 1997; Helwig
+2019)</span>.</li>
+<li>validating the model using a split-half analysis, the core
+consistency, the model fit or visually examining the residuals</li>
+<li>correcting excitation-emission-matrices <span class="citation">(Murphy et al. 2013; Massicotte 2019)</span></li>
+<li>calculating fluorescence peaks and indices <span class="citation">(Massicotte 2019)</span></li>
+<li>autochthonous productivity index / freshness index [BIX; <span class="citation">Huguet et al. (2009)</span>; <span class="citation">Fellman, Hood, and Spencer (2010)</span>]</li>
+<li>classical peaks based on manual peak picking [B, T, A, M, C; <span class="citation">Coble (1996)</span>]</li>
+<li>fluorescence index [FI; <span class="citation">McKnight et al.
+(2001)</span>]</li>
+<li>humification index [HIX; <span class="citation">Ohno
+(2002)</span>]</li>
+<li>calculating common absorbance (slope) parameters:
+<ul>
+<li>absorbance at 254 nm [a254; <span class="citation">Dobbs, Wise, and
+Dean (1972)</span>],</li>
+<li>absorbance at 300 nm [a300; <span class="citation">Molot et al.
+(2005)</span>],</li>
+<li>ratio of absorbance at 250 to 365 nm [E2:E3; <span class="citation">De Haan and De Boer (1987)</span>],</li>
+<li>ratio of absorbance at 465 to 665 nm [E4:E6; <span class="citation">Summers, Cornel, and Roberts (1987)</span>],</li>
+<li>spectral slope within log-transformed absorption spectra range
+(S275-295, S350-400, S300-700) and the ratio of S275-295 to S350-400
+(SR) <span class="citation">(Helms et al. 2008)</span>,</li>
+<li>the wavelength distribution of absorption spectral slopes <span class="citation">(Loiselle et al. 2009)</span> and</li>
+<li>user-defined values and slopes can be extracted or calculated from
+the absorbance spectra.</li>
+</ul></li>
+</ul>
+<p>staRdom has been developed and is maintained at WasserCluster Lunz
+(<a href="https://www.wcl.ac.at/index.php/en/" class="uri">https://www.wcl.ac.at/index.php/en/</a>) and the University
+of Natural Resources and Life Sciences, Vienna (<a href="https://boku.ac.at/" class="uri">https://boku.ac.at/</a>).</p>
+<p>staRdom comes with an Rmd template (<a href="https://rmarkdown.rstudio.com/">infos on Rmd</a>) where you can
+start your analysis with example data and add your personal data and
+parameters whenever you feel ready. We recommend to go interactively
+through the template while reading this vignette to get an overview of
+what is possible. Each version of staRdom provides a new template and
+usually using templates from different versions should be fine. In case
+you have difficulties running the calculations in the template, please
+use the template of the very same version as the installed staRdom
+package. As an advanced user, you can just include the functions in
+whatever calculations you want to do (please see details in the <a href="PARAFAC_analysis_of_EEM.html">advanced vignette</a>). This
+vignette describes the template. If you are interested in the specific
+functions please refer to the help in R, which can be accessed by
+<code>help(function)</code> or in RStudio pressing F1 while the cursor
+is on the function name in the code.</p>
+<p>Later in the vignette there is also a chapter about troubleshooting.
+If you experience problems you may find a useful solution there.</p>
+<div id="aim-of-this-document" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Aim of this
+document</h2>
+<blockquote>
+<p>This file aims for beginners in R and describes an easy way of
+calculating EEM peaks and absorbance (slope) parameters by just setting
+variables (no use of functions) in an Rmd file. The options are limited
+and a PARAFAC analysis cannot be done this way. This way of more or less
+automatic analysis bears the risks of missing informations in the data
+and overlooking problems like outliers and noise in the data. For more
+possibilities, options and a PARAFAC analysis please refer to the
+vignette for the <a href="PARAFAC_analysis_of_EEM.html">PARAFAC
+analysis</a>.</p>
+</blockquote>
+</div>
+<div id="hint-for-beginners-in-r" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Hint for beginners in
+R</h2>
+<p>If you are a beginner in R you may find some help at the R-Studio
+online-learning (<a href="https://docs.rstudio.com/" class="uri">https://docs.rstudio.com/</a>), or Modern R with the
+tidyverse (<a href="https://b-rodrigues.github.io/modern_R/" class="uri">https://b-rodrigues.github.io/modern_R/</a>) by Bruno
+Rodrigues.</p>
+<p>The package is available on CRAN and can be installed via
+<code>install.packages(&quot;staRdom&quot;)</code>.</p>
+</div>
+</div>
+<div id="starting-the-analysis-using-the-template" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Starting the analysis
+using the template</h1>
+<p>The template is accessible with the command
+<code>file.edit(system.file(&quot;EEM_simple_analysis.Rmd&quot;, package = &quot;staRdom&quot;))</code>.
+You can and should save this file if you want to preserve it. The
+example data is saved within the package structure and you can find the
+containing folders with the commands
+<code>system.file(package = &quot;staRdom&quot;)</code>. Raw data is in the
+sub-folder “extdata”. The original settings in the template refer to
+sample data and you can do full featured test runs with that. In case of
+any problems, it can help to run the code chunk-wise (<a href="https://rmarkdown.rstudio.com/lesson-3.html" class="uri">https://rmarkdown.rstudio.com/lesson-3.html</a>).</p>
+<div id="output-parameters" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Output
+parameters</h2>
+<p>On top of the template there are the header parameters necessary to
+create a report with knitr (<a href="https://yihui.org/knitr/" class="uri">https://yihui.org/knitr/</a>). Parameters can be changed and
+just show up in the final report (e.g. author, title) or alter the
+appearance of the document. It is possible to create reports in other
+file formats. Please find details at <a href="https://rmarkdown.rstudio.com/lesson-9.html" class="uri">https://rmarkdown.rstudio.com/lesson-9.html</a>.</p>
+<p>The directory your generated files are saved in is set by output_dir
+at line 7. It is important that you keep the “;” at the end of the line.
+Folders are delimited by “/”. In RStudio, pressing the tab key while the
+cursor is in the path can reveal possible folders on your drive.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>title<span class="sc">:</span> <span class="st">&quot;DOM analysis&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>subtitle<span class="sc">:</span> <span class="st">&quot;EEM peak picking, absorbance slope parameters&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>date<span class="sc">:</span> <span class="st">&quot;`r format(Sys.time(), &#39;%B %e %Y&#39;)`&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>author<span class="sc">:</span> <span class="st">&quot;WCL&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>knit<span class="sc">:</span> (<span class="cf">function</span>(inputFile, encoding) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      output_dir <span class="ot">=</span> <span class="st">&#39;C:/some_folder/output/&#39;</span>;</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      rmarkdown<span class="sc">::</span><span class="fu">render</span>(inputFile,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">encoding=</span>encoding, </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">output_file=</span><span class="fu">file.path</span>(output_dir,<span class="fu">paste0</span>(<span class="st">&#39;DOM_EEM_analysis_report_&#39;</span>,<span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">&quot;%Y%m%d_%H%M%S&quot;</span>),<span class="st">&#39;.htm&#39;</span>)))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                        })</span></code></pre></div>
+<p>You need to specify the output folder on line 61 as well.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the directory where all output files are put in.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The directory is automatically created if it does not exist.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Folder delimiters can be / or \\. \, as it is usually used in Windows, will not work!</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>output_dir <span class="ot">=</span> <span class="st">&quot;C:/some_folder/another_folder&quot;</span> <span class="co"># e.g. output_dir = &quot;C:/some_folder/output/&quot;</span></span></code></pre></div>
+</div>
+<div id="input-parameters" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Input parameters</h2>
+<p>Please be sure to use the same file names for your fluorescence data,
+absorbance data and meta data, as differing file names are often the
+reason for a non working analysis.</p>
+<div id="fluorometer-data-eem" class="section level3" number="2.2.1">
+<h3><span class="header-section-number">2.2.1</span> Fluorometer data
+(EEM)</h3>
+<p>The parameter sample_dir specifies the directory where your data
+files from the fluorometer are. They have to be in a text format (Cary
+Eclipse .csv files, Aqualog .dat files, Shimadzu .TXT files, Fluoromax-4
+.dat files, Hitachi .TXT files, generic .CSV files). Samples can be
+stored in subfolders as well. Please be sure, that your file names are
+unique. File names must not contain ” ” (space) or “-” (minus) or start
+with a number. The command system.file() as used in the template
+EEM_simple_analysis.Rmd is used to access the example data and is not
+needed if you want to use your own data.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the directory with your sample files. Please see eem_read() help for details on file formats.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Sub folders are read in and are considered different sample sets.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Import is done with eem_read() (package eemR), please see details there.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The template refers to data coming with the package. Please use your data</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># by setting the path to your files!</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>sample_dir <span class="ot">=</span> <span class="st">&quot;C:/some_folder/input/fluor/&quot;</span> <span class="co"># e.g. sample_dir = &quot;C:/some_folder/input/fluor/&quot;, system.file() accesses the example data coming with the package!</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the used instrument (with hyphens!):</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Cary Eclipse: &quot;cary&quot; </span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Aqualog: &quot;aqualog&quot;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Shimadzu: &quot;shimadzu&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Fluoromax-4: &quot;fluoromax4&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># And furthermore, without hyphens:</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># generic csv, excitation column-wise: eem_csv</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># generic csv, emission column-wise: eem_csv2</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Hitachi F-7000: eem_hitachi</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>fluorometer <span class="ot">=</span> eem_csv</span></code></pre></div>
+</div>
+<div id="photometer-data-absorbance" class="section level3" number="2.2.2">
+<h3><span class="header-section-number">2.2.2</span> Photometer data
+(absorbance)</h3>
+<p>Absorbance data are needed for inner-filter effect correction and the
+calculation of the slope parameters. They are taken from the folder
+specified by <code>absorbance_dir</code>. The filenames or column
+designations must be identical to the EEM file names to link
+fluorescence and absorbance data distinctly. Please be sure, that your
+file names are unique. File names must not contain ” ” (space) or “-”
+(minus) or start with a number. For the calculations the light path
+length (in cm) used in the photometric measurement has to be set.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Absorbance data </span><span class="al">###</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Absorbance data is read from *.TXT or *.CSV files.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Either a directory containing one or more files can be named or a single file containing all samples.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Absorbance data is used for inner-filter-effect correction and calculation of the slope parameters.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Those steps can be skipped but keep in mind it is important for a profound analysis!</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># path of adsorbance data as directory or single file, sub folders are not read:</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>absorbance_dir <span class="ot">=</span> <span class="st">&quot;C:/some_folder/input/absorbance/&quot;</span> <span class="co"># e.g. absorbance_dir = &quot;C:/some_folder/input/absorbance/&quot;, system.file() accesses the exmaple data coming with the package!</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Path length of absorbance measurement in cm that was used in absorbance measurement.</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># If it is set to &quot;meta&quot; data from the metadata table is used (details see below).</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>absorbance_path <span class="ot">=</span> <span class="dv">5</span> <span class="co"># e.g. absorbance_path = 5</span></span></code></pre></div>
+</div>
+<div id="meta-data" class="section level3" number="2.2.3">
+<h3><span class="header-section-number">2.2.3</span> Meta data</h3>
+<p>In case your samples’ measurements differ and you need to set
+parameters sample-wise, you can set distinct dilution factors,
+photometer cuvette lengths and Raman areas in a table. You can skip that
+if dilution factors and cuvette lengths are similar and you used blank
+samples for calculating the Raman area. Distinct numbers can then be set
+as described below. A dilution factor of e.g. 10 means, there is 1 part
+sample and 9 parts ultrapure water added.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Meta data </span><span class="al">###</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~#</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Adding a table with meta data is OPTIONAL!</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The table can contain dilution factors, path lengths of</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># the photometer and raman areas and is intended</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># for cases where different values should be used for different</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># samples. Each column can be used optionally.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># read table with metadata as *.TXT or *.CSV</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># either a path or FALSE if no metadata file is used.</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>metadata <span class="ot">=</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/metatable.csv&quot;</span>,<span class="at">package =</span> <span class="st">&quot;staRdom&quot;</span>) <span class="co"># e.g. metadata = &quot;C:/some_folder/input/metatable.csv&quot;&quot;, system.file() accesses the exmaple data coming with the package!</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="do">### Meta data: names of columns </span><span class="al">###</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># designation of column with sample names</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>col_samples <span class="ot">=</span> <span class="st">&quot;sample&quot;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co"># if you want to use dilution factors (e.g. 10 if 1 part sample and 9 parts solvent) from the meta data table, state the name </span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co"># of the column containing the dilution data and set dilution = &quot;meta&quot; (below)</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>col_dilution <span class="ot">=</span> <span class="st">&quot;dilution&quot;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># if you want to use the cuvette length (in cm) for the absorbance from the meta data table,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co"># state the name of the column containing the cuvette lengths and set absorbance_path = &quot;meta&quot; (below)</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>col_cuv_len <span class="ot">=</span> <span class="st">&quot;cuv_len&quot;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co"># if you want to use the raman area (under the curve) data from the meta data table, state the name </span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co"># of the column containing the raman areas and set raman_normalisation = &quot;meta&quot; (below)</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>col_raman_area <span class="ot">=</span> <span class="st">&quot;raman&quot;</span></span></code></pre></div>
+</div>
+<div id="spectral-correction" class="section level3" number="2.2.4">
+<h3><span class="header-section-number">2.2.4</span> Spectral
+correction</h3>
+<p>Spectral correction is done to remove instrument-specific influences
+on the EEMs <span class="citation">(DeRose and Resch-Genger
+2010)</span>. Some instruments can do this automatically. Correction
+vectors should be provided in at least the same range as the EEM
+measurements. If this is not the case, the EEMs are cut to this range.
+Please provide paths to csv tables containing wavelengths in the first
+column and correction values in the second.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Spectral correction of EEMs ####</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Some instruments, but not all need a spectral correction to compensate</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># for specific deviations in the measurements. A vector for emission and</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># excitation is used each. EEMs are cut to match the wavelength range of</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># the vectors if used. Please provide paths to csv tables containing</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># wavelengths in the first column and correction values in the second. If</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># you do not want spectral correction to be done, setting these two input</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># files it not necessary. </span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Emission correction vector</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Emcor <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/CorrectionFiles/mcorrs_4nm.csv&quot;</span>,<span class="at">package=</span><span class="st">&quot;staRdom&quot;</span>) <span class="co"># e.g. &quot;C:\folder\emcor.csv&quot;, FALSE</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Excitation correction vector</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>Excor <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/CorrectionFiles/xc06se06n.csv&quot;</span>,<span class="at">package=</span><span class="st">&quot;staRdom&quot;</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="write-out-results-and-plots" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Write out results and
+plots</h2>
+<div id="results-table" class="section level3" number="2.3.1">
+<h3><span class="header-section-number">2.3.1</span> Results table</h3>
+<p>If you want to export your picked peaks and slope parameters as a
+table, set the parameter <code>output_xls = TRUE</code>. Exporting XLS
+files needs a properly configured Java environment. If any problems are
+encountered, a CSV is written to your output directory instead and can
+be opened with a spreadsheet software. Furthermore, you can specify the
+cell separator and decimal point of you data files in case a CSV file is
+written.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Table output </span><span class="al">###</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a table with peaks and slope parameters.</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Written as xls or, in case of missing java environment or the package xlsx as csv.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>output_xls <span class="ot">=</span> <span class="cn">TRUE</span> <span class="co"># e.g. TRUE</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># In case of a csv export you can define the separator and the decimal point here.</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>out_sep_dec <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>,<span class="st">&quot;.&quot;</span>) <span class="co"># e.g. out_sep_dec = c(&quot;\t&quot;,&quot;.&quot;)</span></span></code></pre></div>
+</div>
+<div id="plots" class="section level3" number="2.3.2">
+<h3><span class="header-section-number">2.3.2</span> Plots</h3>
+<p>The script offers several options for exporting plots.
+<code>output_overview_png</code> states whether overview plots
+containing a number of samples (<code>overview_number</code>) each are
+saved in the output directory and <code>output_single_png</code> is the
+parameter if you want to export single PNGs from each sample. The
+parameter <code>scale_col</code> defines if the colour range of all
+plots is synchronised. If you want to compare different samples, it is
+easier if the colour code has the same range. Weak peaks in samples with
+lower fluorophore presence than other samples can be found easier if the
+colours are not synchronised.</p>
+<p>With the parameters <code>overview</code> and
+<code>single_plots</code> these plots can be included in the report
+using the same parameters <code>scale_col</code> and
+<code>overview_number</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Plot settings PNG </span><span class="al">###</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># State whether you want pngs of the single EEM spectra written in your output directory</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>output_single_png <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. TRUE</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="do">## State whether you want pngs of multiple EEM spectra written in your output directory</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>output_overview_png <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. TRUE</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="do">## number of EEM spectra plottet in each overview image</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>overview_number <span class="ot">=</span> <span class="dv">6</span> <span class="co"># e.g. 6</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># The scaling of the different sample plots can be chosen.</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Either all samples are coloured according to the range of the</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># complete sample set (TRUE) or each plot is scaled separately (FALSE).</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>scale_col <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. TRUE</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="do">### Plot settings report </span><span class="al">###</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co"># This block defines which plots are included in the report.</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Add plots with several EEM samples per plot. </span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># The number per plot is defined by overview_number above.</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>overview <span class="ot">=</span> <span class="cn">TRUE</span> <span class="co"># e.g. TRUE</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="co"># State whether you want plots from single EEM spectra in the report.</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>single_plots <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. TRUE</span></span></code></pre></div>
+</div>
+<div id="save-data-to-rdata-file" class="section level3" number="2.3.3">
+<h3><span class="header-section-number">2.3.3</span> Save data to RData
+file</h3>
+<p>The data of the analysis can be stored in an Rdata file to keep track
+of your work or to deepen the analysis later (e.g. PARAFAC).</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Save data for further analysis in R ####</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># File name where data is stored in RData format in the output directory.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set to FALSE if you dont want your eem data saved.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Date, time and file extension is added automatically so you do not overwrite previous saved data.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>data_file <span class="ot">=</span> <span class="st">&quot;eem_data&quot;</span> <span class="co"># e.g. &quot;eem_data&quot;&quot; or FALSE</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Desired name for the variable containing the eem data.</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>eem_name <span class="ot">=</span> <span class="st">&quot;eem_list&quot;</span></span></code></pre></div>
+</div>
+</div>
+<div id="data-correction" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> Data correction</h2>
+<p>Raw data from fluorometers and photometers bear several shortcomings.
+Murphy et al. <span class="citation">(2013)</span> addressed several
+ways of EEM data correction that are used in the staRdom template. Some
+correction methods need specific data (e.g. absorbance ) to be applied.
+Corrections can be necessary and can help you focus on certain aspects
+and information covered by noise otherwise. But depending on your aim
+they might not be necessary. Bro and Smilde <span class="citation">(2003)</span> offer additional information on
+correction of EEM data. If either of the correction steps was already
+done (e.g. by the instrument), the specific correction step can just be
+skipped. In this case R might still tell you about missing correction
+steps and warnings might appear, but these can be ignored as long as the
+whole correction was done as desired.</p>
+<div id="absorbance-baseline-correction" class="section level3" number="2.4.1">
+<h3><span class="header-section-number">2.4.1</span> Absorbance baseline
+correction</h3>
+<p>The instrumental baseline drift in absorbance data can be removed by
+subtracting the mean of the absorbance at high wavelengths <span class="citation">(Li and Hur 2017)</span>. The default is to use the
+spectrum between 680 and 700 nm but any other range can be set
+manually.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Normalising absorbance data to baseline ####</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Absorbance data can be corrected by subtracting a baseline value from each sample.</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># In high wavelength ranges (default 680-700 nm), the absorbance is assumed to be 0.</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># The average value of that range (or any other range) is subtracted from the whole spectrum.</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># abs_norm can be set TRUE to use the default range, you can specify the desired range by a vector of length 2 and you can set it FALSE to skip this correction.</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>abs_norm <span class="ot">=</span> <span class="cn">TRUE</span> <span class="co"># e.g. TRUE, c(700,800)</span></span></code></pre></div>
+</div>
+<div id="dilution" class="section level3" number="2.4.2">
+<h3><span class="header-section-number">2.4.2</span> Dilution</h3>
+<p>If samples were diluted before the spectroscopic measurements, the
+dilution factor can be set here and the sample will be corrected
+accordingly. As an example a dilution factor of 10 means a 1:10 dilution
+(1 part sample and 9 parts ultrapure water). By setting
+<code>dilution = &quot;meta&quot;</code>, data from the meta table is used and
+each sample can be corrected by an individual dilution factor.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Correction of diluted samples </span><span class="al">###</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set a dilution factor if your samples were diluted.</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># All samples are multiplied with this factor.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Please use a meta table (above) if your dilutions are differing</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 for no dilution, 10 for dilution 1:10 (1 part sample and 9</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># parts ultrapure water), &quot;meta&quot; for data from meta table</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>dilution <span class="ot">=</span> <span class="st">&quot;meta&quot;</span> <span class="co"># e.g. 1 for undiluted samples</span></span></code></pre></div>
+<p>The reason of diluting a sample can be inner-filter effects that
+cannot be corrected conveniently if they are too high <span class="citation">(Kothawala et al. 2013)</span>. On the contrary,
+absorbance data might be better analysed undiluted. To combine the
+results of diluted EEM measurements and undiluted absorbance
+measurements, the following parameter can be set to do this
+automatically. Please check the results because depending on your sample
+names, automatically guessed combinations might not be recognised
+correctly!</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In case of diluted samples, two absorbance measurements of the</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># same sample in different dilutions might be present. If this is</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the case, EEMs are renamed to the undiluted sample, absorbance</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># data might be multiplied by the dilution factor if it is only</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># presentas diluted sample. This can be done automatically. In the</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># final protocol a table shows, what has been done to the samples.</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Please check this table and see, if the output is what you</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># wanted it to be!</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>dil_sample_name_correction <span class="ot">=</span> <span class="cn">FALSE</span></span></code></pre></div>
+</div>
+<div id="spectral-correction-1" class="section level3" number="2.4.3">
+<h3><span class="header-section-number">2.4.3</span> Spectral
+correction</h3>
+<p>The spectral correction is described above. Here you can set, whether
+a spectral correction should be applied. Correction vectors need to bet
+supplied above.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Spectral correction of EEMs ####</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Some instruments, but not all need a spectral correction to compensate</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># for specific deviations in the measurements. Please sepecify, if you want</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># spectral correection to be done.</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>spectral_cor <span class="ot">=</span> <span class="cn">TRUE</span> <span class="co"># e.g. TRUE, set to FALSE, if your instrument already provided EEMs with spectral correction</span></span></code></pre></div>
+</div>
+<div id="eem-range-reduction" class="section level3" number="2.4.4">
+<h3><span class="header-section-number">2.4.4</span> EEM range
+reduction</h3>
+<p>EEM data can be cut in both dimensions. Peaks are calculated before
+the reduction. Cut ranges are set with vectors containing the upper and
+lower limits: <code>c(lower,upper)</code>. If you want to avoid any
+cutting, set the vectors to <code>c(0,Inf)</code>. <code>Inf</code>
+means infinity, so the script keeps data from 0 to infinity. The script
+also allows to cut all samples to the size of the sample with the
+shortest range which is necessary if you want to perform a PARAFAC
+analysis. Cutting can be necessary to remove noisy data in advance of a
+PARAFAC analysis or to increase the visibility of important peaks in
+plots.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Cut data to certain range </span><span class="al">###</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set a vector with range of wavelengths to be plotted and saved.</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Peak picking is done before range reduction.</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Emission wavelength:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>em_range <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">Inf</span>) <span class="co"># e.g. c(300,500), c(0,Inf) to use everything</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Excitation wavelength:</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>ex_range <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="cn">Inf</span>) <span class="co"># e.g. c(300,500), c(0,Inf) to use everything</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Cut all samples to fit largest range available in all samples</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>cut_range_to_smallest <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. FALSE</span></span></code></pre></div>
+</div>
+<div id="blank-correction" class="section level3" number="2.4.5">
+<h3><span class="header-section-number">2.4.5</span> Blank
+correction</h3>
+<p>Blank samples are data from measuring ultrapure water. Systematic
+biases can be removed by subtracting the blank sample from each sample.
+The blank samples have to contain “nano”, “miliq”, “milliq”, “mq” or
+“blank” (cases are ignored) in the file name. Regular samples must not
+contain one of these words. Blanks have to be in the same (sub)folder as
+the samples that are corrected with the certain blank. Multiple blanks
+in one (sub)folder are averaged. It needs to be measured with each
+sample set (e.g. once a day) <span class="citation">(Murphy et al.
+2013)</span> and kept together in one folder.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Blank correction </span><span class="al">###</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># A blank sample is subtracted from each sample. Blank samples have to be</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># in the same (sub)folder as the according EEM samples. So different blanks are used</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># for different subsets. The file names of the blanks have to contain nano, </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># miliq, milliq, mq or blank (cases are ignored). Other samples must not </span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># contain these words in their names respectively!</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>blank_correction <span class="ot">=</span> <span class="cn">FALSE</span> <span class="co"># e.g. FALSE</span></span></code></pre></div>
+</div>
+<div id="correct-inner-filter-effects" class="section level3" number="2.4.6">
+<h3><span class="header-section-number">2.4.6</span> Correct inner
+filter effects</h3>
+<p>The inner-filter effect is caused by absorbance that blocks light in
+the pathway from the source to the sensor during fluorescence
+measurements. To apply the inner-filter effects correction described in
+Kothawala et al. <span class="citation">(2013)</span>, absorbance data
+have to be measured for each sample. By knowing the exact absorbance,
+this effect can be mathematically corrected. In case of a total
+absorbance greater than 1.5, the sample has to be diluted because
+otherwise, the linear relationship is not appropriate anymore.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Inner filter effect correction </span><span class="al">###</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Inner filter effects are corrected. Absorbance data is needed. File or column designations</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># of the absorbance data have to resamble file names of the EEM data.</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>ife_correction <span class="ot">=</span> <span class="cn">TRUE</span> <span class="co"># e.g. FALSE</span></span></code></pre></div>
+</div>
+<div id="remove-and-interpolate-scattering" class="section level3" number="2.4.7">
+<h3><span class="header-section-number">2.4.7</span> Remove and
+interpolate scattering</h3>
+<p>Diagonal scatter peaks hinder the analysis of EEM data as they
+usually are much greater than peaks from DOM. They can be partly removed
+by subtracting the blank sample as described above. Diagonal peaks are
+called Rayleigh and Raman peaks of first and second order. They can also
+make a PARAFAC analysis impossible. Senesi <span class="citation">(1990)</span>, Lakowicz et al. <span class="citation">(2006)</span> and Coble et al. <span class="citation">(1990)</span> offer additional information.</p>
+<p>The width of the removed scatter slot can be set. Make sure not to
+lose too much data while still removing the whole peak. If you use the
+interpolation below, a remaining diagonal peak hints at insufficient
+width. Elcoroaristizabal et al. <span class="citation">(-
+Elcoroaristizabal et al. 2015)</span>, Bahram et al. <span class="citation">(2006)</span> and Zepp et al. <span class="citation">(2004)</span> suggest an interpolation of the removed
+scattering prior to a PARAFAC analysis and offer a description.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Remove scattering and interpolate missing data </span><span class="al">###</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Scattering is removed from the EEM spectra.</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>remove_scatter <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>) <span class="co"># logical values, ordered by raman1,raman2,rayleigh1,rayleigh2</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the width of removed scatter slot (usually 10 to 20).</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># If you can still see traces of scattering after interpolation,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># this value should be increased. You can specify a vector containing</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># separate widths for each scatter c(15,16,16,14), ordered by raman1,raman2,rayleigh1,rayleigh2</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># In case one or more scatter peaks are skipped, this vector must remain of length 4 and positions of the certain widths must be kept.</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>remove_scatter_width <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">15</span>) <span class="co"># e.g. 15 or c(15,15,15,15)</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co"># state whether removed scattering should be interpolated</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>interpolation <span class="ot">&lt;-</span> <span class="cn">TRUE</span> <span class="co"># e.g. TRUE</span></span></code></pre></div>
+</div>
+<div id="raman-normalisation" class="section level3" number="2.4.8">
+<h3><span class="header-section-number">2.4.8</span> Raman
+normalisation</h3>
+<p>Fluorescence intensities can differ between analyses on different
+fluorometers, different settings or different days on the same
+fluorometer. The so-called Raman normalisation makes samples comparable
+and normalises fluorescence intensities to Raman units. In staRdom, it
+can be applied in two ways. Either you use a blank sample (details see
+at chapter Blank correction above) to calculate the value for the
+normalisation <span class="citation">(Lawaetz and Stedmon 2009)</span>
+or you provide a certain value, that is used. Fixed values for each
+sample can be set in the meta table as well.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Raman normailsation </span><span class="al">###</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># State whether a Raman normalisation should be performed</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Either &quot;blank&quot; if a blank is present in each (sub)folder of the EEM data.</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Blank samples have to be in the same (sub)folder as the EEM samples. So </span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># different blanks are used for different subsets. The file names of the </span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># blanks have to contain nano, miliq, milliq, mq or blank (cases are ignored).</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Other samples must not contain these words in their names respectively!</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Normalisation is then calculated with this blank, the raman area as a number</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># or &quot;meta&quot; if the raman areas should be taken from the meta data table.</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>raman_normalisation <span class="ot">=</span> <span class="st">&quot;blank&quot;</span> <span class="co"># e.g. &quot;blank&quot;, FALSE, 160, &quot;meta&quot;</span></span></code></pre></div>
+</div>
+<div id="smoothing" class="section level3" number="2.4.9">
+<h3><span class="header-section-number">2.4.9</span> Smoothing</h3>
+<p>For calculating the peaks, the EEMs can be smoothed. If so, peaks and
+indices are calculated from smoothed EEMs but these are not saved. The
+smoothing parameter specifies the size of a moving average window in
+nm.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Smooth data for peak picking </span><span class="al">###</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Moving window size for smoothing data along excitation wavelengths.</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Data must be interpolated if you want to use smoothing.</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># This is used for peak picking but not saved.</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>smooth <span class="ot">=</span> <span class="dv">4</span> <span class="co"># e.g. FALSE, 4</span></span></code></pre></div>
+</div>
+</div>
+<div id="running-the-analysis" class="section level2" number="2.5">
+<h2><span class="header-section-number">2.5</span> Running the
+analysis</h2>
+<p>If you reach the box below in the template, all parameters are set
+and you can finally run the analysis.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">#############################################</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                                           #</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#       THERE ARE NO SETTINGS BELOW.        #</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  YOU CAN KLICK &quot;KNIT&quot; AT THE MENU BAR.    #</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co">#  In case of errors, chunk-wise execution  #</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co">#     of the code can reveal problems!      #</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">#                                           #</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">#     Please read the help of the used      #</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co">#        functions if you encounter         #</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="co">#               any problems:               #</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   Press F1 while cursor in function or    #</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   type help(function) in command line!    #</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="co">#                                           #</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="co">#             Please read the               #</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co">#        error messages carefully!          #</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co">#    Naming of the input files and table    #</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="co">#     column and row names is crucial!      #</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="co">#                                           #</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="do">#############################################</span></span></code></pre></div>
+<p>You can run the script by clicking the “Knit” button in the toolbar
+of RStudio. At the first run of the script you may be asked if you want
+to install several packages. Please confirm. This can take some time.
+Your generated files are placed in your specified output folder. In case
+you experience problems, consider to start over with a “fresh”
+template.</p>
+</div>
+</div>
+<div id="installation" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Installation</h1>
+<p>The script is running in R environment <span class="citation">(R
+Development Core Team 2019)</span>. Using a graphical user interface
+like RStudio (<a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a>) can help beginners to get into
+it.</p>
+<p>You can install staRdom via RStudio by klicking Tools -&gt; Install
+Packages… or by entering the command
+<code>install.packages(&quot;staRdom&quot;)</code> in the command line.</p>
+<p>If any of the programs are already installed on your computer, you
+can skip the respective step. In case of problems while running the
+script, consider re-installing/updating the respective programs.</p>
+<div id="r" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> R</h2>
+<p>Download:</p>
+<p><a href="https://cran.r-project.org/mirrors.html" class="uri">https://cran.r-project.org/mirrors.html</a></p>
+<p>Installation manual:</p>
+<p><a href="https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and-Administration" class="uri">https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and-Administration</a></p>
+</div>
+<div id="rstudio" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> RStudio</h2>
+<p>Download:</p>
+<p><a href="https://www.rstudio.com/" class="uri">https://www.rstudio.com/</a></p>
+<p>Please find the installer for your specific operating system
+there.</p>
+</div>
+<div id="optional-software" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Optional
+software</h2>
+<p>Optionally(!) you need a <a href="https://www.java.com/de/download/">Java runtime environment</a> to
+import data from XLS files and a TeX environment (e.g. <a href="http://miktex.org">MikTeX</a> for Windows) to export PDF files.
+You can use the script to the full extend without those.</p>
+</div>
+</div>
+<div id="troubleshooting" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Troubleshooting</h1>
+<div id="peaks-table-shows-nas" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Peaks table shows
+NAs</h2>
+<p>NA stands for ‘Not available’ and means the wavelength range of the
+certain peak is missing. Be sure that you measured the range of the
+certain peak on your instrument.</p>
+</div>
+<div id="only-some-sample-plots-show-peaks" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Only some sample
+plots show peaks</h2>
+<p>If samples differ considerably in the amount of DOM, scaling might be
+a problem. You can scale each sample plot separately by setting
+<code>scale_col = FALSE</code>.</p>
+</div>
+<div id="i-cannot-read-csv-files-in-ms-excel" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> I cannot read csv
+files in MS Excel</h2>
+<p>If you encounter problems with reading csv files please visit:</p>
+<p><a href="https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizard-40c6d5e6-41b0-4575-a54e-967bbe63a048" class="uri">https://support.office.com/en-us/article/Import-data-using-the-Text-Import-Wizard-40c6d5e6-41b0-4575-a54e-967bbe63a048</a></p>
+</div>
+<div id="i-get-error-messages-concerning-my-output-directory" class="section level2" number="4.4">
+<h2><span class="header-section-number">4.4</span> I get error messages
+concerning my output directory</h2>
+<p>Be sure the specified drive and folder existis on your system
+(e.g. C:/) and you have write access.</p>
+</div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bahram_handling_2006" class="csl-entry">
+Bahram, Morteza, Rasmus Bro, Colin Stedmon, and Abbas Afkhami. 2006.
+<span>“Handling of <span>Rayleigh</span> and <span>Raman</span> Scatter
+for <span>PARAFAC</span> Modeling of Fluorescence Data Using
+Interpolation.”</span> <em>Journal of Chemometrics</em> 20 (3-4):
+99–105. <a href="https://doi.org/10.1002/cem.978">https://doi.org/10.1002/cem.978</a>.
+</div>
+<div id="ref-bro_parafac_1997" class="csl-entry">
+Bro, Rasmus. 1997. <span>“<span>PARAFAC</span>. <span>Tutorial</span>
+and Applications.”</span> <em>Chemometrics and Intelligent Laboratory
+Systems</em> 38 (2): 149–71. <a href="https://doi.org/10.1016/S0169-7439(97)00032-4">https://doi.org/10.1016/S0169-7439(97)00032-4</a>.
+</div>
+<div id="ref-bro_centering_2003" class="csl-entry">
+Bro, Rasmus, and Age K. Smilde. 2003. <span>“Centering and Scaling in
+Component Analysis.”</span> <em>Journal of Chemometrics</em> 17 (1):
+16–33. <a href="https://doi.org/10.1002/cem.773">https://doi.org/10.1002/cem.773</a>.
+</div>
+<div id="ref-coble_characterization_1996" class="csl-entry">
+Coble, Paula G. 1996. <span>“Characterization of Marine and Terrestrial
+<span>DOM</span> in Seawater Using Excitation-Emission Matrix
+Spectroscopy.”</span> <em>Marine Chemistry</em> 51 (4): 325–46. <a href="https://doi.org/10.1016/0304-4203(95)00062-3">https://doi.org/10.1016/0304-4203(95)00062-3</a>.
+</div>
+<div id="ref-coble_characterization_1990" class="csl-entry">
+Coble, Paula G., Sarah A. Green, Neil V. Blough, and Robert B. Gagosian.
+1990. <span>“Characterization of Dissolved Organic Matter in the
+<span>Black</span> <span>Sea</span> by Fluorescence
+Spectroscopy.”</span> <em>Nature</em> 348 (6300): 432–35. <a href="https://doi.org/10.1038/348432a0">https://doi.org/10.1038/348432a0</a>.
+</div>
+<div id="ref-de_haan_applicability_1987" class="csl-entry">
+De Haan, H., and T. De Boer. 1987. <span>“Applicability of Light
+Absorbance and Fluorescence as Measures of Concentration and Molecular
+Size of Dissolved Organic Carbon in Humic <span>Lake</span>
+<span>Tjeukemeer</span>.”</span> <em>Water Research</em> 21 (6): 731–34.
+<a href="https://doi.org/10.1016/0043-1354(87)90086-8">https://doi.org/10.1016/0043-1354(87)90086-8</a>.
+</div>
+<div id="ref-derose_recommendations_2010" class="csl-entry">
+DeRose, Paul C., and Ute Resch-Genger. 2010. <span>“Recommendations for
+<span>Fluorescence</span> <span>Instrument</span>
+<span>Qualification</span>: <span>The</span> <span>New</span>
+<span>ASTM</span> <span>Standard</span> <span>Guide</span>.”</span>
+<em>Analytical Chemistry</em> 82 (5): 2129–33. <a href="https://doi.org/10.1021/ac902507p">https://doi.org/10.1021/ac902507p</a>.
+</div>
+<div id="ref-dobbs_use_1972" class="csl-entry">
+Dobbs, Richard A., Robert H. Wise, and Robert B. Dean. 1972. <span>“The
+Use of Ultra-Violet Absorbance for Monitoring the Total Organic Carbon
+Content of Water and Wastewater.”</span> <em>Water Research</em> 6 (10):
+1173–80. <a href="https://doi.org/10.1016/0043-1354(72)90017-6">https://doi.org/10.1016/0043-1354(72)90017-6</a>.
+</div>
+<div id="ref-elcoroaristizabal_parafac_2015" class="csl-entry">
+Elcoroaristizabal, Saioa, Rasmus Bro, Jose Antonio García, and Lucio
+Alonso. 2015. <span>“<span>PARAFAC</span> Models of Fluorescence Data
+with Scattering: <span>A</span> Comparative Study.”</span>
+<em>Chemometrics and Intelligent Laboratory Systems</em> 142 (March):
+124–30. <a href="https://doi.org/10.1016/j.chemolab.2015.01.017">https://doi.org/10.1016/j.chemolab.2015.01.017</a>.
+</div>
+<div id="ref-fellman_fluorescence_2010" class="csl-entry">
+Fellman, Jason B., Eran Hood, and Robert G. M. Spencer. 2010.
+<span>“Fluorescence Spectroscopy Opens New Windows into Dissolved
+Organic Matter Dynamics in Freshwater Ecosystems: <span>A</span>
+Review.”</span> <em>Limnology and Oceanography</em> 55 (6): 2452–62. <a href="https://doi.org/10.4319/lo.2010.55.6.2452">https://doi.org/10.4319/lo.2010.55.6.2452</a>.
+</div>
+<div id="ref-helms_absorption_2008" class="csl-entry">
+Helms, John R., Aron Stubbins, Jason D. Ritchie, Elizabeth C. Minor,
+David J. Kieber, and Kenneth Mopper. 2008. <span>“Absorption Spectral
+Slopes and Slope Ratios as Indicators of Molecular Weight, Source, and
+Photobleaching of Chromophoric Dissolved Organic Matter.”</span>
+<em>Limnology and Oceanography</em> 53 (3): 955–69. <a href="https://doi.org/10.4319/lo.2008.53.3.0955">https://doi.org/10.4319/lo.2008.53.3.0955</a>.
+</div>
+<div id="ref-helwig_multiway_2019" class="csl-entry">
+Helwig, Nathaniel E. 2019. <span>“Multiway: <span>Component</span>
+<span>Models</span> for <span>Multi</span>-<span>Way</span>
+<span>Data</span>.”</span> <a href="https://CRAN.R-project.org/package=multiway">https://CRAN.R-project.org/package=multiway</a>.
+</div>
+<div id="ref-huguet_properties_2009" class="csl-entry">
+Huguet, A., L. Vacher, S. Relexans, S. Saubusse, J. M. Froidefond, and
+E. Parlanti. 2009. <span>“Properties of Fluorescent Dissolved Organic
+Matter in the <span>Gironde</span> <span>Estuary</span>.”</span>
+<em>Organic Geochemistry</em> 40 (6): 706–19. <a href="https://doi.org/10.1016/j.orggeochem.2009.03.002">https://doi.org/10.1016/j.orggeochem.2009.03.002</a>.
+</div>
+<div id="ref-kothawala_inner_2013" class="csl-entry">
+Kothawala, Dolly N., Kathleen R. Murphy, Colin A. Stedmon, Gesa A.
+Weyhenmeyer, and Lars J. Tranvik. 2013. <span>“Inner Filter Correction
+of Dissolved Organic Matter Fluorescence.”</span> <em>Limnology and
+Oceanography: Methods</em> 11 (12): 616–30. <a href="https://doi.org/10.4319/lom.2013.11.616">https://doi.org/10.4319/lom.2013.11.616</a>.
+</div>
+<div id="ref-lakowicz_principles_2006" class="csl-entry">
+Lakowicz, Joseph R. 2006. <em>Principles of <span>Fluorescence</span>
+<span>Spectroscopy</span></em>. 3rd ed. NY, USA: Springer
+Science+Business Media, LLC. <a href="https://link.springer.com/us/book/9780387312781">https://link.springer.com/us/book/9780387312781</a>.
+</div>
+<div id="ref-lawaetz_fluorescence_2009" class="csl-entry">
+Lawaetz, A. J., and C. A. Stedmon. 2009. <span>“Fluorescence
+<span>Intensity</span> <span>Calibration</span> <span>Using</span> the
+<span>Raman</span> <span>Scatter</span> <span>Peak</span> of
+<span>Water</span>:”</span> <em>Applied Spectroscopy</em>, August. <a href="https://doi.org/10.1366/000370209788964548">https://doi.org/10.1366/000370209788964548</a>.
+</div>
+<div id="ref-li_utilization_2017" class="csl-entry">
+Li, Penghui, and Jin Hur. 2017. <span>“Utilization of
+<span>UV</span>-<span>Vis</span> Spectroscopy and Related Data Analyses
+for Dissolved Organic Matter (<span>DOM</span>) Studies: <span>A</span>
+Review.”</span> <em>Critical Reviews in Environmental Science and
+Technology</em> 47 (3): 131–54. <a href="https://doi.org/10.1080/10643389.2017.1309186">https://doi.org/10.1080/10643389.2017.1309186</a>.
+</div>
+<div id="ref-loiselle_optical_2009" class="csl-entry">
+Loiselle, Steven A., Luca Bracchini, Arduino M. Dattilo, Maso Ricci,
+Antonio Tognazzi, Andres Cózar, and Claudio Rossi. 2009. <span>“The
+Optical Characterization of Chromophoric Dissolved Organic Matter Using
+Wavelength Distribution of Absorption Spectral Slopes.”</span>
+<em>Limnology and Oceanography</em> 54 (2): 590–97. <a href="https://doi.org/10.4319/lo.2009.54.2.0590">https://doi.org/10.4319/lo.2009.54.2.0590</a>.
+</div>
+<div id="ref-massicotte_eemr_2019" class="csl-entry">
+Massicotte, Philippe. 2019. <span>“<span class="nocase">eemR</span>:
+<span>Tools</span> for <span>Pre</span>-<span>Processing</span>
+<span>Emission</span>-<span>Excitation</span>-<span>Matrix</span>
+(<span>EEM</span>) <span>Fluorescence</span> <span>Data</span>.”</span>
+<a href="https://CRAN.R-project.org/package=eemR">https://CRAN.R-project.org/package=eemR</a>.
+</div>
+<div id="ref-mcknight_spectrofluorometric_2001" class="csl-entry">
+McKnight, Diane M., Elizabeth W. Boyer, Paul K. Westerhoff, Peter T.
+Doran, Thomas Kulbe, and Dale T. Andersen. 2001.
+<span>“Spectrofluorometric Characterization of Dissolved Organic Matter
+for Indication of Precursor Organic Material and Aromaticity.”</span>
+<em>Limnology and Oceanography</em> 46 (1): 38–48. <a href="https://doi.org/10.4319/lo.2001.46.1.0038">https://doi.org/10.4319/lo.2001.46.1.0038</a>.
+</div>
+<div id="ref-molot_effect_2005" class="csl-entry">
+Molot, Lewis A., Jeff J. Hudson, Peter J. Dillon, and Sean A. Miller.
+2005. <span>“Effect of <span class="nocase">pH</span> on Photo-Oxidation
+of Dissolved Organic Carbon by Hydroxyl Radicals in a Coloured,
+Softwater Stream.”</span> <em>Aquatic Sciences</em> 67 (2): 189–95. <a href="https://doi.org/10.1007/s00027-005-0754-9">https://doi.org/10.1007/s00027-005-0754-9</a>.
+</div>
+<div id="ref-murphy_fluorescence_2013" class="csl-entry">
+Murphy, Kathleen R., Colin A. Stedmon, Daniel Graeber, and Rasmus Bro.
+2013. <span>“Fluorescence Spectroscopy and Multi-Way Techniques.
+<span>PARAFAC</span>.”</span> <em>Analytical Methods</em> 5 (23):
+6557–66. <a href="https://doi.org/10.1039/C3AY41160E">https://doi.org/10.1039/C3AY41160E</a>.
+</div>
+<div id="ref-ohno_fluorescence_2002" class="csl-entry">
+Ohno, Tsutomu. 2002. <span>“Fluorescence
+<span>Inner</span>-<span>Filtering</span> <span>Correction</span> for
+<span>Determining</span> the <span>Humification</span>
+<span>Index</span> of <span>Dissolved</span> <span>Organic</span>
+<span>Matter</span>.”</span> <em>Environmental Science &amp;
+Technology</em> 36 (4): 742–46. <a href="https://doi.org/10.1021/es0155276">https://doi.org/10.1021/es0155276</a>.
+</div>
+<div id="ref-r_development_core_team_r:_2019" class="csl-entry">
+R Development Core Team. 2019. <em>R: <span>A</span> Language and
+Environment for Statistical Computing</em>. R foundation for statistical
+computing Vienna, Austria.
+</div>
+<div id="ref-senesi_molecular_1990" class="csl-entry">
+Senesi, Nicola. 1990. <span>“Molecular and Quantitative Aspects of the
+Chemistry of Fulvic Acid and Its Interactions with Metal Ions and
+Organic Chemicals: <span>Part</span> <span>II</span>. <span>The</span>
+Fluorescence Spectroscopy Approach.”</span> <em>Analytica Chimica
+Acta</em> 232 (January): 77–106. <a href="https://doi.org/10.1016/S0003-2670(00)81226-X">https://doi.org/10.1016/S0003-2670(00)81226-X</a>.
+</div>
+<div id="ref-summers_molecular_1987" class="csl-entry">
+Summers, R. S., P. K. Cornel, and P. V. Roberts. 1987. <span>“Molecular
+Size Distribution and Spectroscopic Characterization of Humic
+Substances.”</span> <em>Science of The Total Environment</em> 62
+(January): 27–37. <a href="https://doi.org/10.1016/0048-9697(87)90478-5">https://doi.org/10.1016/0048-9697(87)90478-5</a>.
+</div>
+<div id="ref-zepp_dissolved_2004" class="csl-entry">
+Zepp, Richard G, Wade M Sheldon, and Mary Ann Moran. 2004.
+<span>“Dissolved Organic Fluorophores in Southeastern <span>US</span>
+Coastal Waters: Correction Method for Eliminating <span>Rayleigh</span>
+and <span>Raman</span> Scattering Peaks in Excitation–Emission
+Matrices.”</span> <em>Marine Chemistry</em>, <span>CDOM</span> in the
+<span>Ocean</span>: <span>Characterization</span>,
+<span>Distribution</span> and <span>Transformation</span>, 89 (1):
+15–36. <a href="https://doi.org/10.1016/j.marchem.2004.02.006">https://doi.org/10.1016/j.marchem.2004.02.006</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

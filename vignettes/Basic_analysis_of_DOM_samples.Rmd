@@ -40,7 +40,7 @@ staRdom is a package for R version `r R.Version()$major` [@r_development_core_te
     * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (https://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
 
 staRdom comes with an Rmd template ([infos on Rmd](https://rmarkdown.rstudio.com/)) where you can start your analysis with example data and add your personal data and parameters whenever you feel ready. We recommend to go interactively through the template while reading this vignette to get an overview of what is possible. Each version of staRdom provides a new template and usually using templates from different versions should be fine. In case you have difficulties running the calculations in the template, please use the template of the very same version as the installed staRdom package.
 As an advanced user, you can just include the functions in whatever calculations you want to do (please see details in the [advanced vignette](PARAFAC_analysis_of_EEM.html)). This vignette describes the template. If you are interested in the specific functions please refer to the help in R, which can be accessed by `help(function)` or in RStudio pressing F1 while the cursor is on the function name in the code.

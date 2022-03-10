@@ -261,9 +261,9 @@ eempf_rescaleBC <- function(pfmodel,newscale = "Fmax"){
 #' ggeem(pf4[[1]])
 #'
 eempf_comp_names <- function(pfmodel){
-  if(class(pfmodel) == "parafac") {
+  if(inherits(pfmodel, "parafac")) {
     colnames(pfmodel$A)
-  }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
+  }else if(inherits(pfmodel, "list") & inherits(pfmodel[[1]], "parafac")){
     lapply(pfmodel, function(pfm) colnames(pfm$A))
   } else{
     stop("pfmodel is not a parafac model or a list of parafac models!")
@@ -286,12 +286,12 @@ eempf_comp_names <- function(pfmodel){
 #'
 #' eempf_comp_names(pf4) <- c("A","B","C","D","E","F","G")
 `eempf_comp_names<-` <- function(pfmodel, value){
-  if(class(pfmodel) == "parafac") {
+  if(inherits(pfmodel, "parafac")) {
     colnames(pfmodel$A) <- value
     colnames(pfmodel$B) <- value
     colnames(pfmodel$C) <- value
     pfmodel %>% `class<-`("parafac")
-  }else if(class(pfmodel) == "list" & class(pfmodel[[1]]) == "parafac"){
+  }else if(inherits(pfmodel, "list") & inherits(pfmodel[[1]], "parafac")){
     if(!is.list(value) | (length(value) == 1 & length(pfmodel) > 1)) value <- lapply(1:length(pfmodel), function(x) value)
     lapply(1:length(pfmodel), function(pfn){
       colnames(pfmodel[[pfn]]$A) <- value[[pfn]][1:ncol(pfmodel[[pfn]]$A)]
@@ -496,7 +496,7 @@ eempf_leverage_data <- function(cpl,qlabel=0.1){
 #'
 #' pf4[[1]] <- norm2A(pf4[[1]])
 norm2A <- function(pfmodel){
-  if(class(pfmodel) != "parafac") stop("pfmodel must be an object of class parafac!")
+  if(!inherits(pfmodel, "parafac")) stop("pfmodel must be an object of class parafac!")
   if(!is.null(attr(pfmodel,"norm"))){
     pfmodel$A <- pfmodel$A * attr(pfmodel,"norm_factors")
     attr(pfmodel,"norm_factors") <- NULL
@@ -668,10 +668,10 @@ eempf_residuals <- function(pfmodel,eem_list,select=NULL, cores = parallel::dete
 #'   scale_y_continuous(trans="log")
 #' }
 eempf_residuals_metrics <- function(residuals, leverage){
-  if(class(residuals) != "data.frame"){
-    stop("residuals has to be q data.frame, preferablycreated by eempf_residuals.")
+  if(! is.data.frame(residuals)){
+    stop("residuals has to be a data.frame, preferably created by eempf_residuals.")
   }
-  if(class(leverage) != "list" & all(lapply(leverage,class) == "data.frame")){
+  if(is.list(leverage) & all(lapply(leverage,is.data.frame))){
     stop("leverage has to be a list of data.frames, preferably a created by eempf_leverage.")
   }
   groups <- c(sample = "sample", em = "em", ex = "ex")
@@ -734,8 +734,8 @@ A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logi
     eem_exclude(exclude)
   if(!is.null(components)){
     if(!is.null(pfmodel)) warning("The base model is ignored since you provided components manually!")
-    if(class(components[[1]]) == "parafac_components") components <- eempf_bindxc(components)
-    if(class(components) == "parafac_components"){
+    if(inherits(components[[1]], "parafac_components")) components <- eempf_bindxc(components)
+    if(inherits(components, "parafac_components")){
       Bfixed <- components$B
       Cfixed <- components$C
       comps <- ncol(components$B)
@@ -1431,7 +1431,7 @@ eempf_reorder <- function(pfmodel,order,decreasing = FALSE){
   if(ncol(pfmodel$A) != length(order)) stop("the length of the order vector does not fit the number of components")
 
   mod <- try(reorder.parafac(pfmodel,neworder = order), silent=TRUE)
-  if(class(mod) =="try-error") stop(mod) else {
+  if(inherits(mod, "try-error")) stop(mod) else {
     mod
   }
 }
@@ -1531,7 +1531,7 @@ eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detect
         list(B=mod$B,C=mod$C)
       }) %>%
       eempf_ssc(tcc = tcc, m = m, cores = cores)
-  } else if(all(unlist(lapply(pfmodels,class)) == "parafac") & !is.null(unlist(lapply(pfmodels,class)))){ ## PARAFAC models
+  } else if(all(unlist(lapply(pfmodels,inherits, what = "parafac"))) & !is.null(unlist(lapply(pfmodels,class)))){ ## PARAFAC models
     pfmodels %>% lapply(function(mod){
       list(B=mod$B,C=mod$C)
     }) %>%

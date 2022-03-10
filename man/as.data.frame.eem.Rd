@@ -7,9 +7,9 @@
 \method{as.data.frame}{eem}(x, row.names = NULL, optional = FALSE, gather = TRUE, ...)
 }
 \arguments{
-\item{x}{blabla}
+\item{x}{abc}
 
-\item{row.names}{asfas}
+\item{row.names}{abc}
 
 \item{optional}{ignored}
 

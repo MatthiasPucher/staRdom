@@ -141,7 +141,7 @@ absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec
 #' @return A data frame containing the adsorption slopes and slope ratios in column, one line for each sample.
 #'
 #' @references Helms, J., Kieber, D., Mopper, K. 2008. Absorption spectral slopes and slope ratios as indicators of molecular weight, source, and photobleaching of chromophoric dissolved organic matter. Limnol. Oceanogr., 53(3), 955–969
-#' \url{https://aslopubs.onlinelibrary.wiley.com/doi/pdf/10.4319/lo.2008.53.3.0955}
+#' \url{https://aslopubs.onlinelibrary.wiley.com/doi/10.4319/lo.2008.53.3.0955}
 #'
 #' @import dplyr
 #' @import doParallel
@@ -187,7 +187,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(class(.) == "drc",coef(.)["S:(Intercept)"],NA))) %>%
+        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),coef(.)["S:(Intercept)"],NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","S")) %>%
         mutate(SR = S275_295/S350_400) %>%
         bind_cols(res,.)
@@ -197,7 +197,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(class(.) == "drc",summary(.)$coefficients["S:(Intercept)","p-value"],NA))) %>%
+        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),summary(.)$coefficients["S:(Intercept)","p-value"],NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","p_S")) %>%
         bind_cols(res,.)
     }
@@ -206,7 +206,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(class(.) == "drc",ifelse(is.null(attr(., "lref")),coef(.)["lref:(Intercept)"],attr(., "lref")),NA))) %>%
+        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),coef(.)["lref:(Intercept)"],attr(., "lref")),NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","lref")) %>%
         bind_cols(res,.)
     }
@@ -215,7 +215,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(class(.) == "drc",ifelse(is.null(attr(., "lref")),summary(.)$coefficients["lref:(Intercept)","p-value"],NA),NA))) %>%
+        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),summary(.)$coefficients["lref:(Intercept)","p-value"],NA),NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","p_lref")) %>%
         bind_cols(res,.)
     }

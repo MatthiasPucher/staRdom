@@ -27,11 +27,11 @@ list_join <- function(df_list,by){
   df
 }
 
-## make data.frame from eem-metrix and optionally gather values
+## make data.frame from eem-matrix and optionally gather values
 #' Converting EEM data from class eem to data.frame.
 #'
-#' @param x blabla
-#' @param row.names asfas
+#' @param x abc
+#' @param row.names abc
 #' @param optional ignored
 #' @param ... ignored
 #' @param gather logical, says whether data.frame is returned with excitation wavelength as column names or as values of a column. If the data is gathered, the sample name is added as value in a calumn
@@ -258,7 +258,7 @@ eem_import_dir <- function(dir){
 
   for(file in eem_files){
     file <- load(file)
-    if(get(file) %>% class() == "eemlist"){
+    if(get(file) %>% inherits("eemlist")){
       if(exists("eem_list")) eem_list <- eem_bind(eem_list,get(file)) else eem_list <- get(file)
     } else {
       warning(paste0(file," is no object of class eemlist!"))

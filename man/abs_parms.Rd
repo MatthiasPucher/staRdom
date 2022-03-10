@@ -87,5 +87,5 @@ a2 <- abs_parms(absorbance, cuvle = 5,l_ref=list(NA,NA,NA), lref=TRUE, cores = 2
 }
 \references{
 Helms, J., Kieber, D., Mopper, K. 2008. Absorption spectral slopes and slope ratios as indicators of molecular weight, source, and photobleaching of chromophoric dissolved organic matter. Limnol. Oceanogr., 53(3), 955–969
-\url{https://aslopubs.onlinelibrary.wiley.com/doi/pdf/10.4319/lo.2008.53.3.0955}
+\url{https://aslopubs.onlinelibrary.wiley.com/doi/10.4319/lo.2008.53.3.0955}
 }

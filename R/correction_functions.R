@@ -88,9 +88,9 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type
     x1 <- try(eem$x %>% apply(1,function(row) pracma::pchip(xi=eem$ex[!is.na(row)],yi=row %>% na.omit(),x=eem$ex),...) %>% t(),silent=TRUE)
 
     x2 <- try(eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em),...),silent=TRUE)
-    if(class(x1)=="try-error" & class(x2)=="try-error") warning(eem$sample," could not be interpolated!")
-    if(class(x1)=="try-error") x1 <- matrix(NA,nrow(eem$x),ncol(eem$x))
-    if(class(x2)=="try-error") x2 <- matrix(NA,nrow(eem$x),ncol(eem$x))
+    if(inherits(x1, "try-error") & inherits(x2, "try-error")) warning(eem$sample," could not be interpolated!")
+    if(inherits(x1, "try-error")) x1 <- matrix(NA,nrow(eem$x),ncol(eem$x))
+    if(inherits(x2, "try-error")) x2 <- matrix(NA,nrow(eem$x),ncol(eem$x))
     eem$x <- cbind(x1,x2) %>% array(c(nrow(x1),ncol(x2),2)) %>%
       apply(1:2, mean, na.rm = TRUE)
     }
@@ -195,7 +195,7 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
   })
   if(!is.null(ex_exclude) & verbose) cat(paste0("Removed excitation wavelength(s): ",paste0(ex_exclude %>% sort(),collapse=", ")),fill=TRUE)
   if(!is.null(em_exclude) & verbose) cat(paste0("Removed emission wavelength(s): ",paste0(em_exclude %>% sort(),collapse=", ")),fill=TRUE)
-  class(eem_list) = "eemlist"
+  class(eem_list) <- "eemlist"
   eem_list
 }
 
@@ -230,11 +230,11 @@ eem_exclude <- function(eem_list, exclude = list,verbose=FALSE){
 eem_raman_normalisation2 <- function(data, blank="blank"){
   if((blank == "blank")[1]){
     res_list <- try(data %>% eem_raman_normalisation(),silent=TRUE)
-    if (class(res_list) == "try-error") {
+    if (inherits(res_list, "try-error")) {
       warning(res_list)
       stop("There was a problem with raman normalisation, please check the presence of a blank sample and the parameter blank!")
     }
-  } else if(is.data.frame(blank) & class(data) == "eemlist"){
+  } else if(is.data.frame(blank) & inherits(data, "eemlist")){
 
     res_list <- lapply(data,function(eem){
       rar <- blank[eem$sample %>% make.names(),]
@@ -248,7 +248,7 @@ eem_raman_normalisation2 <- function(data, blank="blank"){
       return(eem)
     })
     class(res_list) <- class(data)
-  } else if(is.numeric(blank) & length(blank)==1 & class(data) == "eemlist"){
+  } else if(is.numeric(blank) & length(blank) == 1 & inherits(data, "eemlist")){
     res_list <- lapply(1:length(data),function(i){
       data[[i]]$x <- data[[i]]$x/blank
       attr(data[[i]], "is_raman_normalized") <- TRUE
@@ -330,7 +330,7 @@ eem_ife_correction <- function(data, abs_data, cuvl = NULL, unit = c("absorbance
 #' eem_list3 <- eem_dilution(eem_list, dilution = dilutionT)
 #'
 eem_dilution <- function(data,dilution=1){
-  if(((is.numeric(dilution) & length(dilution)==1) | is.data.frame(dilution)) & class(data) == "eemlist"){
+  if(((is.numeric(dilution) & length(dilution)==1) | is.data.frame(dilution)) & inherits(data, "eemlist")){
     #if(all(eem_names(data) %in% row.names(dilution)))
     res_list <- lapply(1:length(data),function(i){
       if(is.data.frame(dilution)){
@@ -414,7 +414,7 @@ eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALS
 #' eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
 eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpolation = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE)
 {
-  if(data %>% class != "eemlist") stop("first argument has to be a list of eem samples!")
+  if(!inherits(data, "eemlist")) stop("first argument has to be a list of eem samples!")
   if(!is.numeric(remove_scatter_width)) stop("removed scatter slot width has to be numeric!")
   if(length(remove_scatter_width) == 1) remove_scatter_width <- rep(remove_scatter_width,4)
   if(remove_scatter[1]) data <- data %>% eem_remove_scattering(type="raman",order=1,width=remove_scatter_width[1])

@@ -53,7 +53,7 @@ staRdom is a package for R version [@r_development_core_team_r:_2019] to analyse
     * the wavelength distribution of absorption spectral slopes [@loiselle_optical_2009] and
     * user-defined values and slopes can be extracted or calculated from the absorbance spectra.
 
-staRdom has been developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
+staRdom has been developed and is maintained at WasserCluster Lunz (https://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (https://boku.ac.at/).
 
 A comparison in quality of results and performance of the PARAFAC algorithms in staRdom and drEEM can be found in Pucher et al. [-@pucher_stardom_2019]. The analysis process was developed and discussed in other papers and tutorials [e.g. @murphy_fluorescence_2013]. The aim of this package is to provide an elaborate and flexible way of using PARAFAC analysis of EEM data on the R platform. The offered functions follow the concept of Murphy et al. [-@murphy_fluorescence_2013]. We strongly recommend to read this paper to understand the underlying procedure of the analysis.
 
