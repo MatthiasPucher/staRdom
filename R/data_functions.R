@@ -240,6 +240,7 @@ eem_red2smallest <- function(data,verbose=FALSE){
 #' @description Reads Rdata and RDa files with one eemlist each. The eemlists are combined into one and returned.
 #'
 #' @param dir folder where RData files are saved
+#' @param verbose logical, set TRUE to show more information during import
 #'
 #' @return eemlist
 #' @export
@@ -252,21 +253,23 @@ eem_red2smallest <- function(data,verbose=FALSE){
 #' # due to package size issues no example data is provided for this function
 #' # eem_import_dir("C:/some_folder/with_EEMS/only_Rdata_files")
 #' }
-eem_import_dir <- function(dir){
+eem_import_dir <- function(dir, verbose = FALSE){
   eem_files <- dir(dir, pattern=".RData$|.RDa$", ignore.case = TRUE) %>%
     paste0(dir,"/",.)
 
   for(file in eem_files){
+    if(verbose) cat(paste0(file, " is read..."),fill=TRUE)
     file <- load(file)
     if(get(file) %>% inherits("eemlist")){
-      if(exists("eem_list")) eem_list <- eem_bind(eem_list,get(file)) else eem_list <- get(file)
+      if(exists("eems")) eems <- eem_bind(eems,get(file)) else eems <- get(file)
+      if(verbose) cat("completed.",fill=TRUE)
     } else {
       warning(paste0(file," is no object of class eemlist!"))
     }
     NULL
   }
 
-  eem_list
+  eems
 }
 
 #' Opens an R markdown template for an easy and userfriendly analysis of EEM data.

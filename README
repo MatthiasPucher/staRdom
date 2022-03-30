@@ -15,6 +15,10 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.24 to 1.1.26
+  minor changes to class checks
+  bugfix in eem_import_dir
+
 1.1.22 to 1.1.24
   Fixed function eem_csv2
   minor changes in warnings and errors
