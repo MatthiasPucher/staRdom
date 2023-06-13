@@ -24,7 +24,7 @@ This report was created using the R package staRdom version `r packageVersion("s
 ## Input parameters
 ```{r, include=FALSE}
 ###################################################
-#### Version 1.0.13 of EEM_simple_analysis.Rmd ####
+#### Version 1.1.26 of EEM_simple_analysis.Rmd ####
 ###################################################
 # Please use the same versions of staRdom and EEM_simple_analysis.Rmd
 # In general, there was no problem so far mixing the versions, but some

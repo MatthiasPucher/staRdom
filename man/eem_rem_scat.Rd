@@ -39,5 +39,6 @@ remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
 
 remove_scatter_width = c(15,10,16,12)
 
-eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
+eems <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
+ggeem(eems)
 }

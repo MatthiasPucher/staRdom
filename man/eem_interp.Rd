@@ -44,7 +44,7 @@ data(eem_list)
 eem_list <- eem_list[1:6]
 class(eem_list) <- "eemlist"
 
-remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
+remove_scatter <- c(FALSE, TRUE, TRUE, TRUE)
 
 remove_scatter_width = c(15, 10, 16, 12)
 

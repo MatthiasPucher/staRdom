@@ -4,10 +4,12 @@
 \alias{eem_import_dir}
 \title{Load all eemlist obects saved in different Rdata or RDa files in a folder.}
 \usage{
-eem_import_dir(dir)
+eem_import_dir(dir, verbose = FALSE)
 }
 \arguments{
 \item{dir}{folder where RData files are saved}
+
+\item{verbose}{logical, set TRUE to show more information during import}
 }
 \value{
 eemlist

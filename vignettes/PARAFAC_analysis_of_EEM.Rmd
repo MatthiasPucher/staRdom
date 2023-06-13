@@ -9,7 +9,7 @@ output:
     toc: true
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{PARAFAC analysis of EEM data to separate DOM components}
+  %\VignetteIndexEntry{PARAFAC analysis of EEM data to separate DOM components in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -422,12 +422,12 @@ Finding an appropriate PARAFAC model is an iterative process. For comparing diff
 ## Loading data
 
 ### Load drEEM example dataset
-For this tutorial the drEEM example data is used. The complete and corrected data is downloaded from http://models.life.ku.dk/drEEM and converted into an eemlist in R. The example PARAFAC models are calculated based on this complete sample set. You can also adapt that code to import any Matlab EEM data to staRdom.
+For this tutorial the drEEM example data is used. The complete and corrected data is downloaded from https://gitlab.com/dreem/drEEM and converted into an eemlist in R. The example PARAFAC models are calculated based on this complete sample set. You can also adapt that code to import any Matlab EEM data to staRdom.
 
 ```{r eval=FALSE, include=TRUE}
 dreem_raw <- tempfile()
-download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
-dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
+download.file("https://gitlab.com/dreem/drEEM/-/raw/master/tutorials_demos/datasets/PortSurveyData_corrected.mat?inline=false",dreem_raw)
+dreem_data <- dreem_raw %>%
   R.matlab::readMat()
 unlink(dreem_raw)
 

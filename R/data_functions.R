@@ -22,7 +22,8 @@
 list_join <- function(df_list,by){
   df <- df_list[[1]]
   for(n in 2:length(df_list)){
-    df <- full_join(df,df_list[[n]],by=by)
+    df <- try(full_join(df,df_list[[n]],by=by), silent = TRUE)
+    if(inherits(df,"try-error")) stop("Error in ",names(df_list)[n],": ",df)
   }
   df
 }
@@ -309,8 +310,8 @@ eem_easy <- function(){
 #' }
 eem_load_dreem <- function(){
   dreem_raw <- tempfile()
-  download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
-  dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
+  download.file("https://gitlab.com/dreem/drEEM/-/raw/master/tutorials_demos/datasets/PortSurveyData_corrected.mat?inline=false",dreem_raw)
+  dreem_data <- dreem_raw %>%
     readMat()
   unlink(dreem_raw)
 
@@ -449,3 +450,87 @@ eem_apply <- function(data, func, return = c("eemlist","value"),...){
   }
   ress
 }
+
+#' Export all samples of an eem_list
+#'
+#' @param file path to directory (csv format) or file (Matlab format)
+#' @param format either "csv" or "mat" to specify export format
+#' @param ... one or more eem_list objects
+#'
+#' @return 0 on successful export
+#'
+#' @import dplyr
+#' @importFrom readr write_csv
+#'
+#' @export
+#'
+#' @examples
+#' # create temporary directory to write out
+#' file <- paste0(tempdir(),"/eem_export/")
+#' dir.create(file)
+#'
+#' # run eem_export to write one csv file for each sample
+#' eem_export(file, format = "csv", eem_list)
+#'
+#' # show content of output directory
+#' dir(file)
+#'
+eem_export <- function(file, format = c("csv","mat"), ...){
+  if(format[1] == "mat"){
+    eem_export_matlab(file = file, ...)
+  } else if(format[1] == "csv"){
+    if(!file.exists(file) | !file.info(file)$isdir){
+      stop(file, " is not a valid folder!")
+    } else{
+      eem <- eem_bind(...)
+      if(!identical(eem_names(eem), eem_names(eem) %>% unique())){
+        eem_names(eem) <- eem_names(eem) %>% make.unique()
+        warning("Sample names were not unique! Unique names were produced automatically.")
+      }
+      lapply(eem, function(e){
+        data.frame(e$x) %>%
+          setNames(e$ex) %>%
+          mutate(em = e$em) %>%
+          select(em, as.character(e$ex)) %>%
+          write_csv(file = paste0(file,"/",e$sample,".csv"))
+      })
+    }
+  } else {
+    stop("The supplied format is not (yet) available!")
+  }
+  invisible(0)
+}
+
+#' Export samples in an EEM list to a single csv files
+#'
+#' @param eem_list EEM data as eemlist
+#' @param output path to folder where csv files are exported to
+#' @param ... additional arguments
+#'
+#' @return returns the exported EEMs as a list of data.frames
+#' @export
+#'
+#' @examples
+#' data(eem_list)
+#'
+#' output <- tempdir()
+#' output
+#' a <- eem_write_csv(eem_list, output)
+eem_write_csv <- function(eem_list, output, ...){
+  stopifnot(dir.exists(output))
+  stopifnot(inherits(eem_list,"eemlist"))
+  lapply(eem_list, function(eem){
+    cat("Exporting ",eem$sample,"...",fill=TRUE)
+    tab <- data.frame(wavelength = eem$em) %>%
+      bind_cols(eem$x %>%
+      `colnames<-`(eem$ex))
+    filename = paste0(eem$sample,".csv")
+    fil <- paste0(output,"/",filename)
+    if(file.exists(fil)){
+      warning(fil," existed and was overwritten!")
+    }
+    write_csv(x = tab, file = fil)
+  }) %>%
+    invisible()
+}
+

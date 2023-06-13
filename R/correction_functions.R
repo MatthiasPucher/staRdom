@@ -33,7 +33,7 @@
 #' eem_list <- eem_list[1:6]
 #' class(eem_list) <- "eemlist"
 #'
-#' remove_scatter <- c(TRUE, TRUE, TRUE, TRUE)
+#' remove_scatter <- c(FALSE, TRUE, TRUE, TRUE)
 #'
 #' remove_scatter_width = c(15, 10, 16, 12)
 #'
@@ -411,16 +411,17 @@ eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALS
 #'
 #' remove_scatter_width = c(15,10,16,12)
 #'
-#' eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
+#' eems <- eem_rem_scat(eem_list,remove_scatter,remove_scatter_width)
+#' ggeem(eems)
 eem_rem_scat <- function(data,remove_scatter,remove_scatter_width = 10, interpolation = FALSE, cores = parallel::detectCores(logical=FALSE), verbose = FALSE)
 {
   if(!inherits(data, "eemlist")) stop("first argument has to be a list of eem samples!")
   if(!is.numeric(remove_scatter_width)) stop("removed scatter slot width has to be numeric!")
   if(length(remove_scatter_width) == 1) remove_scatter_width <- rep(remove_scatter_width,4)
-  if(remove_scatter[1]) data <- data %>% eem_remove_scattering(type="raman",order=1,width=remove_scatter_width[1])
-  if(remove_scatter[2]) data <- data %>% eem_remove_scattering(type="raman",order=2,width=remove_scatter_width[2])
-  if(remove_scatter[3]) data <- data %>% eem_remove_scattering(type="rayleigh",order=1,width=remove_scatter_width[3])
-  if(remove_scatter[4]) data <- data %>% eem_remove_scattering(type="rayleigh",order=2,width=remove_scatter_width[4])
+  if(remove_scatter[1]) data <- data %>% eem_remove_scattering(type = "raman", order = 1, width = remove_scatter_width[1])
+  if(remove_scatter[2]) data <- data %>% eem_remove_scattering(type = "raman", order = 2, width = remove_scatter_width[2])
+  if(remove_scatter[3]) data <- data %>% eem_remove_scattering(type = "rayleigh", order = 1, width = remove_scatter_width[3])
+  if(remove_scatter[4]) data <- data %>% eem_remove_scattering(type = "rayleigh", order = 2, width = remove_scatter_width[4])
 
   if(interpolation != FALSE) data <- eem_interp(data, cores = cores, type = interpolation, verbose = verbose)
 

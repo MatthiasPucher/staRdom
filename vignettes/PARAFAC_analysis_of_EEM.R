@@ -172,8 +172,8 @@ slope_parms
 
 ## ----eval=FALSE, include=TRUE-------------------------------------------------
 #  dreem_raw <- tempfile()
-#  download.file("http://models.life.ku.dk/sites/default/files/drEEM_dataset.zip",dreem_raw)
-#  dreem_data <- unz(dreem_raw, filename="Backup/PortSurveyData_corrected.mat", open = "rb") %>%
+#  download.file("https://gitlab.com/dreem/drEEM/-/raw/master/tutorials_demos/datasets/PortSurveyData_corrected.mat?inline=false",dreem_raw)
+#  dreem_data <- dreem_raw %>%
 #    R.matlab::readMat()
 #  unlink(dreem_raw)
 #  

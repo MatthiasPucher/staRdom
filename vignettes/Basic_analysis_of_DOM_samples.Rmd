@@ -51,7 +51,7 @@ Later in the vignette there is also a chapter about troubleshooting. If you expe
 > This file aims for beginners in R and describes an easy way of calculating EEM peaks and absorbance (slope) parameters by just setting variables (no use of functions) in an Rmd file. The options are limited and a PARAFAC analysis cannot be done this way. This way of more or less automatic analysis bears the risks of missing informations in the data and overlooking problems like outliers and noise in the data. For more possibilities, options and a PARAFAC analysis please refer to the vignette for the [PARAFAC analysis](PARAFAC_analysis_of_EEM.html). 
 
 ## Hint for beginners in R
-If you are a beginner in R you may find some help at the R-Studio online-learning (https://docs.rstudio.com/), or Modern R with the tidyverse (https://b-rodrigues.github.io/modern_R/) by Bruno Rodrigues.
+If you are a beginner in R you may find some help at the R-Studio online-learning (https://docs.posit.co/ide/user/), or Modern R with the tidyverse (https://modern-rstats.eu/) by Bruno Rodrigues.
 
 The package is available on CRAN and can be installed via `install.packages("staRdom")`.
 
@@ -444,7 +444,7 @@ You can run the script by clicking the "Knit" button in the toolbar of RStudio. 
 
 # Installation
 
-The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://www.rstudio.com/) can help beginners to get into it.
+The script is running in R environment [@r_development_core_team_r:_2019]. Using a graphical user interface like RStudio (https://posit.co/download/rstudio-desktop/) can help beginners to get into it.
 
 You can install staRdom via RStudio by klicking Tools -> Install Packages... or by entering the command `install.packages("staRdom")` in the command line.
 
@@ -463,13 +463,13 @@ https://cran.r-project.org/doc/manuals/r-release/R-admin.html#R-Installation-and
 
 Download:
 
-https://www.rstudio.com/
+https://posit.co/download/rstudio-desktop/
 
 Please find the installer for your specific operating system there.
 
 ## Optional software
 
-Optionally(!) you need a [Java runtime environment](https://www.java.com/de/download/) to import data from XLS files and a TeX environment (e.g. [MikTeX](http://miktex.org) for Windows) to export PDF files. You can use the script to the full extend without those.
+Optionally(!) you need a [Java runtime environment](https://www.java.com/de/download/) to import data from XLS files and a TeX environment (e.g. [MikTeX](https://miktex.org) for Windows) to export PDF files. You can use the script to the full extend without those.
 
 
 # Troubleshooting

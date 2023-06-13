@@ -1,9 +1,9 @@
 Package: staRdom
 Type: Package
 Title: PARAFAC Analysis of EEMs from DOM
-Version: 1.1.26
-Date: 2022-03-30
-Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@boku.ac.at",
+Version: 1.1.27
+Date: 2023-06-13
+Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@gmx.net",
                   role = c("aut", "cre")),
                   person("Daniel", "Graeber", email = "daniel.graeber@ufz.de",
                   role = c("aut", "ctb")),
@@ -48,7 +48,7 @@ Suggests:
     askpass(>= 1.1),
     httr(>= 1.4.2),
     rmarkdown
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 URL: https://cran.r-project.org/package=staRdom
 BugReports: https://github.com/MatthiasPucher/staRdom/issues

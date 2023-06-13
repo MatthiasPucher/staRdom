@@ -64,7 +64,7 @@ absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec
       unlist() %>%
       matrix(ncol = length(data[[first_number]]), byrow = TRUE) %>%
       data.frame(stringsAsFactors = FALSE) %>%
-      mutate_all(gsub,pattern=ifelse(dec != "",dec,"."),replacement=".",fixed=TRUE)
+      mutate(across(.fns = ~gsub(x = ., pattern = ifelse(dec != "",dec,"."),replacement=".",fixed=TRUE)))
     # if(any(as.numeric(table[1,]) %>% is.na())){
     #   table <- table %>%
     #   setNames(.[1,])
@@ -187,7 +187,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),coef(.)["S:(Intercept)"],NA))) %>%
+        mutate(across(contains("model"), .fns = ~ifelse(inherits(., "drc"),coef(.)["S:(Intercept)"],NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","S")) %>%
         mutate(SR = S275_295/S350_400) %>%
         bind_cols(res,.)
@@ -197,7 +197,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),summary(.)$coefficients["S:(Intercept)","p-value"],NA))) %>%
+        mutate(across(contains("model"), .fns = ~ifelse(inherits(., "drc"),summary(.)$coefficients["S:(Intercept)","p-value"],NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","p_S")) %>%
         bind_cols(res,.)
     }
@@ -206,7 +206,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),coef(.)["lref:(Intercept)"],attr(., "lref")),NA))) %>%
+        mutate(across(contains("model"), .fns = ~ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),coef(.)["lref:(Intercept)"],attr(., "lref")),NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","lref")) %>%
         bind_cols(res,.)
     }
@@ -215,7 +215,7 @@ abs_parms <- function(abs_data, cuvle = NULL, unit = c("absorbance", "absorption
       res <- res %>%
         select(contains("model")) %>%
         rowwise() %>%
-        mutate_at(.vars = vars(contains("model")), .funs = funs(ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),summary(.)$coefficients["lref:(Intercept)","p-value"],NA),NA))) %>%
+        mutate(across(contains("model"), .fns = ~ifelse(inherits(., "drc"),ifelse(is.null(attr(., "lref")),summary(.)$coefficients["lref:(Intercept)","p-value"],NA),NA))) %>%
         setNames(names(.) %>% stringr::str_replace("model","p_lref")) %>%
         bind_cols(res,.)
     }
