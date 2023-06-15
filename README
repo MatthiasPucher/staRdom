@@ -9,12 +9,18 @@ staRdom is a package for R to analyse fluorescence and absorbance data of dissol
 * absorbance slope parameters (a254, a300, E2:E3, E4:E6, S275-295, S350-400, S300-700, SR, doi:10.4319/lo.2008.53.3.0955, doi:10.1016/j.marchem.2004.02.008)
 * PARAFAC/CANDECOMP analysis can separate the components of the EEMs that can be linked to chemical components in DOM (doi:10.1039/c3ay41160e).
 
-staRdom was developed and is maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (http://www.boku.ac.at/).
+staRdom was developed and maintained at WasserCluster Lunz (http://www.wcl.ac.at/index.php/en/) and the University of Natural Resources and Life Sciences, Vienna (http://www.boku.ac.at/). Currently, the package is maintained as my personal project.
 
 The analysis process was already discussed in other papers and tutorials. The aim of this package was to bring a familiar way of using PARAFAC analysis for DOM to the R platform. The offered functions follow the concept of doi:10.1039/c3ay41160e. Reading it is recommended and can help your understanding!
 
 
 Changelog:
+1.1.26 to 1.1.28
+  fixed example of eem_load_dreem due to problems on some computers reading UTF8 data
+  fixed deprecated functions in dplyr
+  added function do export data
+  updated links within the whole package
+
 1.1.24 to 1.1.26
   minor changes to class checks
   bugfix in eem_import_dir

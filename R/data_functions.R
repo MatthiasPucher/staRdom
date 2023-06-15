@@ -306,7 +306,13 @@ eem_easy <- function(){
 #'
 #' @examples
 #' \donttest{
-#' eem_list <- eem_load_dreem()
+#' # Reading MATLAB files from recent versions like the demo dataset from drEEM
+#' # can cause problems if the R installation lacks UTF8 support in iconv.
+#' # Therefore, we use try() in the example. If you encounter related problems,
+#' # please refer to the help for R.matlab::readMat() for details.
+#'
+#' eem_list <- try(eem_load_dreem(), silent = FALSE)
+#' eem_list
 #' }
 eem_load_dreem <- function(){
   dreem_raw <- tempfile()
