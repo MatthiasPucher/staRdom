@@ -174,6 +174,7 @@ eem_scale_ext <- function(data){
 #' Remove wavelengths, that are missing in at least one sample form the whole set.
 #'
 #' @param data data of EEM samples as eemlist
+#' @param return either "eems" or "list", function returens reduced eems or a list of the wavelengths to be reduced.
 #' @param verbose states whether additional information is given in the command line
 #'
 #' @details This step is neccessary to perform a PARAFAC analysis which can only be calculated with spectra of similar range.
@@ -207,7 +208,8 @@ eem_scale_ext <- function(data){
 #' eem_list4 <- eem_red2smallest(eem_list3)
 #' #ggeem(eem_list4)
 #'
-eem_red2smallest <- function(data,verbose=FALSE){
+eem_red2smallest <- function(data, return = "eems", verbose=FALSE){
+  stopifnot(return %in% c("eems","list"))
   ems <- lapply(data,`[[`,"em")
   ems
   emspres <- ems %>%
@@ -233,7 +235,13 @@ eem_red2smallest <- function(data,verbose=FALSE){
     matrix(nrow = length(exsTF), byrow = TRUE) %>%
     apply(2,all)
 
-  eem_exclude(data,list(ex = exspres[!exspresTF], em = emspres[!emspresTF]))
+  exclude <- list(ex = exspres[!exspresTF], em = emspres[!emspresTF])
+
+  if(return[1] == "eems"){
+    eem_exclude(data,exclude)
+  } else if(return[1] == "list"){
+    exclude
+  }
 }
 
 #' Load all eemlist obects saved in different Rdata or RDa files in a folder.

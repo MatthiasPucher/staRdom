@@ -8,6 +8,7 @@ A_missing(
   eem_list,
   pfmodel = NULL,
   cores = parallel::detectCores(logical = FALSE),
+  adj_samples = TRUE,
   components = NULL,
   const = NULL,
   control = NULL,
@@ -20,6 +21,8 @@ A_missing(
 \item{pfmodel}{object of class parafac}
 
 \item{cores}{number of cores to use for parallel processing}
+
+\item{adj_samples}{logical, whether wavelengths in the samples are cut automatically to fit the present data in the model}
 
 \item{components}{optionally supply components to use manually, either as a variable of class parafac_components or as a list of variables of class parafac_components, if you do so,}
 
@@ -36,7 +39,7 @@ object of class parafac
 Samples from an eemlist that were not used in the modelling process are added as entries in the  A-modes. Values are calculated using fixed B and C modes in the PARAFAC algorithm. B and C modes can be provided via a previously calculated model or as matrices manually.
 }
 \details{
-This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
+This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). The wavelengths in the samples and in the PARAFAC model must be identically. Surplus wavelengths in the samples can be adjusted automatically with the argument adj_samples = TRUE, surplus wavelengths in the PARAFAC model have to be mitigated by interpolating the missing wavelengths in the samples manually. If there is a mismatch in wavelengths, the function provides you with the necessary information. Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
 }
 \examples{
 \donttest{
@@ -44,5 +47,7 @@ data(eem_list)
 data(pf_models)
 
 A_missing(eem_list, pf4[[1]], cores = 2)
+
+
 }
 }

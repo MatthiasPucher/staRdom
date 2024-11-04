@@ -64,14 +64,14 @@ The absorbance data is a data frame with the first column called "wavelength" co
 
 The following spectral parameters are calculated:
 \itemize{
-   \item $S_{275-295}$ slope between 275 and 295 nm calculated with nonlinear regression
-   \item $S_{350-400}$ slope between 350 and 400 nm calculated with nonlinear regression
-   \item $S_{300-700}$ slope between 275 and 295 nm calculated with nonlinear regression
-   \item SR slope ratio, calculated by $S_{275-295}$/$S_{350-400}$
-   \item E2:E3 ratio $a_{250}$/$a_{365}$
-   \item E4:E6 ratio $a_{465}$/$a_{665}$
-   \item $a_{254}$ absorbance at 254 nm
-   \item $a_{300}$ absorbance at 300 nm
+   \item \eqn{S_{275-295}} slope between 275 and 295 nm calculated with nonlinear regression
+   \item \eqn{S_{350-400}} slope between 350 and 400 nm calculated with nonlinear regression
+   \item \eqn{S_{300-700}} slope between 275 and 295 nm calculated with nonlinear regression
+   \item SR slope ratio, calculated by \eqn{S_{275-295}/S_{350-400}}
+   \item E2:E3 ratio \eqn{a_{250}/a_{365}}
+   \item E4:E6 ratio \eqn{a_{465}/a_{665}}
+   \item \eqn{a_{254}} absorbance at 254 nm
+   \item \eqn{a_{300}} absorbance at 300 nm
    }
 Depending on available wavelength range, values might be NA.
 Additionally other wavelength limits can be defined. The slope ratio might fail in this case.

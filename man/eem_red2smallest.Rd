@@ -4,10 +4,12 @@
 \alias{eem_red2smallest}
 \title{Remove wavelengths, that are missing in at least one sample form the whole set.}
 \usage{
-eem_red2smallest(data, verbose = FALSE)
+eem_red2smallest(data, return = "eems", verbose = FALSE)
 }
 \arguments{
 \item{data}{data of EEM samples as eemlist}
+
+\item{return}{either "eems" or "list", function returens reduced eems or a list of the wavelengths to be reduced.}
 
 \item{verbose}{states whether additional information is given in the command line}
 }

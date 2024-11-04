@@ -125,14 +125,14 @@ absorbance_read <- function(absorbance_path, order = TRUE, recursive = TRUE, dec
 #'
 #' The following spectral parameters are calculated:
 #' \itemize{
-#'    \item $S_{275-295}$ slope between 275 and 295 nm calculated with nonlinear regression
-#'    \item $S_{350-400}$ slope between 350 and 400 nm calculated with nonlinear regression
-#'    \item $S_{300-700}$ slope between 275 and 295 nm calculated with nonlinear regression
-#'    \item SR slope ratio, calculated by $S_{275-295}$/$S_{350-400}$
-#'    \item E2:E3 ratio $a_{250}$/$a_{365}$
-#'    \item E4:E6 ratio $a_{465}$/$a_{665}$
-#'    \item $a_{254}$ absorbance at 254 nm
-#'    \item $a_{300}$ absorbance at 300 nm
+#'    \item \eqn{S_{275-295}} slope between 275 and 295 nm calculated with nonlinear regression
+#'    \item \eqn{S_{350-400}} slope between 350 and 400 nm calculated with nonlinear regression
+#'    \item \eqn{S_{300-700}} slope between 275 and 295 nm calculated with nonlinear regression
+#'    \item SR slope ratio, calculated by \eqn{S_{275-295}/S_{350-400}}
+#'    \item E2:E3 ratio \eqn{a_{250}/a_{365}}
+#'    \item E4:E6 ratio \eqn{a_{465}/a_{665}}
+#'    \item \eqn{a_{254}} absorbance at 254 nm
+#'    \item \eqn{a_{300}} absorbance at 300 nm
 #'    }
 #' Depending on available wavelength range, values might be NA.
 #' Additionally other wavelength limits can be defined. The slope ratio might fail in this case.
@@ -359,9 +359,15 @@ abs_fit_slope <- function(wl,abs,lim,l_ref = 350,control = drmc(errorm = FALSE, 
 #' abs_data_cor1 <- abs_blcor(absorbance[1:2])
 #'
 abs_blcor <- function(abs_data, wlrange = c(680,700)){
+  if(any(wlrange > max(abs_data$wavelength)) | any (wlrange < min(abs_data$wavelength)) | wlrange[1] >= wlrange[2]){
+    stop("Please check the absorbance data and the range of wavelengths to use for blank correction! The range has to be within the range of the samples and data has to be present for every sample.")
+  }
   ad <- abs_data %>%
     .[.$wavelength >= wlrange[1] & .$wavelength <= wlrange[2],] %>%
     apply(2,mean,na.rm=TRUE)
+  if(any(is.nan(ad))){
+    stop("Please check the absorbance data and the range of wavelengths to use for blank correction! The range has to be within the range of the samples and data has to be present for every sample.")
+  }
   ad2 <- sweep(data.matrix(abs_data),2,ad) %>%
     as.data.frame() %>%
     select(-1) %>%

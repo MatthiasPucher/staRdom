@@ -33,9 +33,6 @@ cores <- 2
 # Introduction
 staRdom is a package for R version `r R.Version()$major` [@r_development_core_team_r:_2019] to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
 
-# Introduction
-staRdom is a package for R version [@r_development_core_team_r:_2019] to analyse fluorescence and absorbance data of dissolved organic matter (DOM). The important features are:
-
 * separating the components of the EEMs via PARAFAC/CANDECOMP [@murphy_fluorescence_2013; @bro_parafac_1997; @helwig_multiway_2019].
 * validating the model using a split-half analysis, the core consistency, the model fit or visually examining the residuals
 * correcting excitation-emission-matrices [@murphy_fluorescence_2013; @massicotte_eemr_2019]

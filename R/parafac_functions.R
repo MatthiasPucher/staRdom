@@ -700,12 +700,13 @@ eempf_residuals_metrics <- function(residuals, leverage){
 #' @param eem_list object of class eemlist with sample data
 #' @param pfmodel object of class parafac
 #' @param cores number of cores to use for parallel processing
+#' @param adj_samples logical, whether wavelengths in the samples are cut automatically to fit the present data in the model
 #' @param components optionally supply components to use manually, either as a variable of class parafac_components or as a list of variables of class parafac_components, if you do so,
 #' @param const optional constraints for model, just used, when components are supplied
 #' @param control optional constraint control parameters for model, just used, when components are supplied
 #' @param ... additional arguments passed to eem_parafac
 #'
-#' @details This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
+#' @details This function can be used to calculate A modes (sample loadings) for samples that were previously excluded from the modelling process (e.g. outliers). The wavelengths in the samples and in the PARAFAC model must be identically. Surplus wavelengths in the samples can be adjusted automatically with the argument adj_samples = TRUE, surplus wavelengths in the PARAFAC model have to be mitigated by interpolating the missing wavelengths in the samples manually. If there is a mismatch in wavelengths, the function provides you with the necessary information. Another way to use it would be a recombination of components from different models and calculating the according sample loadings. Expecially the later application is experimental and results have to be seen critically! Nevertheless, I decided to supply this function to stimulate some experiments on that and would be interested in your findings and feedback.
 #'
 #' @return object of class parafac
 #' @export
@@ -721,17 +722,58 @@ eempf_residuals_metrics <- function(residuals, leverage){
 #' data(pf_models)
 #'
 #' A_missing(eem_list, pf4[[1]], cores = 2)
+#'
+#'
 #' }
-A_missing <- function(eem_list,pfmodel = NULL,cores = parallel::detectCores(logical = FALSE),components = NULL, const = NULL, control = NULL, ...){
-  eem_list <- eem_red2smallest(eem_list)
+A_missing <- function(eem_list, pfmodel = NULL, cores = parallel::detectCores(logical = FALSE), adj_samples = TRUE, components = NULL, const = NULL, control = NULL, ...){
   if(is.null(pfmodel) & is.null(components)) stop("You must either specify a model or components as a base for the newly generated model!")
 
   exclude <- list("ex" = eem_list[[1]]$ex[!(eem_list[[1]]$ex %in% rownames(pfmodel$C))],
                   "em" = eem_list[[1]]$em[!(eem_list[[1]]$em %in% rownames(pfmodel$B))],
                   "sample" = c()
   )
-  x <- eem_list %>%
-    eem_exclude(exclude)
+
+  red_list <- eem_red2smallest(eem_list, return = "list")
+
+  if(adj_samples) {
+    if(length(red_list$ex)>0 | length(red_list$em)>0){
+      eem_list <- eem_red2smallest(eem_list)
+
+      warning("The wavelengths in the provided samples are not equal over the whole sample set and were automatically removed.")
+    }
+    if(!is.null(exclude$ex) | !is.null(exclude$em)){
+      x <- eem_list %>%
+        eem_exclude(exclude)
+      warning(paste0("The provided samples contain the following wavelengths that
+            are not present in the PARAFAC model: Emission ",
+                     paste0(exclude$em, collapse = ", "),
+                     "; Excitation ",
+                     paste0(exclude$ex, collapse = ", "), ". These wavelengths were automatically removed."))
+    }
+  } else {
+    if(length(red_list$ex)>0 | length(red_list$em)>0){
+      stop("The wavelengths in the provided samples are not equal over the whole sample set. Please run A_missing with adj_samples = TRUE to remove the surplus wavelengths automatically or adjust manually.")
+    }
+    if(!is.null(exclude$ex) | !is.null(exclude$em)){
+      stop(paste0("The provided samples contain the following wavelengths that
+            are not present in the PARAFAC model: Emission ",
+                  paste0(exclude$em, collapse = ", "),
+                  "; Excitation ",
+                  paste0(exclude$ex, collapse = ", "), ". These wavelengths can be excluded automatically, if A_missing is run with adj_samples = TRUE."))
+    }
+  }
+
+  missing <- list("ex" = rownames(pfmodel$C)[(!rownames(pfmodel$C) %in% eem_list[[1]]$ex)],
+                  "em" = rownames(pfmodel$B)[(!rownames(pfmodel$B) %in% eem_list[[1]]$em)])
+
+  if(length(missing$ex) > 0 | length(missing$em) > 0){
+    stop(paste0("The provided samples are missing the following wavelengths that
+            are present in the PARAFAC model: Emission ",
+           paste0(missing$em, collapse = ", "),
+           "; Excitation ",
+           paste0(missing$ex, collapse = ", "), "."))
+  }
+
   if(!is.null(components)){
     if(!is.null(pfmodel)) warning("The base model is ignored since you provided components manually!")
     if(inherits(components[[1]], "parafac_components")) components <- eempf_bindxc(components)
@@ -828,7 +870,7 @@ splithalf <- function(eem_list, comps, splits = NA, rand = FALSE, normalise = TR
 
   if(verbose) close(pb)
 
-#  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
+  #  if(verbose) cat("The returned fits variable is of class", class(fits), ", subclasses are [", paste(lapply(fits, lapply, class) %>% unlist(), collapse = ","), "] and has", length(fits), "elements that are named [", paste(names(fits), collapse = ","), "].", fill = TRUE)
 
   sscs <- eempf_ssc(fits, tcc = TRUE, cores = cores)
 
@@ -1097,9 +1139,9 @@ eempf_openfluor <- function(pfmodel, file, Fmax = TRUE, upload = FALSE, email = 
   }
   if(!is.null(email)){
     if(!grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>",
-           as.character(email), ignore.case = TRUE)){
-             warning("The email address does not correspond to the expected pattern!")
-  }
+              as.character(email), ignore.case = TRUE)){
+      warning("The email address does not correspond to the expected pattern!")
+    }
   }
   if(Fmax){
     pfmodel <- eempf_rescaleBC(pfmodel)
@@ -1744,14 +1786,14 @@ eempf_convergence <- function(pfmodel, print = TRUE){
     conv <- lapply(pfmodel$models,`[[`,"cflag") %>% unlist()
     res <- list(models = n, converging = sum(conv == 0), nc_itlim = sum(conv == 1), nc_other = sum(conv == 2), conv = conv, sses = sses)
     if(print){
-    cat("Calculated models: ", n, fill = TRUE)
-    cat("Converging models: ", sum(conv == 0), fill = TRUE)
-    cat("Not converging Models, iteration limit reached: ", sum(conv == 1), fill = TRUE)
-    cat("Not converging models, other reasons: ", sum(conv == 2), fill = TRUE)
-    cat("Best SSE: ", min(sses), fill = TRUE)
-    cat("Summary of SSEs of converging models:",fill = TRUE)
-    summary(sses[conv == 0]) %>%
-      print()
+      cat("Calculated models: ", n, fill = TRUE)
+      cat("Converging models: ", sum(conv == 0), fill = TRUE)
+      cat("Not converging Models, iteration limit reached: ", sum(conv == 1), fill = TRUE)
+      cat("Not converging models, other reasons: ", sum(conv == 2), fill = TRUE)
+      cat("Best SSE: ", min(sses), fill = TRUE)
+      cat("Summary of SSEs of converging models:",fill = TRUE)
+      summary(sses[conv == 0]) %>%
+        print()
     }
     invisible(res)
   }

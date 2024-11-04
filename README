@@ -15,6 +15,10 @@ The analysis process was already discussed in other papers and tutorials. The ai
 
 
 Changelog:
+1.1.28 to 1.1.29
+  Added a data check for the absorbance baseline correction.
+  Added data check for A_missing.
+
 1.1.26 to 1.1.28
   fixed example of eem_load_dreem due to problems on some computers reading UTF8 data
   fixed deprecated functions in dplyr
