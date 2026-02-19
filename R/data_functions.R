@@ -538,7 +538,7 @@ eem_write_csv <- function(eem_list, output, ...){
     tab <- data.frame(wavelength = eem$em) %>%
       bind_cols(eem$x %>%
       `colnames<-`(eem$ex))
-    filename = paste0(eem$sample,".csv")
+    filename <- paste0(eem$sample,".csv")
     fil <- paste0(output,"/",filename)
     if(file.exists(fil)){
       warning(fil," existed and was overwritten!")

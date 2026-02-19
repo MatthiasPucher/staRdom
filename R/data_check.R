@@ -141,7 +141,7 @@ eem_duplicates.data.frame <- function(data){
 #' # the whole spectrum when you measure blanks, there is no need
 #' # to supply the data and do an inner-filter effect correction.
 eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NULL, correction = FALSE, error = TRUE){
-  problem = FALSE
+  problem <- FALSE
 
   nas <- eem_is.na(eem_list)
   if(any(nas > 0)){
@@ -151,13 +151,13 @@ eem_checkdata <- function(eem_list,absorbance,metadata = NULL, metacolumns = NUL
     } else {
       cat("Please consider interpolating the data. It is highly recommended, due to more stable and meaningful PARAFAC models!")
     }
-    problem = TRUE
+    problem <- TRUE
   }
 
   size_prob <- eem_checksize(eem_list)
   if(length(size_prob) > 0){
     cat("The following samples contain more EEM data than the smallest in the sample set:",paste0(size_prob,collapse = "", sep=", "),fill=TRUE)
-    problem = TRUE
+    problem <- TRUE
   }
 
 if(correction){
@@ -182,7 +182,7 @@ if(correction){
         lapply(function(eem) eem$location)
       cat(dup,"in ",paste0(locs,collapse=", "), fill=TRUE)
     }) %>% invisible()
-    problem = TRUE
+    problem <- TRUE
   }
 
   abs_no_eem <- colnames(absorbance)[!colnames(absorbance) %in% eem_names(eem_list)] %>%
@@ -207,7 +207,7 @@ if(correction){
         lapply(function(eem) eem$location)
       cat(dup,"in ",paste0(locs,collapse=", "), fill=TRUE)
     }) %>% invisible()
-    problem = TRUE
+    problem <- TRUE
   }
 
   duplsa <- eem_duplicates(absorbance)
@@ -231,7 +231,7 @@ if(correction){
         lapply(function(eem) eem$location)
       cat(inv,"in ",paste0(locs,collapse=", "), fill=TRUE)
     }) %>% invisible()
-    problem = TRUE
+    problem <- TRUE
   }
 
   invalid_abs <- colnames(absorbance)[!colnames(absorbance) %in% make.names(colnames(absorbance))]

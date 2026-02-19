@@ -58,8 +58,14 @@
 #'
 #' }
 eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type = TRUE, verbose = FALSE, nonneg=TRUE, extend = FALSE,...){
-  cl <- makeCluster(spec = min(cores,length(data)), type = "PSOCK")
-  doParallel::registerDoParallel(cl)
+
+  if ((cores > 1) & (length(data) > 1)) {
+    cl <- makeCluster(spec = min(cores,length(data)), type = "PSOCK")
+    doParallel::registerDoParallel(cl)
+  } else {
+    registerDoSEQ()
+  }
+
   if(verbose){
     cat("interpolating missing data in",length(data),"EEMs", fill=TRUE)
   }
@@ -70,7 +76,7 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type
     if(type == 4){
       eem$x <- cbind(zoo::na.approx(eem$x,...),t(zoo::na.approx(t(eem$x),...))) %>% array(c(nrow(eem$x),ncol(eem$x),2)) %>%
         apply(1:2, mean, na.rm = TRUE)
-            }
+    }
     if(type == 1 | type == TRUE){
       x <- eem$x %>%
         data.frame() %>%
@@ -83,16 +89,16 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type
         filter(!is.na(z))
       x3 <- MBA::mba.points(xyz = x2 %>% select(em,ex,z), xy.est = expand.grid(em = eem$em, ex = eem$ex), verbose = verbose, extend = extend, ...)
       eem$x[is.na(eem$x)] <- x3$xyz.est[,3] %>% matrix(nrow = nrow(eem$x), ncol = ncol(eem$x)) %>% .[is.na(eem$x)] #%>% pmin(max(eem$x,na.rm=TRUE)) %>% pmax(min(eem$x,na.rm=TRUE))#matrix(x3,nrow=length(eem$em), ncol = length(eem$ex))
-      }
+    }
     if(type == 2){
-    x1 <- try(eem$x %>% apply(1,function(row) pracma::pchip(xi=eem$ex[!is.na(row)],yi=row %>% na.omit(),x=eem$ex),...) %>% t(),silent=TRUE)
+      x1 <- try(eem$x %>% apply(1,function(row) pracma::pchip(xi=eem$ex[!is.na(row)],yi=row %>% na.omit(),x=eem$ex),...) %>% t(),silent=TRUE)
 
-    x2 <- try(eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em),...),silent=TRUE)
-    if(inherits(x1, "try-error") & inherits(x2, "try-error")) warning(eem$sample," could not be interpolated!")
-    if(inherits(x1, "try-error")) x1 <- matrix(NA,nrow(eem$x),ncol(eem$x))
-    if(inherits(x2, "try-error")) x2 <- matrix(NA,nrow(eem$x),ncol(eem$x))
-    eem$x <- cbind(x1,x2) %>% array(c(nrow(x1),ncol(x2),2)) %>%
-      apply(1:2, mean, na.rm = TRUE)
+      x2 <- try(eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em),...),silent=TRUE)
+      if(inherits(x1, "try-error") & inherits(x2, "try-error")) warning(eem$sample," could not be interpolated!")
+      if(inherits(x1, "try-error")) x1 <- matrix(NA,nrow(eem$x),ncol(eem$x))
+      if(inherits(x2, "try-error")) x2 <- matrix(NA,nrow(eem$x),ncol(eem$x))
+      eem$x <- cbind(x1,x2) %>% array(c(nrow(x1),ncol(x2),2)) %>%
+        apply(1:2, mean, na.rm = TRUE)
     }
     if(type == 3){
       eem$x <- eem$x %>% apply(2,function(col) pracma::pchip(xi=eem$em[!is.na(col)],yi=col %>% na.omit(),x=eem$em,...))
@@ -103,7 +109,10 @@ eem_interp <- function(data,cores = parallel::detectCores(logical = FALSE), type
     if(nonneg) eem$x[eem$x<0] <- 0
     eem
   }
-  stopCluster(cl)
+
+  if ((cores > 1) & (length(data) > 1)) {
+    stopCluster(cl)
+  }
 
   class(eem_list) <- "eemlist"
   eem_list
@@ -374,7 +383,7 @@ eem_smooth <- function(data, n = 4, cores = parallel::detectCores(logical = FALS
 
   cl <- makePSOCKcluster(min(cores, length(data)))
   clusterExport(cl, c("data","n"), envir = environment())
-  clusterEvalQ(cl,require(dplyr))
+  clusterEvalQ(cl, require(dplyr))
   data <- parLapply(cl,data,function(eem){
     k <- which(eem$em[1] + n >= eem$em) %>% max()
     eem$x <- eem$x %>% apply(2,function(col) col %>% zoo::rollmean(k=k,fill=c(0,0,0)))

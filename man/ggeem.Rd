@@ -67,7 +67,7 @@ The data can be of different sources:
 
     A colour palette can be specified using the argument colpal.
 
-    Plotting distinct samples can be done using \code{\link{eem_extract}}. Please see example.
+    Plotting distinct samples can be done using \code{\link[eemR]{eem_extract}}. Please see example.
 }
 \examples{
 ## plotting two distinct samples

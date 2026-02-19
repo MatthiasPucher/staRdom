@@ -7,7 +7,7 @@
 eempf_mleverage(pfres_comps, ecdf = FALSE, stats = FALSE)
 }
 \arguments{
-\item{pfres_comps}{object of class parafac}
+\item{pfres_comps}{list of one or more parafac models}
 
 \item{ecdf}{logical, transforme leverages to according empirical quantiles (\code{\link[stats]{ecdf}})}
 

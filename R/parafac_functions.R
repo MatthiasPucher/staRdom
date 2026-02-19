@@ -57,14 +57,19 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     eem_array <- eem_array %>% norm_array()
   }
   if(verbose) cat(paste0(cores," core",ifelse(cores > 1,"s are", " is" )," used for the calculation."),fill=TRUE)
+
+  cl <- NULL
+  if(cores > 1){
+    cl <- makeCluster(min(cores,nstart), type="PSOCK")
+    clusterExport(cl, c("eem_array","maxit","const","ctol","cores"), envir=environment())
+    clusterEvalQ(cl, library(multiway))
+  }
+
   res <- lapply(comps,function(comp){
     #comp <- 6
     if(verbose) cat(paste0("calculating ",comp," components model..."),fill=TRUE)
-    cl <- NULL
     if(cores > 1){
-      cl <- makeCluster(min(cores,nstart), type="PSOCK")
-      clusterExport(cl, c("eem_array","comp","maxit","const","ctol","cores"), envir=environment())
-      clusterEvalQ(cl, library(multiway))
+      clusterExport(cl, c("comp"), envir=environment())
     }
     if(strictly_converging){
       cpresult <- parafac_conv(eem_array, nfac = comp, const = const, maxit = maxit, parallel = (cores > 1), cl = cl, ctol = ctol, nstart = nstart, output = "all", verbose = verbose, ...)
@@ -73,9 +78,6 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     }
     Rsqs <- lapply(cpresult,`[[`,"Rsq") %>% unlist()
     cpresult1 <- cpresult[[which.max(Rsqs)]]
-    if(cores > 1){
-      stopCluster(cl)
-    }
     cflags <- lapply(cpresult,`[[`,"cflag") %>% unlist()
     converged <- sum(cflags == 0)/nstart
     if(converged <= 0.5 & sum(cflags == 0) < 20){
@@ -91,6 +93,9 @@ eem_parafac <- function(eem_list, comps, maxit = 2500, normalise = TRUE, const =
     cpresult1$converged <- converged
     cpresult1
   })
+  if(cores > 1){
+    stopCluster(cl)
+  }
   mostattributes(res) <- attributes(eem_array)
   return(res)
 }
@@ -415,7 +420,7 @@ eempf_leverage <- function(pfmodel){
 
 #' Calculate the leverage of each emission and excitation wavelength and each sample from a list of PARAFAC models
 #'
-#' @param pfres_comps object of class parafac
+#' @param pfres_comps list of one or more parafac models
 #' @param ecdf logical, transforme leverages to according empirical quantiles (\code{\link[stats]{ecdf}})
 #' @param stats logical, whether means and standard deviations are calculated from leverages
 #'
@@ -430,7 +435,7 @@ eempf_leverage <- function(pfmodel){
 #' data(pf_models)
 #'
 #' eempf_mleverage(pf3)
-eempf_mleverage <- function(pfres_comps,ecdf = FALSE, stats = FALSE){
+eempf_mleverage <- function(pfres_comps, ecdf = FALSE, stats = FALSE){
   cpls <- lapply(pfres_comps,eempf_leverage) %>%
     lapply(unlist) %>%
     lapply(function(ll) data.frame(parameter=names(ll),value=ll)) %>%
@@ -545,9 +550,9 @@ eempf_cortable <- function(pfmodel,normalisation = FALSE, method="pearson",...){
 #' ml <- maxlines(pf4[[1]])
 maxlines <- function(pfmodel){
   maxl <- lapply(colnames(pfmodel$C),function(comp){
-    em = (pfmodel$B[,comp]*max(pfmodel$C[,comp])) %>%
+    em <- (pfmodel$B[,comp]*max(pfmodel$C[,comp])) %>%
       data.frame(e="em", wavelength = as.numeric(names(.)),value=.)
-    ex = (pfmodel$C[,comp]*max(pfmodel$B[,comp])) %>%
+    ex <- (pfmodel$C[,comp]*max(pfmodel$B[,comp])) %>%
       data.frame(e="ex", wavelength = as.numeric(names(.)),value=.)
     res <- bind_rows(em,ex) %>%
       setNames(c("e","wavelength",comp))
@@ -769,9 +774,9 @@ A_missing <- function(eem_list, pfmodel = NULL, cores = parallel::detectCores(lo
   if(length(missing$ex) > 0 | length(missing$em) > 0){
     stop(paste0("The provided samples are missing the following wavelengths that
             are present in the PARAFAC model: Emission ",
-           paste0(missing$em, collapse = ", "),
-           "; Excitation ",
-           paste0(missing$ex, collapse = ", "), "."))
+                paste0(missing$em, collapse = ", "),
+                "; Excitation ",
+                paste0(missing$ex, collapse = ", "), "."))
   }
 
   if(!is.null(components)){
@@ -789,9 +794,9 @@ A_missing <- function(eem_list, pfmodel = NULL, cores = parallel::detectCores(lo
     Bfixed <- pfmodel$B
     Cfixed <- pfmodel$C
     comps <- pfmodel$A %>% ncol()
-    normalise = (!is.null(attr(pfmodel,"norm_factors")))
-    control = pfmodel$control
-    const = pfmodel$const
+    normalise <- (!is.null(attr(pfmodel,"norm_factors")))
+    control <- pfmodel$control
+    const <- pfmodel$const
   }
   missingAs <- eem_parafac(x,comps = comps,normalise = (!is.null(attr(pfmodel,"norm_factors"))),Bfixed = Bfixed, Cfixed = Cfixed,cores = cores,const = const, control = control, ...)
   missingAs[[1]]
@@ -1581,13 +1586,13 @@ eempf_ssc <- function(pfmodels, tcc = FALSE, m = FALSE, cores = parallel::detect
   } else if(all(classes == "matrix")){ ## matrices
     cl <- makePSOCKcluster(min(cores,length(pfmodels)))
     clusterExport(cl, c("pfmodels","tcc"), envir = environment())
-    clusterEvalQ(cl,require(staRdom))
+    clusterEvalQ(cl, require(staRdom))
 
     SSCs <- parLapply(cl,1:length(pfmodels),function(k){
       lapply(k:length(pfmodels), function(l){
-        B = ssc(pfmodels[[k]][[1]], pfmodels[[l]][[1]], tcc = tcc)
-        C = ssc(pfmodels[[k]][[2]], pfmodels[[l]][[2]], tcc = tcc)
-        list(B=B, C=C)
+        B <- ssc(pfmodels[[k]][[1]], pfmodels[[l]][[1]], tcc = tcc)
+        C <- ssc(pfmodels[[k]][[2]], pfmodels[[l]][[2]], tcc = tcc)
+        list(B = B, C = C)
       }) %>%
         setNames(paste0(k,"vs",k:length(pfmodels)))
     }) %>% unlist(recursive = FALSE)
@@ -1696,7 +1701,7 @@ eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE, cores
 
   cl <- makePSOCKcluster(min(cores, length(sscs)))
   clusterExport(cl, c("sscs"), envir=environment())
-  clusterEvalQ(cl,require(staRdom))
+  clusterEvalQ(cl, require(staRdom))
 
   maxs <- parLapply(cl, sscs, lapply, ssc_max)
 
@@ -1738,27 +1743,34 @@ eempf_ssccheck <- function(pfmodels, best = length(pfmodels), tcc = FALSE, cores
 #' attr(sscs,"order")
 ssc_max <- function(mat){
   n <- min(dim(mat))
-  p <- permutations(n , n)
-  combinations <- lapply(1:nrow(p),function(row){
-    per <- p[row,]
-    matrix(c(1:n,per), ncol = n,byrow = TRUE)
-  })
+  if(n > 1){
+    p <- permutations(n , n)
+    combinations <- lapply(1:nrow(p),function(row){
+      per <- p[row,]
+      matrix(c(1:n,per), ncol = n,byrow = TRUE)
+    })
 
-  best_comb <- lapply(combinations, function(c){
-    pair <- c[,2] %>% unlist()
-    apply(c,2,function(pair){
-      mat[pair[1],pair[2]] %>% `^`(2)
+    best_comb <- lapply(combinations, function(c){
+      pair <- c[,2] %>% unlist()
+      apply(c,2,function(pair){
+        mat[pair[1],pair[2]] %>% `^`(2)
+      }) %>%
+        sum() %>%
+        sqrt()
     }) %>%
-      sum() %>%
-      sqrt()
-  }) %>%
-    which.max() %>%
-    combinations[[.]]
+      which.max() %>%
+      combinations[[.]]
 
-  res <- apply(best_comb,2,function(pair){
-    mat[pair[1],pair[2]]
-  })
-  attr(res,"order") <- best_comb[2,]
+    res <- apply(best_comb,2,function(pair){
+      mat[pair[1],pair[2]]
+    })
+
+    attr(res,"order") <- best_comb[2,]
+
+  } else {
+    res <- c(1)
+    attr(res,"order") <- c(1)
+  }
   res
 }
 

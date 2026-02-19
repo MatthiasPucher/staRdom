@@ -1,9 +1,9 @@
 Package: staRdom
 Type: Package
 Title: PARAFAC Analysis of EEMs from DOM
-Version: 1.1.29
-Date: 2024-11-04
-Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@gmx.net",
+Version: 1.1.30
+Date: 2025-09-02
+Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@ecosight.at",
                   role = c("aut", "cre")),
                   person("Daniel", "Graeber", email = "daniel.graeber@ufz.de",
                   role = c("aut", "ctb")),
@@ -44,7 +44,8 @@ Suggests:
     kableExtra (>= 1.4.0),
     askpass (>= 1.2.1),
     httr (>= 1.4.7),
-    rmarkdown (>= 2.28.0)
+    rmarkdown (>= 2.28.0),
+    ggrepel (>= 0.9.6)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 URL: https://cran.r-project.org/package=staRdom

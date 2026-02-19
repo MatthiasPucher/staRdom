@@ -59,5 +59,11 @@ globalVariables(c(
   "wl",
   "absorbance",
   "error",
-  "SAE"
+  "SAE",
+  "em_max",
+  "em_min",
+  "ex_max",
+  "ex_min",
+  "name",
+  "peaks"
 ), package = "staRdom")

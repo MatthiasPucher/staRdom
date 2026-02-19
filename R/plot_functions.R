@@ -26,7 +26,7 @@
 #'
 #'     A colour palette can be specified using the argument colpal.
 #'
-#'     Plotting distinct samples can be done using \code{\link{eem_extract}}. Please see example.
+#'     Plotting distinct samples can be done using \code{\link[eemR]{eem_extract}}. Please see example.
 #'
 #' @return a ggplot object
 #'
@@ -209,3 +209,205 @@ eem_overview_plot <- function(data, spp = 8,...){
   })
   ov_plot
 }
+
+#' Mark EEM scatter bands
+#'
+#' @description geom_eemscatter draws dashed lines at the locations where scatter is expected in EEMs from water samples.
+#'
+#' @param scatter logical vector of size 4 stating the scatter bands to be marked. The order is Raman 1, Raman 2, Rayleigh 1, Rayleigh 2.
+#' @param ... additional arguments to be passed on to \code{\link[ggplot2]{geom_function}}
+#'
+#' @returns a layer to a ggplot2
+#' @export
+#'
+#' @import ggplot2
+#'
+#' @examples
+#' require(tidyr)
+#'
+#' eem_list %>%
+#'   eem_extract(eem_names((eem_list))[1], keep = TRUE) %>%
+#'   ggeem() +
+#'   geom_eemscatter() +
+#'   coord_cartesian(xlim = c(250,455), ylim = c(290,578))
+geom_eemscatter <- function(scatter = rep(TRUE, 4), ...){
+  raman <- function(ex, order = 1){
+    order * 1/(1/ex - 3.4e-4)
+  }
+
+  rayleigh <- function(ex, order = 1){
+    order*ex
+  }
+
+  layers <- list()
+  if (scatter[1]){
+    layers <- c(layers,
+                geom_function(fun = raman, mapping = aes(z = NULL), ...))
+  }
+  if (scatter[2]){
+    layers <- c(layers,
+                geom_function(fun = raman, mapping = aes(z = NULL), args = list(order = 2), ...))
+  }
+  if (scatter[3]){
+    layers <- c(layers,
+                geom_function(fun = rayleigh, mapping = aes(z = NULL), ...))
+  }
+  if (scatter[3]){
+    layers <- c(layers,
+                geom_function(fun = rayleigh, mapping = aes(z = NULL), args = list(order = 2), ...))
+  }
+
+  return(layers)
+}
+
+
+#' Mark common EEM peaks
+#'
+#' @description geom_eempeakloc marks the locations of commonly used peaks to EEMs of water samples
+#'
+#' @param data data.frame containing information about the peaks, such as names, locations and ranges
+#' @param ... additional arguments to be passed on to \code{\link[ggplot2]{geom_function}}
+#'
+#' @details data, the data.frame with the peaks, is included in the package and accessible using data(peaks).
+#' It is possible to alter that data.frame and e.g. provide altered peaks or a selection of peaks using common functions on data.frames.
+#' geom_eempeakloc plots several labels which can be close together in smaller plots. By default, labels are omitted to keep it readable, but this means important information is lost.
+#' If the ggrepel package is installed, it is used for plotting the labels and the result is much more convenient. You have to install ggrepel manually to use it with this function.
+#'
+#' @returns a layer to a ggplot2
+#' @export
+#'
+#' @import ggplot2
+#'
+#' @examples
+#' require(tidyr)
+#'
+#' eem_list %>%
+#'   eem_extract(eem_names((eem_list))[1], keep = TRUE) %>%
+#'   ggeem() +
+#'   geom_eempeakloc()
+#'
+#' # We plot only component 3 of the PARAFAC model to avoid letter overload
+#' pf4[[1]] %>%
+#'   (\(x, comp = 3) { #please change comp to the index of the comp. to plot.
+#'     x$A <- x$A[, comp, drop = FALSE]
+#'     x$B <- x$B[, comp, drop = FALSE]
+#'     x$C <- x$C[, comp, drop = FALSE]
+#'     x
+#'   })() %>%
+#'   ggeem() +
+#'   geom_eempeakloc() +
+#'   coord_cartesian(xlim = c(250,455), ylim = c(290,578))
+geom_eempeakloc <- function(data = peaks, ...){
+  list(
+    geom_point(mapping = aes(x = ex, y = em), data = peaks, ...),
+    geom_errorbar(mapping = aes(x = ex, ymin = em_min, ymax = em_max), data = peaks, ...),
+    geom_errorbar(mapping = aes(y = em, xmin = ex_min, xmax = ex_max), data = peaks, ...),
+    if (requireNamespace("ggrepel", quietly = TRUE)) {
+      ggrepel::geom_text_repel(mapping = aes(x = ex, y = em, label = name), data = peaks, ...)
+    } else {
+      geom_text(mapping = aes(x = ex, y = em, label = name), data = peaks, check_overlap = TRUE, ...)
+    }
+  )
+}
+
+#' Mark common reagions to EEMs to show molecular groups
+#'
+#' @description geom_eemregions marks the locations of commonly destinguished molecular groups in EEMs
+#'
+#' @param lim limit the extend of the lines separating the groups
+#' @param detail logical, whether the reagions are given with numbers only or with more detailed information
+#' @param ... additional arguments to be passed on to \code{\link[ggplot2]{geom_function}}, \code{\link[ggplot2]{geom_segment}} and \code{\link[ggplot2]{geom_text}}
+#'
+#' @details data, the data.frame with the peaks, is included in the package and accessible using data(peaks).
+#' It is possible to alter that data.frame and e.g. provide altered peaks or a selection of peaks using common functions on data.frames.
+#'
+#' @returns a layer to a ggplot2
+#' @export
+#'
+#' @import ggplot2
+#'
+#' @examples
+#' require(tidyr)
+#'
+#' eem_list %>%
+#'   eem_extract(eem_names((eem_list))[1], keep = TRUE) %>%
+#'   ggeem() +
+#'   geom_eemregions()
+geom_eemregions <- function(lim = c(ex_min = 200, ex_max = 500, em_min = 250, em_max = 700), detail = TRUE, ...){
+
+  label <- c("I", "II", "III", "IV", "V")
+
+  if(detail){
+    label2 <- c("Aromatic protein I", "Aromatic protein II", "Fulvic acid-like", "Soluble microbial\nby-product-like", "Humic acid-like")
+    label <- paste(label, label2, sep = "\n")
+  }
+
+
+
+  text <- data.frame(ex = c(rep(mean(c(250, lim["ex_min"])),3), mean(c(rep(250, 2), min(lim["ex_max"],342))), min(320, lim["ex_max"])),
+                     em = c(mean(c(lim["em_min"],330)), 355, mean(c(lim["em_max"],380)), mean(c(lim["em_min"],380)), mean(c(lim["em_max"],380))),
+                     label = label,
+                     value = rep(0,5))
+
+  list(
+    geom_segment(aes(y = max(lim["em_min"],260), yend = lim["em_max"], x = 250, xend = 250), linetype = 3, ...),
+    geom_segment(aes(y = 330, yend = 330, x = lim["ex_min"], xend = 250), linetype = 3, ...),
+    geom_segment(aes(y = 380, yend = 380, x = lim["ex_min"], xend = min(lim["ex_max"],342)), linetype = 3, ...),
+    geom_function(fun = function(x) {y <- -67.016 + 1.308 * x}, mapping = aes(z = NULL), ...),
+    geom_text(mapping = aes(x = ex, y = em, label = label), data = text, ...)
+  )
+}
+
+#' Add layers of scatter bands, molecular regions and common peaks to EEM plots
+#'
+#' @description This function is a wrapper for \code{\link[staRdom]{geom_eemregions}}, \code{\link[staRdom]{geom_eempeakloc}}, \code{\link[staRdom]{geom_eemscatter}} and can limit the plot extend to the area of the original EEM.
+#' Therefore, it is not added using '+' but the plot has to be supplied as an argument.
+#'
+#' @param plot the ggplot where the layers are added
+#' @param scatter logical vector of size 4 stating the scatter bands to be marked. The order is Raman 1, Raman 2, Rayleigh 1, Rayleigh 2.
+#' @param regions logical, whether molecular regions are marked
+#' @param peakloc logical, whether common EEM peaks are marked
+#' @param limit logical, whether the plot is limited to the original EEM
+#' @param ... additional arguments passed to geom_eemregions(), geom_eemscatter() and geom_eempeakloc().
+#'
+#' @returns an altered ggplot2
+#' @export
+#'
+#' @examples
+#' require(tidyr)
+#'
+#' eem_list %>%
+#'  eem_extract(eem_names((eem_list))[1], keep = TRUE) %>%
+#'  ggeem() %>%
+#'  ggeem_overlay()
+ggeem_overlay <- function(plot, scatter = rep(TRUE, 4), regions = TRUE, peakloc = TRUE, limit = TRUE, ...){
+
+  if(limit){
+    built <- ggplot_build(plot)
+    panel_ranges <- built$layout$panel_params[[1]]
+    xlim <- panel_ranges$x.range
+    ylim <- panel_ranges$y.range
+
+    plot <- plot +
+      coord_cartesian(xlim = xlim, ylim = ylim)
+  }
+
+  if(any(scatter)){
+    plot <- plot +
+      geom_eemscatter(scatter = scatter, linetype = 2, ...)
+  }
+
+  if(regions){
+    plot <- plot +
+      geom_eemregions(...)
+  }
+
+  if(peakloc){
+    plot <- plot +
+      geom_eempeakloc(...)
+  }
+
+  plot
+
+}
+

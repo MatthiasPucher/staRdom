@@ -37,3 +37,8 @@
 #'
 #' @format list of parafacs
 "sh"
+
+#' data.frame containing common EEM peaks with the wavelengths and possible deviations
+#'
+#' @format data.frame
+"peaks"
