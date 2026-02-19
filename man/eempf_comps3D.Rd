@@ -4,12 +4,14 @@
 \alias{eempf_comps3D}
 \title{3D plots of PARAFAC components}
 \usage{
-eempf_comps3D(pfmodel, which = NULL)
+eempf_comps3D(pfmodel, which = NULL, ...)
 }
 \arguments{
 \item{pfmodel}{object of class parafac}
 
 \item{which}{optional, if numeric selects certain component}
+
+\item{...}{attributes passed on to \code{\link[plotly]{plot_ly}}}
 }
 \value{
 plotly plot

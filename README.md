@@ -1,3 +1,6 @@
+# staRdom
+
+## Introduction
 staRdom is a package for R to analyse fluorescence and absorbance data of dissolved organic matter (DOM). It is possible to do the following steps:
 
 * correcting excitation-emission-matrices (EEM, doi:10.1039/c3ay41160e, partly done with eemR)
@@ -14,144 +17,148 @@ staRdom was developed and maintained at WasserCluster Lunz (https://wcl.ac.at/in
 The analysis process was already discussed in other papers and tutorials. The aim of this package was to bring a familiar way of using PARAFAC analysis for DOM to the R platform. The offered functions follow the concept of doi:10.1039/c3ay41160e. Reading it is recommended and can help your understanding!
 
 
-Changelog:
-1.1.29 to 1.1.30
+## Changelog:
+1.1.31
+  bug fix for reading the metadata in the basic analysis Rmd
+  some other minor bugs
+
+1.1.30
   Added functions to add information to EEM plots (common peaks, molecular regions, scatter bands)
   Minor format adjustments
 
-1.1.28 to 1.1.29
+1.1.29
   Added a data check for the absorbance baseline correction.
   Added data check for A_missing.
 
-1.1.26 to 1.1.28
+1.1.28
   fixed example of eem_load_dreem due to problems on some computers reading UTF8 data
   fixed deprecated functions in dplyr
   added function do export data
   updated links within the whole package
 
-1.1.24 to 1.1.26
+1.1.26
   minor changes to class checks
   bugfix in eem_import_dir
 
-1.1.22 to 1.1.24
+1.1.24
   Fixed function eem_csv2
   minor changes in warnings and errors
 
-1.1.21 to 1.1.22
+1.1.22
   The default colour palette was changed to viridis to improve the readability for people with color vision deficiency.
   The default ggplot theme of the plots was changed to theme_minimal()
   splithalf_plot shows a legend to identify the subsets
 
-1.1.20 to 1.1.21
+1.1.21
   fixed links in vignettes and help
 
-1.1.19 to 1.1.20
+1.1.20
   eempf_res_analysis: function added to calculate residual metrics
   Fixed example of eempf_report writing to home directory
   Fixed generation of openfluor export demands email
 
-1.1.18 to 1.1.19
+1.1.19
   PARAFAC models can be uploaded to openfluor.org directly
 
-1.1.17 to 1.1.18
+1.1.18
  PARAFAC models are automatically scaled when exported to openfluor
 
-1.1.16 to 1.1.17
+1.1.17
   corrected links in the manual
 
-1.1.15 to 1.1.16
+1.1.16
   eempf_corcondia bug fixed
 
-1.1.14 to 1.1.15
+1.1.15
   abs_blcor can handle single samples now
 
-1.1.13 to 1.1.14
+1.1.14
   staRdom is fit for R 4.0 now
 
-1.1.11 to 1.1.13
+1.1.13
   parafac_conv bug fixed
   splithalf bug fixed
 
-1.1.9 to 1.1.11
+1.1.11
   the use of colour palettes in plots was changed slightly to be more intuitive and consistent over all staRdom functions
 
-1.1.8 to 1.1.9
+1.1.9
   changed citation system in vignettes: no internet connection necessary for knitting now
 
-1.1.7 to 1.1.8
+1.1.8
   abs_parms: bug fixed, plain absorbance values were not multiplied by log(10)
 
-1.1.5 to 1.1.7
+1.1.7
   eem_dilution: bug fixed
   eem_smooth: bug fixed
 
-1.1.4 to 1.1.5
+1.1.5
   eem_dilution: improved error behaviour
   basic analysis: bug in contour plots corrected
   eem_hitachi: throws an error instead of a warning if there is a problem
 
-1.1.3 to 1.1.4
+1.1.4
   added error catcher to absorbance read to improve readability of errors.
 
-1.1.2 to 1.1.3
+1.1.3
   corrected release date ;-)
 
-1.1.1 to 1.1.2
+1.1.2
   eem_hitachi : added error catcher to provide more information in case of faulty files
   eem_overview_plot: rows and columns of samples in a plot can be defined
   eem_compare and eem_plot_comps: unequal wavelength slits do not show in the plots anymore
 
-1.1.0 to 1.1.1
+1.1.1
   bug fixed: eempf4analysis now returnes loadings multiplied with normalisation factors
 
-1.0.28 to 1.1.0
+1.1.0
   changes in examples
 
-1.0.27 to 1.0.28
+1.0.28
   added information on paper comparing staRdom and drEEM
   absorbance_read and abs_parms use multiple CPUs now
 
-1.0.26 to 1.0.27
+1.0.27
   eem_smooth, eempf_ssc and eempf_ssccheck use multiple CPUs now
 
-1.0.24 to 1.0.26
+1.0.26
   changes in vignettes
 
-1.0.23 to 1.0.24
+1.0.24
   reduced package size by restructuring data
 
-1.0.22 1.0.23
+1.0.23
   bugfix in eem_ife_correction
 
-1.0.21 to 1.0.22
+1.0.22
   corrected broken links in vignettes
 
-1.0.20 to 1.0.21
+1.0.21
   changes in vignettes
 
-1.0.19 to 1.0.20
+1.0.20
   corrected an issue with absorption data
 
-1.0.18 to 1.0.19
+1.0.19
   function eem_apply to apply any functions on EEMs
   corrected wrong a254 and a300 were wrong when using absorption data
 
-1.0.17 to 1.0.18
+1.0.18
   Minor issues to fulfill CRAN requirements
 
-1.0.16 to 1.0.17
+1.0.17
   SSC included to measure the similarity between components
   dec and sep recognition is possible with numbers in exponential format
   SSCs between components of a model can be plotted
 
-1.0.15 to 1.0.16
+1.0.16
   corrected reading single absorbance files
 
-1.0.13 to 1.0.15
+1.0.15
   absorbance and absorption can be used for inner-filter effect correction
   the desired number of converging models can be set optionally
 
-1.0.12 to 1.0.13
+1.0.13
   adapted to work with eemR 1.0.1
   added optional contours to plots
   ensured nonnegative values with nonnegative constraints
@@ -160,7 +167,7 @@ Changelog:
   spectral correction is not limited to integer values anymore
   solved issue with axis breaks
 
-1.0.11 to 1.0.12
+1.0.12
   The PARAFAC tutorial was improved and extended again.
   all examples are taken from drEEM now
   eem_read_csv function to read EEM data from plain csv files
@@ -172,11 +179,11 @@ Changelog:
   eempf_excomp extract components from PARAFAC models to variables
   eempf_bindxc bind extracted components into one set of components
 
-1.0.10 to 1.0.11
+1.0.11
   absorbance parameters can be interpolated where wavelengths are missing
   absorbance can be passed on as absorbance coefficient
 
-1.0.9 to 1.0.10
+1.0.10
   corrected bug: functions not exported
   PARAFAC models and components can have names
   PARAFAC tutorial revised
@@ -184,7 +191,7 @@ Changelog:
   eempf_varimp calculates the variable importance of the components
   eempf_reorder can reorder the components in a PARAFAC model based on different criteria
 
-1.0.8 to 1.0.9
+1.0.9
   Re-worked PARAFAC tutorial
   abs_blcor does a baseline correction of absorbance data
   abs_parms additionally calculates the spectral slope according to Loiselle, 2009
@@ -195,24 +202,23 @@ Changelog:
   abs_fit_slope does not produce errors (but a warning) if the absorbance wavelength is smaller than the desired slope limits.
   absorbance_read is more reliable now and can deal with more formats
 
-1.0.7 to 1.0.8
+1.0.8
   documentation was extended
   reading absorbance data can determine decimal separator automatically
   corrected broken dependency to multiway
 
-1.0.6 to 1.0.7:
+1.0.7:
   correction of sample normalisation
   functions for merging diluted and undiluted samples
 
-1.0.5 to 1.0.6:
+1.0.6:
   absorbance_read: sep and dec are set automatically, location of files is saved
   eem_checkdata: added functions to check imported data, checks sample names, missing data
   eempf4analysis: create and optionally export table containing loadings from parafac, peaks, indices and absorbance slope parameters
   eempf_eemqual: calculate model quality
   eempf_report: create a report from a PARAFAC model and write out as html
 
-
-1.0.3 to 1.0.5:
+1.0.5:
   corrected severe bug in eem2array
   corrected severe bug in norm_array
   eem_parafac: bug in Windows multi core calculation corrected

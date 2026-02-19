@@ -1,8 +1,8 @@
 Package: staRdom
 Type: Package
 Title: PARAFAC Analysis of EEMs from DOM
-Version: 1.1.30
-Date: 2025-09-02
+Version: 1.1.31
+Date: 2026-02-19
 Authors@R: c(person("Matthias", "Pucher", email = "matthias.pucher@ecosight.at",
                   role = c("aut", "cre")),
                   person("Daniel", "Graeber", email = "daniel.graeber@ufz.de",
@@ -36,7 +36,9 @@ Imports:
     R.matlab (>= 3.7.0),
     readr (>= 2.1.5),
     gtools (>= 3.9.5),
-    viridisLite (>= 0.4.2)
+    viridisLite (>= 0.4.2),
+    purrr (>= 1.2.1),
+    rlang (>= 1.1.7)
 Suggests:
     plotly (>= 4.10.4),
     xlsx (>= 0.6.5),
@@ -46,7 +48,7 @@ Suggests:
     httr (>= 1.4.7),
     rmarkdown (>= 2.28.0),
     ggrepel (>= 0.9.6)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 URL: https://cran.r-project.org/package=staRdom
 BugReports: https://github.com/MatthiasPucher/staRdom/issues

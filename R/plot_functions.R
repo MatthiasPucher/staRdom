@@ -157,7 +157,7 @@ ggeem.data.frame <- function(data, fill_max=FALSE, colpal = "default", contour =
     facet_wrap(~ sample)
   if(contour){
     plot <- plot +
-      geom_contour(colour = "black", size = 0.3, ...)
+      geom_contour(colour = "black", linewidth = 0.3, ...)
   }
   if(table$value %>% min(na.rm=TRUE) < 0){
     vals <- c(table$value %>% min(na.rm = TRUE), seq(from = 0, to = fill_max, length.out = length(colpal) - 1))

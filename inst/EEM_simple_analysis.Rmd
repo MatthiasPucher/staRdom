@@ -346,7 +346,6 @@ eem_list <- eem_list %>% eem_name_replace(c("\\(FD3\\)"), c(""))
 # There is an additional step to automatically reread the table with comma decimal separator if dot did not work.
 if(metadata != FALSE){
   meta <- data.table::fread(file = metadata, header = TRUE)
-  if(!all(sapply(meta,is.numeric)[-which(colnames(meta) == col_samples)])) meta <- data.table::fread(file = metadata, header = TRUE, dec = ",")
   meta <- meta %>% mutate_at(vars(one_of(col_samples)), make.names) %>%
     tibble::column_to_rownames(var=col_samples)
 }

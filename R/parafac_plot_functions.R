@@ -319,6 +319,7 @@ eempf_load_plot <- function(pfmodel){
 #'
 #' @param pfmodel object of class parafac
 #' @param which optional, if numeric selects certain component
+#' @param ... attributes passed on to \code{\link[plotly]{plot_ly}}
 #'
 #' @return plotly plot
 #' @export
@@ -326,6 +327,8 @@ eempf_load_plot <- function(pfmodel){
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble remove_rownames
 #' @importFrom grDevices rainbow
+#' @importFrom purrr map compact
+#' @importFrom rlang list2
 #'
 #' @examples
 #' \dontrun{
@@ -333,31 +336,78 @@ eempf_load_plot <- function(pfmodel){
 #'
 #' eempf_comps3D(pf4[[1]])
 #' }
-eempf_comps3D <- function(pfmodel, which = NULL){
-  data <- pfmodel %>% eempf_comp_mat()
-  z <- lapply(data,function(mat){
-    mat %>%
-      data.frame() %>%
-      spread(em,value) %>%
-      remove_rownames() %>%
-      column_to_rownames("ex") %>%
-      as.matrix()
+eempf_comps3D <- function(pfmodel, which = NULL, ...) {
+  # Collect dots with rlang::list2 (keeps names and quosures nicely)
+  dots <- rlang::list2(...)
+
+  # Extract colors from dots if present, otherwise use a default
+  if ("colors" %in% names(dots)) {
+    colors <- dots$colors
+    dots$colors <- NULL   # remove so we don't pass it twice
+  } else {
+    colors <- rainbow(12)[9:1]
+  }
+
+  # Get data (assumes eempf_comp_mat is available in the environment)
+  data_list <- eempf_comp_mat(pfmodel)
+
+  # Build matrices for z, and vectors for x/y (em/ex)
+  z_list <- purrr::map(data_list, function(mat) {
+    # Convert to data.frame/tibble, pivot to wide with em as columns, ex as rows
+    df <- as.data.frame(mat, stringsAsFactors = FALSE)
+    # ensure numeric ex and em if needed
+    df$ex <- as.numeric(df$ex)
+    df$em <- as.numeric(df$em)
+    wide <- tidyr::pivot_wider(df, names_from = em, values_from = value)
+    # set rownames and convert to matrix (avoid column_to_rownames dependency)
+    rn <- wide$ex
+    wide$ex <- NULL
+    m <- as.matrix(as.data.frame(wide))
+    rownames(m) <- rn
+    m
   })
-  ex <- lapply(data,function(mat){
-    mat$ex %>% unique() %>% as.numeric() %>% as.vector()
+
+  ex_list <- purrr::map(data_list, ~ unique(as.numeric(.x$ex)))
+  em_list <- purrr::map(data_list, ~ unique(as.numeric(.x$em)))
+
+  # Extract scene if provided, otherwise fallback to default
+  if ("scene" %in% names(dots)) {
+    scene <- dots$scene
+    dots$scene <- NULL
+  } else {
+    scene <- list(
+      xaxis = list(title = "em"),
+      yaxis = list(title = "ex")
+    )
+  }
+
+  # Build plots (one per component). Use seq_along to keep consistent indexing.
+  plots <- purrr::map(seq_along(z_list), function(i) {
+    # apply 'which' filtering
+    if (!is.null(which) && !(i %in% which)) return(NULL)
+
+    # construct named args for plot_ly safely
+    plot_args <- c(
+      list(
+        x = em_list[[i]],
+        y = ex_list[[i]],
+        z = z_list[[i]],
+        type = "surface",
+        colors = colors
+      ),
+      dots
+    )
+
+    # call plot_ly via do.call to avoid positional-argument confusion
+    p <- do.call(plotly::plot_ly, plot_args)
+    p <- plotly::layout(p, scene = scene)
+    p
   })
-  em <- lapply(data,function(mat){
-    mat$em %>% unique() %>% as.numeric() %>% as.vector()
-  })
-  scene <- list(xaxis=list(title="em"),
-                yaxis=list(title="ex"))
-  lapply(1:length(ex),function(comp){
-    if(is.null(which) | comp %in% which){
-      plotly::plot_ly(x=em[[comp]],y=ex[[comp]], z=z[[comp]],colors = rainbow(12)[9:1]) %>%
-        plotly::layout(scene=scene) %>%
-        plotly::add_surface()
-    }
-  })
+
+  # remove NULL entries (components filtered out)
+  plots <- purrr::compact(plots)
+
+  plots
 }
 
 #' Plot correlations of components in samples
